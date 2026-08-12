@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShoppingBag, Search, MapPin, Phone, MessageSquare, 
-  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle, PackageCheck, Filter, ChevronUp, Map, CreditCard, RefreshCw, Printer, ExternalLink
+  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle, PackageCheck, Filter, ChevronUp, Map, CreditCard, RefreshCw, Printer, ExternalLink, Download
 } from "lucide-react";
 import Link from "next/link";
 
@@ -353,7 +353,7 @@ export default function CustomerMarketplacePage() {
 
   // Detailed Modals State
   const [inspectingCrop, setInspectingCrop] = useState<FarmerCropListing | null>(null);
-  const [inspectingOrder, setInspectingOrder] = useState<BuyerOrderRequest | null>(null);
+  const [billOrder, setBillOrder] = useState<BuyerOrderRequest | null>(null);
 
   // Multi-step Checkout Modal State
   const [buyingListing, setBuyingListing] = useState<FarmerCropListing | null>(null);
@@ -925,7 +925,7 @@ export default function CustomerMarketplacePage() {
         </div>
       )}
 
-      {/* REDESIGNED MY CUSTOMER ORDERS WITH EXHAUSTIVE "SHOW FULL PURCHASE DETAILS" MODAL */}
+      {/* REDESIGNED MY CUSTOMER ORDERS */}
       {activeTab === "my_orders" && (
         <div className="space-y-6">
           
@@ -1000,7 +1000,7 @@ export default function CustomerMarketplacePage() {
                 <Receipt className="w-5 h-5 text-emerald-600" />
                 My Crop Purchase Orders ({filteredOrders.length})
               </h3>
-              <p className="text-xs text-gray-400 font-medium mt-0.5">Click "Show Full Purchase Details" on any order card to view the complete tax invoice and full metadata.</p>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">Click "View Official Tax Invoice Bill" on any order card to see its full bill receipt.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -1146,7 +1146,7 @@ export default function CustomerMarketplacePage() {
                         </div>
                       </div>
 
-                      {/* SECTION 3: DELIVERY ADDRESS & EXPLICIT "SHOW FULL PURCHASE DETAILS" ACTION BUTTON */}
+                      {/* SECTION 3: DELIVERY ADDRESS & EXPLICIT "VIEW OFFICIAL TAX INVOICE BILL" ACTION BUTTON */}
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
                         <div className="flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 w-full md:w-auto">
                           <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -1154,13 +1154,13 @@ export default function CustomerMarketplacePage() {
                         </div>
 
                         <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
-                          {/* PROMINENT SHOW FULL PURCHASE DETAILS BUTTON */}
+                          {/* OFFICIAL PRINTABLE TAX INVOICE BILL BUTTON */}
                           <button
-                            onClick={() => setInspectingOrder(order)}
+                            onClick={() => setBillOrder(order)}
                             className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
                           >
-                            <Eye className="w-4 h-4 text-yellow-300" />
-                            <span>Show Full Purchase Details</span>
+                            <Receipt className="w-4 h-4 text-yellow-300" />
+                            <span>View Official Tax Invoice Bill</span>
                           </button>
 
                           {/* BUYER CANCEL ORDER ACTION */}
@@ -1189,160 +1189,152 @@ export default function CustomerMarketplacePage() {
         </div>
       )}
 
-      {/* EXHAUSTIVE PURCHASE DETAILS INSPECTION MODAL */}
+      {/* OFFICIAL PRINTABLE TAX INVOICE BILL RECEIPT MODAL */}
       <AnimatePresence>
-        {inspectingOrder && (
+        {billOrder && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500/50 rounded-3xl max-w-3xl w-full p-6 md:p-8 shadow-2xl relative space-y-6 text-gray-900 dark:text-white"
+              className="bg-white text-gray-900 border-4 border-emerald-600 rounded-3xl max-w-3xl w-full p-6 md:p-8 shadow-2xl relative space-y-6 font-sans overflow-hidden"
             >
               <button 
-                onClick={() => setInspectingOrder(null)}
-                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full bg-gray-100 dark:bg-white/10"
+                onClick={() => setBillOrder(null)}
+                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-800 rounded-full bg-gray-100 border"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              {/* MODAL HEADER WITH TAX INVOICE BADGE */}
-              <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl font-black shrink-0">
-                  📄
-                </div>
+              {/* 1. BILL HEADER */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-emerald-600 pb-4 gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
-                      Official Tax Invoice & Metadata Receipt
+                    <span className="text-2xl">🌾</span>
+                    <span className="text-2xl font-black text-emerald-800 tracking-tight">AgroPulse</span>
+                    <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded border border-emerald-300">
+                      OFFICIAL TAX INVOICE
                     </span>
-                    <span className="font-mono text-xs font-extrabold text-gray-400">{inspectingOrder.orderId}</span>
                   </div>
-                  <h2 className="text-xl font-black text-gray-900 dark:text-white mt-0.5">
-                    Full Purchase Details — {inspectingOrder.cropName}
-                  </h2>
+                  <p className="text-[11px] text-gray-500 font-bold mt-0.5">
+                    Direct Farm Trading & APMC Mandi Procurement Portal • GSTIN: 27AAAAA0000A1Z5
+                  </p>
+                </div>
+
+                <div className="text-left sm:text-right text-xs">
+                  <div className="font-black text-emerald-900">INVOICE #: <span className="font-mono text-emerald-700">INV-2026-{billOrder.orderId}</span></div>
+                  <div className="text-gray-600 font-semibold">Date: {billOrder.orderDate}</div>
+                  <div className="text-gray-600 font-semibold">Payment Status: <strong className="text-emerald-700 uppercase">{billOrder.status}</strong></div>
                 </div>
               </div>
 
-              {/* EXHAUSTIVE METADATA SECTIONS GRID */}
-              <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1 scrollbar-none">
+              {/* 2. BILLED FROM (SELLER) vs BILLED TO (BUYER) GRID */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 
-                {/* 1. ORDER & TIMELINE SUMMARY */}
-                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                    <Clock className="w-4 h-4" /> 1. Order Identifiers & Timeline
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-semibold pt-1">
-                    <div><span className="text-gray-400 block">Sequence #:</span> #{inspectingOrder.sequenceNo}</div>
-                    <div><span className="text-gray-400 block">Order ID:</span> <strong className="font-mono text-emerald-600">{inspectingOrder.orderId}</strong></div>
-                    <div><span className="text-gray-400 block">Purchase Date:</span> {inspectingOrder.orderDate}</div>
-                    <div><span className="text-gray-400 block">Order Status:</span> <strong className="text-emerald-600">{inspectingOrder.status}</strong></div>
-                  </div>
+                {/* SELLER FARMER */}
+                <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-emerald-900 tracking-wider block border-b border-emerald-200 pb-1 mb-1">
+                    👨‍🌾 Billed From (Farmer Seller):
+                  </span>
+                  <div className="font-black text-sm text-gray-900">{billOrder.farmerName}</div>
+                  <div className="text-gray-600 font-medium">Location: {billOrder.farmLocation || "Baramati, Pune, Maharashtra"}</div>
+                  <div className="text-gray-600 font-medium">Contact: {billOrder.farmerPhone}</div>
+                  <div className="text-gray-500 text-[10px]">Verified Farmer Identity: e-KYC Verified</div>
                 </div>
 
-                {/* 2. CROP & QUALITY METADATA */}
-                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                    <Sprout className="w-4 h-4" /> 2. Crop & Produce Specifications
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs font-semibold pt-1">
-                    <div><span className="text-gray-400 block">Crop Name:</span> <strong>{inspectingOrder.cropName}</strong></div>
-                    <div><span className="text-gray-400 block">Quality Grade:</span> <strong className="text-emerald-600">{inspectingOrder.qualityGrade || "Grade A Premium"}</strong></div>
-                    <div><span className="text-gray-400 block">Delivery Method:</span> <strong>{inspectingOrder.deliveryOption || "Doorstep Delivery"}</strong></div>
-                  </div>
-                </div>
-
-                {/* 3. FARMER / SELLER DIRECT DETAILS */}
-                <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-4 rounded-2xl border-2 border-emerald-500/40 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                    <User className="w-4 h-4 text-emerald-600" /> 3. Verified Farmer / Seller Information
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-semibold pt-1">
-                    <div><span className="text-gray-500 block">Seller Name:</span> <strong className="text-gray-900 dark:text-white">{inspectingOrder.farmerName}</strong></div>
-                    <div><span className="text-gray-500 block">Contact Phone:</span> <strong>{inspectingOrder.farmerPhone}</strong></div>
-                    <div><span className="text-gray-500 block">Farm Location:</span> <strong>{inspectingOrder.farmLocation || "Baramati, Pune, Maharashtra"}</strong></div>
-                  </div>
-                  {inspectingOrder.farmerWhatsapp && (
-                    <div className="pt-1">
-                      <a
-                        href={`https://wa.me/${inspectingOrder.farmerWhatsapp}?text=Namaste%20${encodeURIComponent(inspectingOrder.farmerName)},%20I%20have%20a%20question%20regarding%20my%20order%20${inspectingOrder.orderId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-sm transition-all"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" /> Chat Directly on WhatsApp with {inspectingOrder.farmerName}
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {/* 4. BUYER & SHIPPING INFORMATION */}
-                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4" /> 4. Shipping & Buyer Information
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-semibold pt-1">
-                    <div><span className="text-gray-400 block">Customer Name:</span> <strong>{inspectingOrder.buyerName}</strong></div>
-                    <div><span className="text-gray-400 block">Customer Phone:</span> <strong>{inspectingOrder.buyerPhone}</strong></div>
-                    <div><span className="text-gray-400 block">Delivery Pincode:</span> <strong className="text-emerald-600">{inspectingOrder.buyerPincode}</strong></div>
-                  </div>
-                  <div className="text-xs font-semibold pt-1">
-                    <span className="text-gray-400 block">Full Delivery Address:</span>
-                    <strong className="text-gray-900 dark:text-white">{inspectingOrder.buyerAddress}</strong>
-                  </div>
-                </div>
-
-                {/* 5. FINANCIAL INVOICE BREAKDOWN */}
-                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                    <CreditCard className="w-4 h-4" /> 5. Itemized Financial Breakdown
-                  </h4>
-                  <div className="space-y-1.5 text-xs font-semibold pt-1">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Purchased Quantity:</span>
-                      <strong>{inspectingOrder.quantityQuintals} Quintals</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Mandi Price Rate:</span>
-                      <strong>₹{inspectingOrder.pricePerQuintal.toLocaleString("en-IN")} / quintal</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Crop Subtotal:</span>
-                      <strong>₹{inspectingOrder.subtotal.toLocaleString("en-IN")}</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Freight Transport Charge:</span>
-                      <strong className="text-emerald-600">₹{inspectingOrder.deliveryFee}</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Payment Gateway Method:</span>
-                      <strong>{inspectingOrder.paymentMethod || "Cash on Delivery / Direct Bank"}</strong>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-white/10 text-sm font-black text-emerald-600 dark:text-emerald-400">
-                      <span>Grand Total Amount Paid:</span>
-                      <span>₹{inspectingOrder.totalPrice.toLocaleString("en-IN")}</span>
-                    </div>
-                  </div>
+                {/* BUYER CUSTOMER */}
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-gray-700 tracking-wider block border-b border-gray-200 pb-1 mb-1">
+                    🛒 Billed To (Customer Buyer):
+                  </span>
+                  <div className="font-black text-sm text-gray-900">{billOrder.buyerName}</div>
+                  <div className="text-gray-600 font-medium">Address: {billOrder.buyerAddress}</div>
+                  <div className="text-gray-600 font-medium">PIN Code: {billOrder.buyerPincode}</div>
+                  <div className="text-gray-600 font-medium">Phone: {billOrder.buyerPhone}</div>
                 </div>
 
               </div>
 
-              {/* MODAL FOOTER WITH PRINT RECEIPT ACTION */}
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
-                <button
-                  onClick={() => window.print()}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 font-extrabold rounded-xl text-xs hover:bg-gray-200 transition-all flex items-center justify-center gap-1.5"
-                >
-                  <Printer className="w-4 h-4" /> Print Tax Receipt Invoice
-                </button>
-
-                <button
-                  onClick={() => setInspectingOrder(null)}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all"
-                >
-                  Close Purchase Details
-                </button>
+              {/* 3. ITEMIZED TAX BILL TABLE */}
+              <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-emerald-800 text-white font-black uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">S.No</th>
+                      <th className="p-3">Description of Produce</th>
+                      <th className="p-3">Quality Grade</th>
+                      <th className="p-3 text-right">Quantity</th>
+                      <th className="p-3 text-right">Rate / Quintal</th>
+                      <th className="p-3 text-right">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 font-semibold text-gray-800">
+                    <tr>
+                      <td className="p-3 font-black text-center">1</td>
+                      <td className="p-3 font-bold text-gray-900 flex items-center gap-1.5">
+                        <span className="text-base">{billOrder.iconEmoji}</span> {billOrder.cropName}
+                      </td>
+                      <td className="p-3 text-emerald-800 font-bold">{billOrder.qualityGrade || "Grade A Premium"}</td>
+                      <td className="p-3 text-right font-black">{billOrder.quantityQuintals} Quintals</td>
+                      <td className="p-3 text-right">₹{billOrder.pricePerQuintal.toLocaleString("en-IN")}</td>
+                      <td className="p-3 text-right font-black">₹{billOrder.subtotal.toLocaleString("en-IN")}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
+
+              {/* 4. FINANCIAL SUMMARY & GST BREAKDOWN */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 text-xs pt-2">
+                <div className="space-y-1 text-gray-600 font-medium">
+                  <div>• Payment Method: <strong>{billOrder.paymentMethod || "Cash on Delivery / Direct Bank"}</strong></div>
+                  <div>• GST Exempt: <strong>Agricultural Raw Produce (0% CGST / SGST)</strong></div>
+                  <div>• Guarantee: <strong>100% Direct Farmer Settlement Guarantee</strong></div>
+                </div>
+
+                <div className="w-full sm:w-72 bg-emerald-900 text-white p-4 rounded-2xl space-y-1.5 shadow-lg">
+                  <div className="flex justify-between text-emerald-200">
+                    <span>Subtotal:</span>
+                    <span>₹{billOrder.subtotal.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-200">
+                    <span>Freight Transport:</span>
+                    <span>₹{billOrder.deliveryFee}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-200">
+                    <span>GST (0% Exempt):</span>
+                    <span>₹0</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-emerald-700 text-base font-black text-white">
+                    <span>Grand Total Paid:</span>
+                    <span className="text-yellow-300">₹{billOrder.totalPrice.toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. AUTHORIZED DIGITAL GUARANTEE STAMP */}
+              <div className="border-t border-gray-200 pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-gray-500 font-bold gap-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>Digitally Generated & Certified Tax Receipt by Developer Uday Pratap Singh Chauhan</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <Printer className="w-4 h-4" /> Print Official Bill
+                  </button>
+
+                  <button
+                    onClick={() => setBillOrder(null)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 font-black rounded-xl text-xs"
+                  >
+                    Close Bill
+                  </button>
+                </div>
+              </div>
+
             </motion.div>
           </div>
         )}

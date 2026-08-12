@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   PlusCircle, ClipboardList, CheckCircle2, Phone, MessageSquare, 
-  Clock, Check, Truck, XCircle, ShieldCheck, MapPin, ArrowRightLeft, Sprout, Eye, X, Info, Calendar, Award, Receipt, DollarSign, Edit3, Trash2, Save, Sparkles, AlertCircle
+  Clock, Check, Truck, XCircle, ShieldCheck, MapPin, ArrowRightLeft, Sprout, Eye, X, Info, Calendar, Award, Receipt, DollarSign, Edit3, Trash2, Save, Sparkles, AlertCircle, Lock, LogIn, RefreshCw, User, ShieldAlert, PackageCheck
 } from "lucide-react";
 import Link from "next/link";
 import { ALL_INDIAN_STATES_AND_UTS, FarmerCropListing, BuyerOrderRequest } from "@/app/marketplace/page";
@@ -20,7 +20,7 @@ const INITIAL_LISTINGS: FarmerCropListing[] = [
     whatsapp: "919822145678",
     state: "Maharashtra",
     district: "Pune",
-    village: "Baramati",
+    village: "Baramati APMC Mandi",
     pricePerQuintal: 2550,
     availableQuantityQuintals: 45,
     qualityGrade: "Organic Certified",
@@ -115,10 +115,17 @@ const CATEGORIES = [
 ];
 
 export default function FarmerSellerPortalPage() {
-  const [activeTab, setActiveTab] = useState<"post" | "orders" | "my_listings">("my_listings");
+  const [activeTab, setActiveTab] = useState<"my_listings" | "orders" | "post">("orders");
   const [listings, setListings] = useState<FarmerCropListing[]>(INITIAL_LISTINGS);
   const [orders, setOrders] = useState<BuyerOrderRequest[]>(INITIAL_ORDERS);
   
+  // FARMER ACCOUNT PRIVACY & AUTHENTICATION STATE
+  const [farmerPhoneInput, setFarmerPhoneInput] = useState("");
+  const [farmerNameInput, setFarmerNameInput] = useState("");
+  const [loggedInFarmerPhone, setLoggedInFarmerPhone] = useState<string | null>(null);
+  const [loggedInFarmerName, setLoggedInFarmerName] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   // Modals state
   const [inspectingCrop, setInspectingCrop] = useState<FarmerCropListing | null>(null);
   const [editingCrop, setEditingCrop] = useState<FarmerCropListing | null>(null);
@@ -155,6 +162,25 @@ export default function FarmerSellerPortalPage() {
   const [editImageUrl, setEditImageUrl] = useState("");
 
   useEffect(() => {
+    // Restore Logged In Farmer Identity
+    const savedPhone = localStorage.getItem("agropulse_farmer_phone");
+    const savedName = localStorage.getItem("agropulse_farmer_name");
+    if (savedPhone) {
+      setLoggedInFarmerPhone(savedPhone);
+      setNewPhone(savedPhone);
+    } else {
+      // Default initial farmer identity
+      setLoggedInFarmerPhone("+91 98221 45678");
+      setNewPhone("+91 98221 45678");
+    }
+    if (savedName) {
+      setLoggedInFarmerName(savedName);
+      setNewFarmerName(savedName);
+    } else {
+      setLoggedInFarmerName("Rameshwar Patil");
+      setNewFarmerName("Rameshwar Patil");
+    }
+
     const savedListings = localStorage.getItem("agropulse_farmer_listings");
     if (savedListings) {
       try {
@@ -171,6 +197,52 @@ export default function FarmerSellerPortalPage() {
       } catch (e) { console.error(e); }
     }
   }, []);
+
+  const handleFarmerLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!farmerPhoneInput.trim()) {
+      alert("Please enter your registered farmer mobile phone number.");
+      return;
+    }
+
+    const cleanPhone = farmerPhoneInput.startsWith("+") ? farmerPhoneInput : `+91 ${farmerPhoneInput.trim()}`;
+    const name = farmerNameInput.trim() || "Verified Farmer Seller";
+
+    setLoggedInFarmerPhone(cleanPhone);
+    setLoggedInFarmerName(name);
+    setNewPhone(cleanPhone);
+    setNewFarmerName(name);
+
+    localStorage.setItem("agropulse_farmer_phone", cleanPhone);
+    localStorage.setItem("agropulse_farmer_name", name);
+    setShowAuthModal(false);
+  };
+
+  // PRIVACY SCOPED FARMER ORDERS (FARMER ONLY SEES ORDERS RECEIVED FOR THEIR OWN CROPS)
+  const myPrivateFarmerOrders = useMemo(() => {
+    if (!loggedInFarmerPhone) return [];
+    const cleanPhone = loggedInFarmerPhone.replace(/\D/g, "");
+
+    return orders.filter(o => {
+      const orderFarmerPhoneClean = (o.farmerPhone || "").replace(/\D/g, "");
+      const isPhoneMatch = orderFarmerPhoneClean.length > 5 && (orderFarmerPhoneClean === cleanPhone || orderFarmerPhoneClean.slice(-10) === cleanPhone.slice(-10));
+      const isNameMatch = loggedInFarmerName && o.farmerName && o.farmerName.toLowerCase().includes(loggedInFarmerName.toLowerCase());
+      return isPhoneMatch || isNameMatch;
+    });
+  }, [orders, loggedInFarmerPhone, loggedInFarmerName]);
+
+  // PRIVACY SCOPED FARMER CROP LISTINGS (FARMER ONLY SEES LISTINGS CREATED BY THEM)
+  const myPrivateListings = useMemo(() => {
+    if (!loggedInFarmerPhone) return listings;
+    const cleanPhone = loggedInFarmerPhone.replace(/\D/g, "");
+
+    return listings.filter(l => {
+      const listingPhoneClean = (l.phone || "").replace(/\D/g, "");
+      const isPhoneMatch = listingPhoneClean.length > 5 && (listingPhoneClean === cleanPhone || listingPhoneClean.slice(-10) === cleanPhone.slice(-10));
+      const isNameMatch = loggedInFarmerName && l.farmerName && l.farmerName.toLowerCase().includes(loggedInFarmerName.toLowerCase());
+      return isPhoneMatch || isNameMatch;
+    });
+  }, [listings, loggedInFarmerPhone, loggedInFarmerName]);
 
   const openEditModal = (crop: FarmerCropListing) => {
     setEditingCrop(crop);
@@ -217,8 +289,80 @@ export default function FarmerSellerPortalPage() {
     localStorage.setItem("agropulse_farmer_listings", JSON.stringify(updated));
   };
 
+  const handleCreateListing = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCropName || !newPrice || !newQuantity || !newDistrict || !newVillage) {
+      alert("Please fill in all required fields to list your crop.");
+      return;
+    }
+
+    const newListing: FarmerCropListing = {
+      id: `lst-${Date.now()}`,
+      cropName: newCropName,
+      category: newCategory,
+      iconEmoji: newIconEmoji || "🌾",
+      farmerName: newFarmerName || loggedInFarmerName || "Verified Farmer",
+      phone: newPhone || loggedInFarmerPhone || "+91 98221 45678",
+      whatsapp: (newPhone || loggedInFarmerPhone || "9822145678").replace(/\D/g, ""),
+      state: newState,
+      district: newDistrict,
+      village: newVillage,
+      pricePerQuintal: Number(newPrice),
+      availableQuantityQuintals: Number(newQuantity),
+      qualityGrade: newQuality,
+      deliveryOption: newDelivery,
+      rating: 4.9,
+      harvestDate: "Fresh Crop Harvest",
+      description: newDescription || "Direct APMC Mandi benchmarked farmer produce. Fresh harvest.",
+      imageUrl: newImageUrl || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=600&q=80",
+      createdAt: "Just now",
+      apmcMandiVerified: true
+    };
+
+    const updatedListings = [newListing, ...listings];
+    setListings(updatedListings);
+    localStorage.setItem("agropulse_farmer_listings", JSON.stringify(updatedListings));
+
+    setPostSuccess(true);
+    setTimeout(() => {
+      setPostSuccess(false);
+      setActiveTab("my_listings");
+    }, 1500);
+
+    // Reset Form
+    setNewCropName("");
+    setNewPrice("");
+    setNewQuantity("");
+    setNewDistrict("");
+    setNewVillage("");
+    setNewDescription("");
+    setNewImageUrl("");
+  };
+
+  // Update Status of Received Order
+  const handleUpdateOrderStatus = (orderId: string, newStatus: BuyerOrderRequest["status"]) => {
+    let cancelReason: string | undefined = undefined;
+    if (newStatus === "Cancelled by Farmer") {
+      cancelReason = prompt("Enter reason for order cancellation:") || "Stock depleted or harvest affected.";
+    }
+
+    const updated = orders.map(o => {
+      if (o.orderId === orderId) {
+        return {
+          ...o,
+          status: newStatus,
+          cancellationReason: cancelReason || o.cancellationReason
+        };
+      }
+      return o;
+    });
+
+    setOrders(updated);
+    localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updated));
+  };
+
   const filteredOrders = useMemo(() => {
-    let list = orders.filter(o => {
+    let list = myPrivateFarmerOrders.filter(o => {
       const matchStatus = statusFilter === "All" || o.status === statusFilter;
       const matchMonth = monthFilter === "All" || (o.orderDate && o.orderDate.toLowerCase().includes(monthFilter.toLowerCase()));
       return matchStatus && matchMonth;
@@ -231,319 +375,717 @@ export default function FarmerSellerPortalPage() {
     }
 
     return list;
-  }, [orders, statusFilter, monthFilter, orderSort]);
-
-  const monthWiseSalesStats = useMemo(() => {
-    const months = ["July 2026", "June 2026", "May 2026", "April 2026"];
-    return months.map(m => {
-      const mOrders = orders.filter(o => o.orderDate && o.orderDate.toLowerCase().includes(m.toLowerCase()));
-      const totalRevenue = mOrders.filter(o => !o.status.includes("Cancelled")).reduce((sum, o) => sum + o.totalPrice, 0);
-      return {
-        monthName: m,
-        count: mOrders.length,
-        totalRevenue
-      };
-    });
-  }, [orders]);
+  }, [myPrivateFarmerOrders, statusFilter, monthFilter, orderSort]);
 
   const orderStats = useMemo(() => {
-    const activeOrders = orders.filter(o => !o.status.includes("Cancelled"));
-    const totalLifetimeRevenue = activeOrders.reduce((sum, o) => sum + o.totalPrice, 0);
-    const pendingCount = orders.filter(o => o.status === "Pending").length;
-    const acceptedCount = orders.filter(o => o.status === "Accepted").length;
-    const dispatchedCount = orders.filter(o => o.status === "Dispatched").length;
-    const completedCount = orders.filter(o => o.status === "Completed").length;
-    return { totalLifetimeRevenue, pendingCount, acceptedCount, dispatchedCount, completedCount, totalOrders: orders.length };
-  }, [orders]);
+    const activeOrders = myPrivateFarmerOrders.filter(o => !o.status.includes("Cancelled"));
+    const totalEarnings = activeOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+    const pendingCount = myPrivateFarmerOrders.filter(o => o.status === "Pending").length;
+    const acceptedCount = myPrivateFarmerOrders.filter(o => o.status === "Accepted").length;
+    const dispatchedCount = myPrivateFarmerOrders.filter(o => o.status === "Dispatched").length;
+    const completedCount = myPrivateFarmerOrders.filter(o => o.status === "Completed").length;
 
-  const handlePostCrop = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCropName || !newFarmerName || !newPhone || !newPrice || !newQuantity) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-
-    const cleanPhone = newPhone.replace(/\D/g, "");
-    const newListing: FarmerCropListing = {
-      id: `lst-${Date.now()}`,
-      cropName: newCropName,
-      category: newCategory,
-      iconEmoji: newIconEmoji,
-      farmerName: newFarmerName,
-      phone: newPhone.startsWith("+") ? newPhone : `+91 ${newPhone}`,
-      whatsapp: cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone,
-      state: newState,
-      district: newDistrict || "Primary District",
-      village: newVillage || "Farm Village",
-      pricePerQuintal: Number(newPrice),
-      availableQuantityQuintals: Number(newQuantity),
-      qualityGrade: newQuality,
-      deliveryOption: newDelivery,
-      rating: 5.0,
-      harvestDate: new Date().toISOString().split("T")[0],
-      description: newDescription || "Fresh high-quality crop directly harvested from farm.",
-      imageUrl: newImageUrl || "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80",
-      createdAt: "Just now",
-      moistureContent: "11.5% Standard",
-      soilType: "Natural Fertile Soil"
+    return { 
+      totalEarnings, 
+      pendingCount, 
+      acceptedCount, 
+      dispatchedCount, 
+      completedCount, 
+      totalOrders: myPrivateFarmerOrders.length 
     };
+  }, [myPrivateFarmerOrders]);
 
-    const updated = [newListing, ...listings];
-    setListings(updated);
-    localStorage.setItem("agropulse_farmer_listings", JSON.stringify(updated));
-
-    setPostSuccess(true);
-    setTimeout(() => {
-      setPostSuccess(false);
-      setActiveTab("my_listings");
-      setNewCropName(""); setNewPrice(""); setNewQuantity(""); setNewDescription(""); setNewImageUrl("");
-    }, 2000);
-  };
-
-  const handleUpdateOrderStatus = (orderId: string, newStatus: BuyerOrderRequest["status"]) => {
-    let reason: string | undefined = undefined;
-    if (newStatus.includes("Cancelled")) {
-      reason = prompt("Enter reason for cancelling/rejecting this order request:") || "Cancelled by Farmer";
-    }
-
-    const updated = orders.map(o => o.orderId === orderId ? { ...o, status: newStatus, cancellationReason: reason } : o);
-    setOrders(updated);
-    localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updated));
-    
-    if (inspectingOrder && inspectingOrder.orderId === orderId) {
-      setInspectingOrder(prev => prev ? { ...prev, status: newStatus, cancellationReason: reason } : null);
+  const getOrderCardStyles = (status: BuyerOrderRequest["status"]) => {
+    switch (status) {
+      case "Pending":
+        return {
+          border: "border-2 border-amber-400/60 dark:border-amber-500/40",
+          headerBg: "bg-gradient-to-r from-amber-500 to-amber-600 text-white",
+          badgeBg: "bg-amber-100 text-amber-900 border-amber-300",
+          icon: <Clock className="w-4 h-4 text-amber-100 animate-pulse" />,
+          label: "⏳ Pending Confirmation"
+        };
+      case "Accepted":
+        return {
+          border: "border-2 border-blue-500/60 dark:border-blue-500/40",
+          headerBg: "bg-gradient-to-r from-blue-600 to-indigo-600 text-white",
+          badgeBg: "bg-blue-100 text-blue-900 border-blue-300",
+          icon: <CheckCircle2 className="w-4 h-4 text-blue-100" />,
+          label: "🔵 Accepted by You"
+        };
+      case "Dispatched":
+        return {
+          border: "border-2 border-purple-500/60 dark:border-purple-500/40",
+          headerBg: "bg-gradient-to-r from-purple-600 to-indigo-700 text-white",
+          badgeBg: "bg-purple-100 text-purple-900 border-purple-300",
+          icon: <Truck className="w-4 h-4 text-purple-100 animate-bounce" />,
+          label: "🚚 Dispatched — En Route"
+        };
+      case "Completed":
+        return {
+          border: "border-2 border-emerald-500/60 dark:border-emerald-500/40",
+          headerBg: "bg-gradient-to-r from-emerald-600 to-green-700 text-white",
+          badgeBg: "bg-emerald-100 text-emerald-900 border-emerald-300",
+          icon: <PackageCheck className="w-4 h-4 text-emerald-100" />,
+          label: "✅ Completed & Delivered"
+        };
+      case "Cancelled by Farmer":
+      case "Cancelled by Buyer":
+      default:
+        return {
+          border: "border-2 border-red-300 dark:border-red-900/50",
+          headerBg: "bg-gradient-to-r from-red-600 to-rose-700 text-white",
+          badgeBg: "bg-red-100 text-red-900 border-red-300",
+          icon: <XCircle className="w-4 h-4 text-red-100" />,
+          label: "❌ Cancelled"
+        };
     }
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 font-sans max-w-7xl mx-auto pt-[78px]">
+    <div className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 pt-[84px] font-sans">
       
-      {/* Farmer Seller Hero Header */}
-      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-emerald-900 via-green-800 to-teal-900 text-white p-6 md:p-8 rounded-3xl shadow-xl border-2 border-emerald-500/40">
+      {/* Farmer Seller Header Bar with Identity & Security Status */}
+      <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md w-full">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-yellow-400 text-emerald-950 text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> Real Farmer Direct Sales Desk
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" /> APMC Verified Farmer Desk
             </span>
-            <span className="text-xs text-emerald-200 font-semibold">• Manage Active Crops & Buyer Orders</span>
+            <span className="text-xs text-gray-400 font-semibold">• Encrypted Seller Order Management</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2.5">
-            <Sprout className="w-8 h-8 text-yellow-300 shrink-0" />
-            Farmer Seller Desk & Active Crop Manager
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2.5">
+            <Sprout className="w-8 h-8 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            Farmer Seller & Order Management Desk
           </h1>
-          <p className="text-emerald-100 mt-1 text-xs md:text-sm font-medium max-w-2xl">
-            Publish harvest online, edit live mandi prices & stock, manage received purchase orders, and sell directly to customers across India.
-          </p>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-          <div className="flex bg-black/40 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 w-full md:w-auto justify-between">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          {/* FARMER ACCOUNT PRIVACY DESK STATUS */}
+          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 p-2 px-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800">
+            <User className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="text-left text-xs">
+              <span className="text-[10px] text-gray-400 font-bold block">Logged In Seller:</span>
+              <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">
+                {loggedInFarmerName || "Rameshwar Patil"} ({loggedInFarmerPhone || "+91 98221..."})
+              </strong>
+            </div>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="ml-2 px-2.5 py-1 bg-emerald-600 text-white rounded-xl text-[10px] font-black hover:bg-emerald-700 transition-all flex items-center gap-1"
+            >
+              <RefreshCw className="w-3 h-3" /> Switch
+            </button>
+          </div>
+
+          <div className="flex bg-gray-100 dark:bg-white/10 p-1.5 rounded-2xl">
+            <button
+              onClick={() => setActiveTab("orders")}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                activeTab === "orders" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+              }`}
+            >
+              <ClipboardList className="w-4 h-4" /> Received Orders ({myPrivateFarmerOrders.length})
+            </button>
+
             <button
               onClick={() => setActiveTab("my_listings")}
               className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                activeTab === "my_listings" ? "bg-yellow-400 text-emerald-950 shadow-md" : "text-emerald-100 hover:text-white"
+                activeTab === "my_listings" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
               }`}
             >
-              <Sprout className="w-4 h-4" /> My Active Crops ({listings.length})
+              <Sprout className="w-4 h-4" /> My Active Crops ({myPrivateListings.length})
             </button>
 
             <button
               onClick={() => setActiveTab("post")}
               className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                activeTab === "post" ? "bg-yellow-400 text-emerald-950 shadow-md" : "text-emerald-100 hover:text-white"
+                activeTab === "post" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
               }`}
             >
-              <PlusCircle className="w-4 h-4" /> Post New Crop
-            </button>
-            
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 relative ${
-                activeTab === "orders" ? "bg-yellow-400 text-emerald-950 shadow-md" : "text-emerald-100 hover:text-white"
-              }`}
-            >
-              <ClipboardList className="w-4 h-4" /> Buyer Orders ({orders.length})
-              {orderStats.pendingCount > 0 && (
-                <span className="bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
-                  {orderStats.pendingCount}
-                </span>
-              )}
+              <PlusCircle className="w-4 h-4" /> Sell New Crop
             </button>
           </div>
         </div>
       </header>
 
-      {/* TAB 3: FARMER'S MY ACTIVE LISTINGS (WITH EDIT CROP OPTION & ELEVATED UI/UX) */}
-      {activeTab === "my_listings" && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-emerald-500/30 shadow-md gap-4">
-            <div>
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <Sprout className="w-5 h-5 text-emerald-600" />
-                Active Crop Listings ({listings.length})
-              </h3>
-              <p className="text-xs text-gray-400 font-medium mt-0.5">Real-time crops published in the buyer marketplace. Click <strong>"Edit Crop"</strong> to update prices or stock anytime.</p>
-            </div>
-            <button
-              onClick={() => setActiveTab("post")}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 shadow-md transition-all"
-            >
-              <PlusCircle className="w-4 h-4" /> Add New Harvest Listing
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {listings.map((item) => (
-              <motion.div 
-                key={item.id} 
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-[#1a1b23] border-2 border-gray-200 dark:border-white/10 hover:border-emerald-500 dark:hover:border-emerald-400 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  {/* Crop Image Header with Edit & Quality Badges */}
-                  <div className="relative h-48 w-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.cropName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" /> {item.qualityGrade}
-                    </span>
-
-                    <button
-                      onClick={() => openEditModal(item)}
-                      className="absolute top-3 right-3 bg-yellow-400 hover:bg-yellow-300 text-emerald-950 font-black text-xs px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-1 transition-all"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" /> Edit Crop
-                    </button>
-                  </div>
-
-                  {/* Card Body */}
-                  <div className="p-5 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-black text-gray-900 dark:text-white text-base leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                          {item.cropName}
-                        </h4>
-                        <div className="text-xs text-gray-400 font-bold mt-0.5 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400" /> {item.village}, {item.district}, {item.state}
-                        </div>
-                      </div>
-                      <span className="text-3xl p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border">{item.iconEmoji}</span>
-                    </div>
-
-                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed font-medium">
-                      {item.description}
-                    </p>
-
-                    {/* Rates & Stock Banner */}
-                    <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900/40 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">Mandi Rate</span>
-                        <div className="text-base font-black text-emerald-700 dark:text-emerald-400">
-                          ₹{item.pricePerQuintal.toLocaleString("en-IN")}<span className="text-[10px] font-bold text-gray-500">/quintal</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] font-black uppercase text-gray-400">Available Stock</span>
-                        <div className="text-sm font-black text-gray-900 dark:text-white">{item.availableQuantityQuintals} Quintals</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Action Footer */}
-                <div className="p-5 pt-0 grid grid-cols-3 gap-2">
-                  <button 
-                    onClick={() => openEditModal(item)}
-                    className="col-span-1 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-950/40 text-yellow-900 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-800 text-xs font-black py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 text-yellow-600" /> Edit
-                  </button>
-
-                  <button 
-                    onClick={() => setInspectingCrop(item)}
-                    className="col-span-1 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 text-xs font-black py-2.5 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-emerald-600" /> Inspect
-                  </button>
-
-                  <button 
-                    onClick={() => handleDeleteCrop(item.id)}
-                    className="col-span-1 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/40 text-xs font-black py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-red-600" /> Remove
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* EDIT CROP MODAL */}
+      {/* FARMER ACCOUNT AUTHENTICATION MODAL */}
       <AnimatePresence>
-        {editingCrop && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+        {showAuthModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#1a1b23] border-2 border-yellow-400 rounded-3xl max-w-xl w-full p-6 md:p-8 shadow-2xl relative space-y-5 text-gray-900 dark:text-white"
+              className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500 rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl relative space-y-5"
             >
               <button 
-                onClick={() => setEditingCrop(null)}
+                onClick={() => setShowAuthModal(false)}
                 className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full bg-gray-100 dark:bg-white/10"
               >
                 <X className="w-5 h-5" />
               </button>
 
               <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
-                <div className="p-3 bg-yellow-100 dark:bg-yellow-950/60 text-yellow-800 rounded-2xl">
-                  <Edit3 className="w-6 h-6" />
+                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl">
+                  <Lock className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase text-yellow-700 dark:text-yellow-400">Edit Active Crop Listing</span>
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white">Update {editingCrop.cropName}</h3>
+                  <span className="text-[10px] font-black uppercase text-emerald-700">Seller Order Privacy</span>
+                  <h3 className="text-lg font-black text-gray-900 dark:text-white">Farmer Seller Desk Login</h3>
                 </div>
               </div>
 
-              <form onSubmit={handleSaveEditCrop} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Crop Name:</label>
-                    <input
-                      type="text"
-                      required
-                      value={editCropName}
-                      onChange={(e) => setEditCropName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
-                    />
+              <p className="text-xs text-gray-500 font-medium">
+                Enter your registered farmer phone number and name to privately view only orders placed for your crops.
+              </p>
+
+              <form onSubmit={handleFarmerLogin} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Farmer Name:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rameshwar Patil"
+                    value={farmerNameInput}
+                    onChange={(e) => setFarmerNameInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Farmer Mobile Phone Number:</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 9822145678"
+                    value={farmerPhoneInput}
+                    onChange={(e) => setFarmerPhoneInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-600"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
+                >
+                  <LogIn className="w-4 h-4" /> Securely Access My Seller Desk Orders
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* PRIVACY SCOPED RECEIVED ORDERS TAB */}
+      {activeTab === "orders" && (
+        <div className="space-y-6 w-full">
+          
+          {/* STATS OVERVIEW CARDS */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 w-full">
+            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-2xl border-2 border-emerald-500/40 shadow-sm flex flex-col justify-between">
+              <span className="text-[10px] font-black text-gray-400 uppercase">My Total Revenue</span>
+              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">₹{orderStats.totalEarnings.toLocaleString("en-IN")}</div>
+              <span className="text-[10px] text-gray-500 font-bold">{orderStats.totalOrders} Orders Received</span>
+            </div>
+
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Pending" ? "All" : "Pending")}
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Pending" ? "bg-amber-500 text-white border-amber-600 shadow-md" : "bg-white dark:bg-[#1a1b23] border-amber-200 dark:border-amber-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Pending" ? "text-white" : "text-amber-600"}`}>⏳ Pending</span>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Pending" ? "text-white" : "text-amber-500"}`}>{orderStats.pendingCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">Needs Action</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Accepted" ? "All" : "Accepted")}
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Accepted" ? "bg-blue-600 text-white border-blue-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-blue-200 dark:border-blue-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Accepted" ? "text-white" : "text-blue-600"}`}>🔵 Accepted</span>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Accepted" ? "text-white" : "text-blue-600"}`}>{orderStats.acceptedCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">In Processing</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Dispatched" ? "All" : "Dispatched")}
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Dispatched" ? "bg-purple-600 text-white border-purple-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-purple-200 dark:border-purple-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Dispatched" ? "text-white" : "text-purple-600"}`}>🚚 Dispatched</span>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Dispatched" ? "text-white" : "text-purple-600"}`}>{orderStats.dispatchedCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">En Route</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Completed" ? "All" : "Completed")}
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Completed" ? "bg-emerald-600 text-white border-emerald-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-emerald-200 dark:border-emerald-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Completed" ? "text-white" : "text-emerald-600"}`}>✅ Delivered</span>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Completed" ? "text-white" : "text-emerald-600"}`}>{orderStats.completedCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">Completed</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter("All")}
+              className="p-5 rounded-2xl border-2 text-left bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10"
+            >
+              <span className="text-[10px] font-black text-gray-500 uppercase">View All</span>
+              <div className="text-xl font-black text-gray-900 dark:text-white mt-1">{orderStats.totalOrders}</div>
+              <span className="text-[10px] text-gray-400 font-bold">Reset Filters</span>
+            </button>
+          </div>
+
+          {/* PRIVACY SECURITY BANNER */}
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs w-full">
+            <div className="flex items-center gap-2.5">
+              <Lock className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <span className="font-black text-emerald-800 dark:text-emerald-300 block">🔒 Encrypted Farmer Seller Privacy Active</span>
+                <p className="text-emerald-700 dark:text-emerald-400 font-medium">
+                  Showing incoming buyer orders received for seller <strong>{loggedInFarmerName || "Rameshwar Patil"}</strong> ({loggedInFarmerPhone || "+91 98221..."}). Other farmers cannot view your received orders.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-xl font-black text-xs hover:bg-emerald-700 shrink-0"
+            >
+              Switch Seller Account
+            </button>
+          </div>
+
+          {/* ORDERS LIST CONTAINER */}
+          {filteredOrders.length === 0 ? (
+            <div className="bg-white dark:bg-[#1a1b23] border-2 border-dashed border-gray-200 dark:border-white/10 p-12 text-center rounded-3xl space-y-3 w-full">
+              <ClipboardList className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto" />
+              <h4 className="text-base font-extrabold text-gray-900 dark:text-white">No incoming buyer orders for your seller account</h4>
+              <p className="text-xs text-gray-400 font-medium max-w-md mx-auto">
+                No orders have been received under farmer identity <strong>{loggedInFarmerPhone}</strong> yet. List new crops to receive direct buyer orders!
+              </p>
+              <button
+                onClick={() => setActiveTab("post")}
+                className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 transition-all shadow-md"
+              >
+                + List New Produce Crop
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6 w-full">
+              {filteredOrders.map((order) => {
+                const style = getOrderCardStyles(order.status);
+
+                return (
+                  <motion.div
+                    key={order.orderId}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`bg-white dark:bg-[#1a1b23] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all ${style.border} w-full`}
+                  >
+                    {/* CARD HEADER BANNER */}
+                    <div className={`px-6 py-3.5 ${style.headerBg} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-inner`}>
+                      <div className="flex items-center gap-3">
+                        <span className="bg-black/30 text-white font-black text-xs px-2.5 py-1 rounded-lg border border-white/20">
+                          #{order.sequenceNo}
+                        </span>
+                        <span className="font-mono text-xs font-extrabold tracking-wider bg-white/10 px-2.5 py-0.5 rounded-md">
+                          {order.orderId}
+                        </span>
+                        <span className="text-xs font-bold opacity-90 flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" /> Received: {order.orderDate}
+                        </span>
+                      </div>
+
+                      <span className={`text-xs font-black px-3.5 py-1 rounded-xl flex items-center gap-1.5 shadow-sm ${style.badgeBg}`}>
+                        {style.icon}
+                        <span>{style.label}</span>
+                      </span>
+                    </div>
+
+                    {/* CARD BODY */}
+                    <div className="p-6 space-y-5">
+                      
+                      {/* SECTION 1: CROP & BUYER INFO */}
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+                        <div className="flex items-start gap-4">
+                          <div className="text-4xl p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border-2 border-emerald-500/30 shrink-0">
+                            {order.iconEmoji}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-black text-gray-900 dark:text-white">{order.cropName}</h3>
+                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs font-extrabold">
+                              <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                <User className="w-3.5 h-3.5" /> Buyer: <strong>{order.buyerName}</strong>
+                              </span>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                                <Phone className="w-3.5 h-3.5 text-emerald-600" /> {order.buyerPhone}
+                              </span>
+                              <a
+                                href={`https://wa.me/${(order.buyerPhone || "").replace(/\D/g, "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-2 py-0.5 bg-green-100 text-green-800 rounded-md text-[10px] font-black hover:bg-green-200"
+                              >
+                                WhatsApp Buyer
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* TOTAL ORDER VALUE */}
+                        <div className="bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/40 px-5 py-3 rounded-2xl text-right shrink-0">
+                          <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">Order Payable Amount</span>
+                          <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">₹{order.totalPrice.toLocaleString("en-IN")}</div>
+                        </div>
+                      </div>
+
+                      {/* ITEM DETAILS */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 text-xs font-semibold">
+                        <div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Quantity Ordered</span>
+                          <div className="text-sm font-black text-gray-900 dark:text-white mt-0.5">{order.quantityQuintals} Quintals</div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Mandi Rate / Quintal</span>
+                          <div className="text-sm font-black text-gray-900 dark:text-white mt-0.5">₹{order.pricePerQuintal.toLocaleString("en-IN")}</div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Freight Fee</span>
+                          <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">₹{order.deliveryFee}</div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Payment Mode</span>
+                          <div className="text-sm font-black text-gray-900 dark:text-white mt-0.5">{order.paymentMethod || "COD / Direct Bank"}</div>
+                        </div>
+                      </div>
+
+                      {/* DELIVERY ADDRESS & FARMER STATUS ACTIONS */}
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 w-full md:w-auto">
+                          <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Deliver To: <strong>{order.buyerAddress}</strong> (PIN: {order.buyerPincode})</span>
+                        </div>
+
+                        {/* STATUS ACTION BUTTONS FOR FARMER */}
+                        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+                          {order.status === "Pending" && (
+                            <>
+                              <button
+                                onClick={() => handleUpdateOrderStatus(order.orderId, "Accepted")}
+                                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1"
+                              >
+                                <CheckCircle2 className="w-4 h-4" /> Accept Order
+                              </button>
+
+                              <button
+                                onClick={() => handleUpdateOrderStatus(order.orderId, "Cancelled by Farmer")}
+                                className="px-3.5 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold rounded-xl text-xs border border-red-200 transition-all flex items-center gap-1"
+                              >
+                                <XCircle className="w-4 h-4 text-red-600" /> Reject / Cancel
+                              </button>
+                            </>
+                          )}
+
+                          {order.status === "Accepted" && (
+                            <button
+                              onClick={() => handleUpdateOrderStatus(order.orderId, "Dispatched")}
+                              className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                            >
+                              <Truck className="w-4 h-4" /> Mark Dispatched & En Route
+                            </button>
+                          )}
+
+                          {order.status === "Dispatched" && (
+                            <button
+                              onClick={() => handleUpdateOrderStatus(order.orderId, "Completed")}
+                              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                            >
+                              <PackageCheck className="w-4 h-4" /> Mark Order Delivered & Completed
+                            </button>
+                          )}
+
+                          {order.status === "Completed" && (
+                            <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4" /> Transaction Settled & Completed
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PRIVACY SCOPED FARMER ACTIVE LISTINGS TAB */}
+      {activeTab === "my_listings" && (
+        <div className="space-y-6 w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm w-full">
+            <div>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <Sprout className="w-5 h-5 text-emerald-600" />
+                My Active Produce Crop Listings ({myPrivateListings.length})
+              </h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">Manage, update rates, or edit stock for crops listed under your farmer account.</p>
+            </div>
+
+            <button
+              onClick={() => setActiveTab("post")}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5"
+            >
+              <PlusCircle className="w-4 h-4" /> Sell New Crop Listing
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
+            {myPrivateListings.map((crop) => (
+              <div key={crop.id} className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+                <div>
+                  <div className="relative h-48 w-full bg-gray-100 dark:bg-white/5 overflow-hidden">
+                    <img src={crop.imageUrl} alt={crop.cropName} className="w-full h-full object-cover" />
+                    <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-md">
+                      {crop.qualityGrade}
+                    </span>
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Category:</label>
-                    <select
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
-                    >
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                  <div className="p-5 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-extrabold text-gray-900 dark:text-white text-base">{crop.cropName}</h4>
+                        <span className="text-xs text-gray-500 font-bold">{crop.village}, {crop.district}</span>
+                      </div>
+                      <span className="text-2xl">{crop.iconEmoji}</span>
+                    </div>
+
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-2xl flex justify-between items-center text-xs">
+                      <div>
+                        <span className="text-[10px] font-black text-emerald-800 uppercase">Mandi Rate</span>
+                        <div className="text-base font-black text-emerald-700">₹{crop.pricePerQuintal.toLocaleString("en-IN")}/q</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase">Stock</span>
+                        <div className="text-xs font-black text-gray-900 dark:text-white">{crop.availableQuantityQuintals} Q</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-5 pt-0 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => openEditModal(crop)}
+                    className="py-2.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 font-black rounded-xl text-xs hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-emerald-600" /> Edit Listing
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteCrop(crop.id)}
+                    className="py-2.5 bg-red-50 hover:bg-red-100 text-red-700 font-black rounded-xl text-xs transition-colors flex items-center justify-center gap-1 border border-red-200"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-600" /> Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* POST NEW CROP FORM TAB */}
+      {activeTab === "post" && (
+        <div className="max-w-3xl mx-auto bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-xl space-y-6">
+          <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
+            <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl">
+              <PlusCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-emerald-700">APMC Mandi Direct Trade</span>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white">List Produce Crop For Sale</h3>
+            </div>
+          </div>
+
+          {postSuccess ? (
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 p-8 rounded-3xl text-center space-y-3 border-2 border-emerald-500">
+              <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto" />
+              <h3 className="text-xl font-black text-gray-900 dark:text-white">Crop Listed Successfully!</h3>
+              <p className="text-xs text-gray-500 font-medium">Your crop listing is now live in the APMC Mandi Marketplace for buyers across India.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleCreateListing} className="space-y-4 text-xs font-semibold">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">Crop Produce Name:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Organic Wheat (Lokwan)"
+                    value={newCropName}
+                    onChange={(e) => setNewCropName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">Category:</label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                  >
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">Mandi Price per Quintal (₹):</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 2550"
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-600 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">Available Quantity (Quintals):</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 50"
+                    value={newQuantity}
+                    onChange={(e) => setNewQuantity(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">State:</label>
+                  <select
+                    value={newState}
+                    onChange={(e) => setNewState(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                  >
+                    {ALL_INDIAN_STATES_AND_UTS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">District:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Pune"
+                    value={newDistrict}
+                    onChange={(e) => setNewDistrict(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">Mandi / Village Yard:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Baramati Mandi"
+                    value={newVillage}
+                    onChange={(e) => setNewVillage(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-600 dark:text-gray-300 font-bold mb-1">Crop Description:</label>
+                <textarea
+                  rows={3}
+                  placeholder="Describe your produce quality, moisture level, organic certification, harvest date..."
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-medium text-xs"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-xs shadow-md transition-all flex items-center justify-center gap-2 mt-4"
+              >
+                <PlusCircle className="w-4 h-4" /> Publish Live Crop Listing to Marketplace
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+
+      {/* EDIT CROP MODAL */}
+      <AnimatePresence>
+        {editingCrop && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative space-y-5"
+            >
+              <button 
+                onClick={() => setEditingCrop(null)}
+                className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 rounded-full bg-gray-100 dark:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
+                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl">
+                  <Edit3 className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-emerald-700">Edit Active Crop</span>
+                  <h3 className="text-lg font-black text-gray-900 dark:text-white">Update Listing Details</h3>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveEditCrop} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Crop Name:</label>
+                  <input
+                    type="text"
+                    required
+                    value={editCropName}
+                    onChange={(e) => setEditCropName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Selling Price Rate (₹/Quintal):</label>
+                    <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Price per Quintal (₹):</label>
                     <input
                       type="number"
                       required
                       value={editPrice}
                       onChange={(e) => setEditPrice(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-600"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-600"
                     />
                   </div>
 
@@ -554,48 +1096,18 @@ export default function FarmerSellerPortalPage() {
                       required
                       value={editQuantity}
                       onChange={(e) => setEditQuantity(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Quality Grade:</label>
-                    <select
-                      value={editQuality}
-                      onChange={(e: any) => setEditQuality(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
-                    >
-                      <option value="Organic Certified">Organic Certified</option>
-                      <option value="Grade A Premium">Grade A Premium</option>
-                      <option value="Natural Farming">Natural Farming</option>
-                      <option value="Standard Fresh">Standard Fresh</option>
-                      <option value="Export Quality">Export Quality</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Delivery Option:</label>
-                    <select
-                      value={editDelivery}
-                      onChange={(e: any) => setEditDelivery(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
-                    >
-                      <option value="Doorstep Delivery">Doorstep Delivery</option>
-                      <option value="Farmer Location Pickup">Farmer Location Pickup</option>
-                      <option value="Mandi Transport">Mandi Transport</option>
-                    </select>
-                  </div>
-                </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Crop Description:</label>
+                  <label className="block font-bold text-gray-600 dark:text-gray-300 mb-1">Description:</label>
                   <textarea
                     rows={3}
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-medium"
                   />
                 </div>
 
@@ -607,527 +1119,14 @@ export default function FarmerSellerPortalPage() {
                   >
                     Cancel
                   </button>
-
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5"
+                    className="flex-1 py-3 bg-emerald-600 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5"
                   >
-                    <Save className="w-4 h-4" /> Save Updated Listing Details
+                    <Save className="w-4 h-4" /> Save Updated Listing
                   </button>
                 </div>
               </form>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* TAB 1: FARMER POST CROP FORM */}
-      {activeTab === "post" && (
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500/30 rounded-3xl p-6 md:p-8 shadow-xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-white/10">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <PlusCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-black text-gray-900 dark:text-white">Put Your Crop Online for Online Buyers</h2>
-                <p className="text-xs text-gray-400 font-medium mt-0.5">List your harvest directly to customers across India with 0% middleman commission.</p>
-              </div>
-            </div>
-
-            {postSuccess ? (
-              <div className="text-center py-12">
-                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                <h3 className="text-xl font-black text-gray-900 dark:text-white">Crop Listed Online Successfully!</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-2">
-                  Your crop is now live in the Customer Buying Portal. Incoming buyer order requests will appear in your <strong>Received Orders</strong> tab for your manual approval.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handlePostCrop} className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Crop Name & Variety *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Organic Wheat, Red Tomatoes, Basmati Rice"
-                      value={newCropName}
-                      onChange={(e) => setNewCropName(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Category *</label>
-                    <select
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    >
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Farmer Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Your name"
-                      value={newFarmerName}
-                      onChange={(e) => setNewFarmerName(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Phone / WhatsApp Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="e.g. 9822145678"
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Selling Price (₹ per Quintal) *</label>
-                    <input
-                      type="number"
-                      required
-                      placeholder="e.g. 2500"
-                      value={newPrice}
-                      onChange={(e) => setNewPrice(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Available Quantity (Quintals) *</label>
-                    <input
-                      type="number"
-                      required
-                      placeholder="e.g. 50"
-                      value={newQuantity}
-                      onChange={(e) => setNewQuantity(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Select State / UT *</label>
-                    <select
-                      value={newState}
-                      onChange={(e) => setNewState(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    >
-                      {ALL_INDIAN_STATES_AND_UTS.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">District / Mandi Area *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Nashik, Pune, Ludhiana"
-                      value={newDistrict}
-                      onChange={(e) => setNewDistrict(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Quality Grade</label>
-                    <select
-                      value={newQuality}
-                      onChange={(e: any) => setNewQuality(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="Organic Certified">Organic Certified</option>
-                      <option value="Grade A Premium">Grade A Premium</option>
-                      <option value="Natural Farming">Natural Farming</option>
-                      <option value="Standard Fresh">Standard Fresh</option>
-                      <option value="Export Quality">Export Quality</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Delivery Option</label>
-                    <select
-                      value={newDelivery}
-                      onChange={(e: any) => setNewDelivery(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="Doorstep Delivery">Doorstep Delivery</option>
-                      <option value="Farmer Location Pickup">Farmer Location Pickup</option>
-                      <option value="Mandi Transport">Mandi Transport</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Photo Image URL (Optional)</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={newImageUrl}
-                      onChange={(e) => setNewImageUrl(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black text-gray-700 dark:text-gray-300 mb-1">Crop Description & Details</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Describe crop quality, moisture level, organic farming practices, or delivery options..."
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2"
-                >
-                  <PlusCircle className="w-4 h-4" /> Publish Crop Online for Buyers
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: FARMER RECEIVED ORDERS DESK */}
-      {activeTab === "orders" && (
-        <div className="space-y-6">
-          
-          {/* Lifetime Farmer Revenue & Orders Summary Card */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-emerald-500/40 shadow-sm flex flex-col justify-between">
-              <span className="text-xs font-black text-gray-400 uppercase">Total Lifetime Sales Revenue</span>
-              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">₹{orderStats.totalLifetimeRevenue.toLocaleString("en-IN")}</div>
-              <span className="text-[10px] text-gray-400 font-semibold">{orderStats.totalOrders} Total Buyer Requests</span>
-            </div>
-
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-blue-500/40 shadow-sm flex flex-col justify-between">
-              <span className="text-xs font-black text-gray-400 uppercase">🔵 Accepted Orders</span>
-              <div className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{orderStats.acceptedCount} Orders</div>
-              <span className="text-[10px] text-blue-600 dark:text-blue-300 font-bold">Ready for Dispatch</span>
-            </div>
-
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-purple-500/40 shadow-sm flex flex-col justify-between">
-              <span className="text-xs font-black text-gray-400 uppercase">🚚 Dispatched Orders</span>
-              <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">{orderStats.dispatchedCount} Orders</div>
-              <span className="text-[10px] text-purple-600 dark:text-purple-300 font-bold">En Route Transport</span>
-            </div>
-
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-amber-500/40 shadow-sm flex flex-col justify-between">
-              <span className="text-xs font-black text-gray-400 uppercase">⏳ Pending Review</span>
-              <div className="text-2xl font-black text-amber-500 mt-1">{orderStats.pendingCount} Orders</div>
-              <span className="text-[10px] text-amber-600 dark:text-amber-300 font-bold">Awaiting Your Approval</span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-[#1a1b23] border-2 border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
-            <div className="p-5 border-b border-gray-100 dark:border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50/50 dark:bg-white/5">
-              <div>
-                <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-emerald-600" />
-                  Received Buyer Orders ({filteredOrders.length})
-                </h3>
-                <p className="text-xs text-gray-400 font-medium mt-0.5">Filter & sort transactions from newest to oldest or month-wise.</p>
-              </div>
-
-              {/* ENHANCED SORT & MONTH-WISE TRANSACTION CONTROLS */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-400 font-bold">Sort:</span>
-                  <select
-                    value={orderSort}
-                    onChange={(e: any) => setOrderSort(e.target.value)}
-                    className="px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1b23] text-xs font-black text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="newest">🕒 Newest to Oldest (Latest First)</option>
-                    <option value="oldest">⏳ Oldest to Newest</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-400 font-bold">Status:</span>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1b23] text-xs font-black text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="All">All Statuses ({orders.length})</option>
-                    <option value="Pending">⏳ Pending Approval</option>
-                    <option value="Accepted">🔵 Accepted</option>
-                    <option value="Dispatched">🚚 Dispatched</option>
-                    <option value="Completed">✅ Completed</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {filteredOrders.length === 0 ? (
-              <div className="p-12 text-center">
-                <ClipboardList className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200">No orders found matching status "{statusFilter}"</h4>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100 dark:divide-white/5">
-                {filteredOrders.map((order) => (
-                  <div key={order.orderId} className={`p-5 md:p-6 transition-colors ${
-                    order.status === "Pending" ? "bg-amber-50/20 dark:bg-amber-950/10" : "hover:bg-gray-50/50 dark:hover:bg-white/5"
-                  }`}>
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                      
-                      <div className="flex items-center gap-3">
-                        <span className="w-9 h-9 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-black text-sm flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
-                          #{order.sequenceNo}
-                        </span>
-
-                        <span className="text-3xl p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                          {order.iconEmoji}
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-gray-400 uppercase">{order.orderId}</span>
-                            <span className="text-xs text-gray-400 font-semibold">• {order.orderDate}</span>
-                          </div>
-                          <h4 className="text-base font-black text-gray-900 dark:text-white mt-0.5">
-                            {order.cropName}
-                          </h4>
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className={`text-xs font-black px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm ${
-                          order.status === "Pending" ? "bg-amber-500 text-white animate-pulse" :
-                          order.status === "Accepted" ? "bg-blue-600 text-white" :
-                          order.status === "Dispatched" ? "bg-purple-600 text-white" :
-                          order.status === "Completed" ? "bg-emerald-600 text-white" :
-                          "bg-red-600 text-white"
-                        }`}>
-                          {order.status === "Pending" && <Clock className="w-3.5 h-3.5" />}
-                          {order.status === "Accepted" && <Check className="w-3.5 h-3.5" />}
-                          {order.status === "Dispatched" && <Truck className="w-3.5 h-3.5" />}
-                          {order.status === "Completed" && <CheckCircle2 className="w-3.5 h-3.5" />}
-                          {order.status.includes("Cancelled") && <XCircle className="w-3.5 h-3.5" />}
-                          
-                          {order.status === "Pending" ? "⏳ Pending Farmer Approval" :
-                           order.status === "Accepted" ? "🔵 Accepted Order" :
-                           order.status === "Dispatched" ? "🚚 Dispatched Transport" :
-                           order.status === "Completed" ? "✅ Completed & Delivered" :
-                           `Status: ${order.status}`}
-                        </span>
-                      </div>
-
-                    </div>
-
-                    <div 
-                      onClick={() => setInspectingOrder(order)}
-                      className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5 mb-4 text-xs cursor-pointer hover:border-emerald-400 transition-colors"
-                    >
-                      <div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Buyer Info</span>
-                        <div className="font-black text-gray-900 dark:text-white mt-1">{order.buyerName}</div>
-                        <div className="text-gray-500 font-semibold mt-0.5">{order.buyerPhone}</div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Delivery Address & Pincode</span>
-                        <div className="font-semibold text-gray-700 dark:text-gray-300 mt-1">{order.buyerAddress}</div>
-                        {order.buyerPincode && <div className="text-emerald-600 font-bold">Pincode: {order.buyerPincode}</div>}
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Quantity Bought</span>
-                        <div className="font-black text-gray-900 dark:text-white mt-1">{order.quantityQuintals} Quintals</div>
-                        <div className="text-gray-400 font-semibold">@ ₹{order.pricePerQuintal.toLocaleString("en-IN")}/q</div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Order Revenue</span>
-                        <div className="font-black text-emerald-700 dark:text-emerald-400 text-sm mt-1">
-                          ₹{order.totalPrice.toLocaleString("en-IN")}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* MANUAL FARMER ACTION BUTTONS */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-white/5">
-                      <div className="flex items-center gap-2">
-                        {order.status === "Pending" && (
-                          <>
-                            <button
-                              onClick={() => handleUpdateOrderStatus(order.orderId, "Accepted")}
-                              className="bg-emerald-600 text-white font-black px-4 py-2 rounded-xl text-xs hover:bg-emerald-700 transition-all shadow-md flex items-center gap-1.5"
-                            >
-                              <Check className="w-4 h-4" /> Accept Order
-                            </button>
-                            <button
-                              onClick={() => handleUpdateOrderStatus(order.orderId, "Cancelled by Farmer")}
-                              className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 font-bold px-3 py-2 rounded-xl text-xs hover:bg-red-100 transition-colors flex items-center gap-1"
-                            >
-                              <XCircle className="w-3.5 h-3.5" /> Cancel / Reject
-                            </button>
-                          </>
-                        )}
-
-                        {order.status === "Accepted" && (
-                          <button
-                            onClick={() => handleUpdateOrderStatus(order.orderId, "Dispatched")}
-                            className="bg-purple-600 text-white font-black px-4 py-2 rounded-xl text-xs hover:bg-purple-700 transition-all shadow-md flex items-center gap-1.5"
-                          >
-                            <Truck className="w-4 h-4" /> Dispatch Crop Transport
-                          </button>
-                        )}
-
-                        {order.status === "Dispatched" && (
-                          <button
-                            onClick={() => handleUpdateOrderStatus(order.orderId, "Completed")}
-                            className="bg-emerald-600 text-white font-black px-4 py-2 rounded-xl text-xs hover:bg-emerald-700 transition-all shadow-md flex items-center gap-1.5"
-                          >
-                            <CheckCircle2 className="w-4 h-4" /> Mark Order Completed
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`https://wa.me/${order.buyerPhone.replace(/\D/g, "")}?text=Hi%20${order.buyerName},%20regarding%20your%20order%20%23${order.sequenceNo}%20(${order.orderId})%20for%20${order.cropName}.`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 hover:bg-emerald-100"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" /> WhatsApp Buyer
-                        </a>
-                      </div>
-                    </div>
-
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* INSPECT CROP MODAL FOR FARMER DESK LISTINGS */}
-      <AnimatePresence>
-        {inspectingCrop && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#1a1b23] border border-gray-100 dark:border-white/10 rounded-3xl max-w-2xl w-full my-8 overflow-hidden shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setInspectingCrop(null)}
-                className="absolute top-4 right-4 z-20 text-white bg-black/60 hover:bg-black/90 p-2 rounded-full backdrop-blur-sm transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="relative h-64 w-full bg-gray-100 dark:bg-white/5">
-                <img 
-                  src={inspectingCrop.imageUrl} 
-                  alt={inspectingCrop.cropName} 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                <div className="absolute bottom-4 left-6 right-6 flex justify-between items-end">
-                  <div>
-                    <span className="bg-emerald-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-lg shadow-md mb-2 inline-flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" /> {inspectingCrop.qualityGrade}
-                    </span>
-                    <h2 className="text-2xl font-black text-white leading-tight flex items-center gap-2">
-                      {inspectingCrop.cropName} <span className="text-3xl">{inspectingCrop.iconEmoji}</span>
-                    </h2>
-                    <p className="text-xs text-emerald-300 font-bold mt-0.5">
-                      Farmer: {inspectingCrop.farmerName} • {inspectingCrop.village}, {inspectingCrop.district}, {inspectingCrop.state}
-                    </p>
-                  </div>
-
-                  <div className="text-right bg-black/60 backdrop-blur-md p-3 rounded-2xl border border-white/20">
-                    <span className="text-[10px] text-gray-300 uppercase block font-bold">Farmer Rate</span>
-                    <div className="text-xl font-black text-emerald-400">
-                      ₹{inspectingCrop.pricePerQuintal.toLocaleString("en-IN")}
-                      <span className="text-xs font-semibold text-gray-300">/quintal</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 md:p-8 space-y-6">
-                <div>
-                  <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider mb-2 flex items-center gap-1.5">
-                    <Info className="w-4 h-4 text-emerald-600" /> Crop Description & Quality Summary
-                  </h3>
-                  <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed font-medium bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5">
-                    {inspectingCrop.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-gray-50 dark:bg-white/5 p-3.5 rounded-2xl border border-gray-100 dark:border-white/5">
-                    <span className="text-[10px] font-extrabold text-gray-400 uppercase flex items-center gap-1">
-                      <Sprout className="w-3 h-3 text-emerald-500" /> Category
-                    </span>
-                    <div className="font-extrabold text-xs text-gray-900 dark:text-white mt-1">{inspectingCrop.category}</div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-white/5 p-3.5 rounded-2xl border border-gray-100 dark:border-white/5">
-                    <span className="text-[10px] font-extrabold text-gray-400 uppercase flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-blue-500" /> Harvest Date
-                    </span>
-                    <div className="font-extrabold text-xs text-gray-900 dark:text-white mt-1">{inspectingCrop.harvestDate}</div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-white/5 p-3.5 rounded-2xl border border-gray-100 dark:border-white/5">
-                    <span className="text-[10px] font-extrabold text-gray-400 uppercase flex items-center gap-1">
-                      <Award className="w-3 h-3 text-amber-500" /> Moisture Level
-                    </span>
-                    <div className="font-extrabold text-xs text-gray-900 dark:text-white mt-1">{inspectingCrop.moistureContent || "11-12% Optimal"}</div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-white/5 p-3.5 rounded-2xl border border-gray-100 dark:border-white/5">
-                    <span className="text-[10px] font-extrabold text-gray-400 uppercase flex items-center gap-1">
-                      <Truck className="w-3.5 h-3.5 text-purple-500" /> Logistics
-                    </span>
-                    <div className="font-extrabold text-xs text-gray-900 dark:text-white mt-1">{inspectingCrop.deliveryOption}</div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setInspectingCrop(null); openEditModal(inspectingCrop); }}
-                    className="flex-1 py-3 bg-yellow-400 hover:bg-yellow-300 text-emerald-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md"
-                  >
-                    <Edit3 className="w-4 h-4" /> Edit This Listing
-                  </button>
-                  <button
-                    onClick={() => setInspectingCrop(null)}
-                    className="px-5 py-3 bg-gray-200 text-gray-800 font-bold rounded-xl text-xs"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
             </motion.div>
           </div>
         )}

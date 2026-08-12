@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Stethoscope, Star, Calendar, MessageSquare, Video, PhoneCall, X, 
   CheckCircle, Search, ShieldCheck, UserCheck, AlertCircle, FileText, 
-  Award, Lock, PlusCircle, CheckCircle2, Clock, ThumbsUp, RefreshCw, Send, Paperclip, CreditCard, Smartphone, Building, QrCode, BellRing, ExternalLink, ArrowRight, LogIn, UserPlus, ShieldAlert, KeyRound, Unlock
+  Award, Lock, PlusCircle, CheckCircle2, Clock, ThumbsUp, RefreshCw, Send, Paperclip, CreditCard, Smartphone, Building, QrCode, BellRing, ExternalLink, ArrowRight, LogIn, UserPlus, ShieldAlert, KeyRound, Unlock, Shield, Sparkles, User
 } from "lucide-react";
 
 export interface RealExpert {
@@ -105,18 +105,19 @@ export function validateAadhaarNumber(aadhaar: string): { isValid: boolean; mess
   return { isValid: true, message: "✓ Aadhaar Verified via Official Verhoeff Checksum!" };
 }
 
-// NO ARTIFICIAL BOTS OR SEED ACCOUNTS — ONLY REAL EXPERTS REGISTERED BY HUMANS AND APPROVED BY DEVELOPER
+// NO ARTIFICIAL BOTS — ONLY REAL EXPERTS REGISTERED BY HUMANS AND APPROVED BY DEVELOPER
 const INITIAL_REAL_EXPERTS: RealExpert[] = [];
 
 export default function ExpertConsultationPage() {
-  const [activeTab, setActiveTab] = useState<"directory" | "register" | "expert_login" | "my_bookings" | "developer_portal">("directory");
+  const [activeTab, setActiveTab] = useState<"directory" | "register" | "expert_login" | "my_bookings">("directory");
   const [experts, setExperts] = useState<RealExpert[]>(INITIAL_REAL_EXPERTS);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Logged-in Sessions
+  // Logged-in Sessions & Modals
   const [loggedInExpert, setLoggedInExpert] = useState<RealExpert | null>(null);
+  const [showDeveloperModal, setShowDeveloperModal] = useState<boolean>(false);
   const [isDeveloperAuthenticated, setIsDeveloperAuthenticated] = useState<boolean>(false);
 
   // Dedicated Developer Sign-In Form State
@@ -281,7 +282,7 @@ export default function ExpertConsultationPage() {
       setRegName(""); setRegTitle(""); setRegQualification(""); setRegAadhaar(""); setRegPhone(""); setRegEmail(""); setRegFee(""); setRegBio(""); setAadhaarValidationResult(null);
 
       alert("🎉 Real Expert Account Created Successfully! Your Aadhaar e-KYC has been verified via UIDAI Verhoeff Checksum. Your account is now awaiting Developer Approval.");
-      setActiveTab("developer_portal");
+      setShowDeveloperModal(true);
     }, 1500);
   };
 
@@ -316,7 +317,6 @@ export default function ExpertConsultationPage() {
     const email = devEmailInput.trim().toLowerCase();
     const pass = devPasscodeInput.trim();
 
-    // Valid Developer Identity for Uday Pratap Singh Chauhan
     if (email === "udchauhan0987@gmail.com" || email === "developer" || pass === "dev2026" || pass === "uday0751") {
       setIsDeveloperAuthenticated(true);
       alert("🔓 Developer Authentication Successful! Welcome Developer Uday Pratap Singh Chauhan.");
@@ -487,76 +487,87 @@ export default function ExpertConsultationPage() {
   return (
     <div className="min-h-screen p-4 md:p-8 font-sans max-w-7xl mx-auto space-y-6 pt-[78px]">
       
-      {/* Header Bar */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-green-500/30 shadow-md">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
-              🛡️ Zero AI Bots • Dedicated Developer Approval Portal
-            </span>
+      {/* HIGH-END MODERN HERO & NAVIGATION HEADER */}
+      <header className="relative bg-gradient-to-br from-emerald-900 via-green-900 to-slate-950 text-white p-6 md:p-8 rounded-3xl border border-emerald-500/30 shadow-2xl overflow-hidden">
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-400/30 flex items-center gap-1.5 backdrop-blur-md">
+                <Sparkles className="w-3 h-3 text-emerald-400" /> Verified Human Agricultural Scientists
+              </span>
+            </div>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+              <Stethoscope className="w-9 h-9 text-emerald-400 shrink-0" />
+              Verified Expert Consultants
+            </h1>
+            <p className="text-xs md:text-sm text-emerald-100/80 font-medium max-w-2xl">
+              100% Real human agricultural scientists verified via UIDAI Verhoeff Checksum. Connect directly with approved agronomists & crop pathologists.
+            </p>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white flex items-center gap-2.5">
-            <Stethoscope className="w-8 h-8 text-green-600 dark:text-green-400 shrink-0" />
-            Real Human Expert Agriculture Consultants
-          </h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
-            Experts create their account with Aadhaar e-KYC. Every expert account must be verified & approved by Developer.
-          </p>
+
+          {/* DISCRETE, SLEEK DEVELOPER PORTAL TRIGGER BUTTON */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowDeveloperModal(true)}
+              className="px-4 py-2.5 bg-slate-900/90 hover:bg-slate-800 text-purple-300 border border-purple-500/40 rounded-2xl text-xs font-black transition-all shadow-lg flex items-center gap-2 backdrop-blur-md hover:border-purple-400 group"
+            >
+              <ShieldCheck className="w-4 h-4 text-purple-400 group-hover:rotate-12 transition-transform" />
+              <span>Developer Portal</span>
+              {pendingExperts.length > 0 && (
+                <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                  {pendingExperts.length} Pending
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* TAB BUTTONS */}
-        <div className="flex flex-wrap items-center gap-2 bg-gray-100 dark:bg-white/10 p-1.5 rounded-2xl">
+        {/* CLEAN, ELEGANT PUBLIC USER NAVIGATION TABS */}
+        <div className="relative z-10 flex flex-wrap items-center gap-2 mt-6 pt-6 border-t border-white/10">
           <button
             onClick={() => setActiveTab("directory")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-              activeTab === "directory" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+            className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              activeTab === "directory"
+                ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 font-black"
+                : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <Stethoscope className="w-3.5 h-3.5" /> Verified Experts ({approvedExperts.length})
+            <Stethoscope className="w-4 h-4" /> Verified Directory ({approvedExperts.length})
           </button>
 
           <button
             onClick={() => setActiveTab("register")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-              activeTab === "register" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+            className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              activeTab === "register"
+                ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 font-black"
+                : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <UserPlus className="w-3.5 h-3.5 text-yellow-300" /> Create Expert Account
+            <UserPlus className="w-4 h-4 text-amber-300" /> Create Expert Account
           </button>
 
           <button
             onClick={() => setActiveTab("expert_login")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-              activeTab === "expert_login" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+            className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              activeTab === "expert_login"
+                ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 font-black"
+                : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <LogIn className="w-3.5 h-3.5" /> Expert Sign In
+            <LogIn className="w-4 h-4" /> Expert Sign In
           </button>
 
           <button
             onClick={() => setActiveTab("my_bookings")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-              activeTab === "my_bookings" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+            className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              activeTab === "my_bookings"
+                ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 font-black"
+                : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <Calendar className="w-3.5 h-3.5" /> My Bookings ({bookings.length})
-          </button>
-
-          {/* DEDICATED SEPARATE DEVELOPER PORTAL TAB */}
-          <button
-            onClick={() => setActiveTab("developer_portal")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border-2 ${
-              activeTab === "developer_portal" 
-                ? "bg-purple-600 border-purple-600 text-white shadow-md" 
-                : "border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50"
-            }`}
-          >
-            <KeyRound className="w-3.5 h-3.5 text-yellow-300" /> Developer Portal
-            {pendingExperts.length > 0 && (
-              <span className="bg-amber-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
-                {pendingExperts.length}
-              </span>
-            )}
+            <Calendar className="w-4 h-4" /> My Session Bookings ({bookings.length})
           </button>
         </div>
       </header>
@@ -574,7 +585,7 @@ export default function ExpertConsultationPage() {
                 placeholder="Search real approved experts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white"
               />
             </div>
 
@@ -592,7 +603,7 @@ export default function ExpertConsultationPage() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 border ${
                     selectedCategory === cat.id
-                      ? "bg-green-600 border-green-600 text-white shadow-sm"
+                      ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
                       : "bg-gray-100 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-200"
                   }`}
                 >
@@ -604,7 +615,7 @@ export default function ExpertConsultationPage() {
 
           {/* NO BOTS / EMPTY STATE WHEN NO EXPERTS ARE APPROVED YET */}
           {filteredExperts.length === 0 ? (
-            <div className="bg-white dark:bg-[#1a1b23] border-2 border-dashed border-gray-200 dark:border-white/10 p-12 text-center rounded-3xl space-y-4 max-w-2xl mx-auto">
+            <div className="bg-white dark:bg-[#1a1b23] border-2 border-dashed border-gray-200 dark:border-white/10 p-12 text-center rounded-3xl space-y-4 max-w-2xl mx-auto shadow-sm">
               <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950/80 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-3xl font-black">
                 👨‍⚕️
               </div>
@@ -617,15 +628,15 @@ export default function ExpertConsultationPage() {
               <div className="flex justify-center gap-3 pt-2">
                 <button
                   onClick={() => setActiveTab("register")}
-                  className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-1.5"
                 >
                   <UserPlus className="w-4 h-4" /> Create Real Expert Account
                 </button>
                 <button
-                  onClick={() => setActiveTab("developer_portal")}
+                  onClick={() => setShowDeveloperModal(true)}
                   className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-1.5"
                 >
-                  <KeyRound className="w-4 h-4" /> Open Developer Portal
+                  <ShieldCheck className="w-4 h-4" /> Open Developer Verification Desk
                 </button>
               </div>
             </div>
@@ -635,7 +646,7 @@ export default function ExpertConsultationPage() {
               {filteredExperts.map(expert => (
                 <div
                   key={expert.id}
-                  className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 rounded-3xl p-5 shadow-sm flex flex-col justify-between hover:border-green-500/60 transition-all group"
+                  className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 rounded-3xl p-5 shadow-sm flex flex-col justify-between hover:border-emerald-500/60 transition-all group"
                 >
                   <div>
                     <div className="flex justify-between items-center mb-3">
@@ -652,16 +663,16 @@ export default function ExpertConsultationPage() {
                         <img
                           src={expert.avatar}
                           alt={expert.name}
-                          className="w-full h-full rounded-2xl object-cover border-2 border-green-500 shadow-md"
+                          className="w-full h-full rounded-2xl object-cover border-2 border-emerald-500 shadow-md"
                         />
-                        <span className="absolute -bottom-1 -right-1 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm">
+                        <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm">
                           ✓
                         </span>
                       </div>
 
                       <div>
-                        <h3 className="font-extrabold text-sm text-gray-900 dark:text-white group-hover:text-green-600 transition-colors">{expert.name}</h3>
-                        <p className="text-[11px] font-black text-green-600 dark:text-green-400">{expert.title}</p>
+                        <h3 className="font-extrabold text-sm text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors">{expert.name}</h3>
+                        <p className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">{expert.title}</p>
                         <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{expert.qualification}</p>
                       </div>
                     </div>
@@ -673,7 +684,7 @@ export default function ExpertConsultationPage() {
                       </div>
                       <div className="flex justify-between text-gray-500">
                         <span>Consultation Fee:</span>
-                        <span className="font-black text-green-600 dark:text-green-400">₹{expert.feePerSession} / Session</span>
+                        <span className="font-black text-emerald-600 dark:text-emerald-400">₹{expert.feePerSession} / Session</span>
                       </div>
                       <div className="flex flex-wrap gap-1 pt-1">
                         {expert.languages.map(l => (
@@ -693,16 +704,16 @@ export default function ExpertConsultationPage() {
                         setBookingDate(""); setBookingTimeSlot(""); setFarmerNameInput(""); setFarmerPhoneInput(""); setCropConcernInput("");
                         setBookingSuccess(false); setConfirmedBookingDetails(null);
                       }}
-                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all"
                     >
                       <Calendar className="w-3.5 h-3.5" /> Book Session
                     </button>
 
                     <button
                       onClick={() => setChatExpert(expert)}
-                      className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 hover:bg-green-100 text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
+                      className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 text-green-600" /> Live Chat
+                      <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> Live Chat
                     </button>
                   </div>
                 </div>
@@ -715,10 +726,10 @@ export default function ExpertConsultationPage() {
       {/* TAB 2: CREATE REAL EXPERT ACCOUNT */}
       {activeTab === "register" && (
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white dark:bg-[#1a1b23] border-2 border-green-500/40 rounded-3xl p-6 md:p-8 shadow-xl space-y-6">
+          <div className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500/40 rounded-3xl p-6 md:p-8 shadow-xl space-y-6">
             
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-white/10">
-              <div className="w-12 h-12 rounded-2xl bg-green-100 dark:bg-green-950 flex items-center justify-center text-green-600 dark:text-green-400 font-black text-xl">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-black text-xl">
                 🆔
               </div>
               <div>
@@ -740,7 +751,7 @@ export default function ExpertConsultationPage() {
                     placeholder="e.g. Dr. Vijay Kumar Sharma"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -749,7 +760,7 @@ export default function ExpertConsultationPage() {
                   <select
                     value={regCategory}
                     onChange={(e: any) => setRegCategory(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   >
                     <option value="pest">🐛 Pest Management & Control</option>
                     <option value="soil">🌱 Soil Health & Fertigation</option>
@@ -768,7 +779,7 @@ export default function ExpertConsultationPage() {
                     placeholder="e.g. Senior Agronomist / Plant Pathologist"
                     value={regTitle}
                     onChange={(e) => setRegTitle(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -780,7 +791,7 @@ export default function ExpertConsultationPage() {
                     placeholder="e.g. M.Sc. Agronomy / Ph.D. Soil Science"
                     value={regQualification}
                     onChange={(e) => setRegQualification(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -823,7 +834,7 @@ export default function ExpertConsultationPage() {
                     placeholder="+91 98765 43210"
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -835,7 +846,7 @@ export default function ExpertConsultationPage() {
                     placeholder="expert@agriuniv.edu.in"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -847,7 +858,7 @@ export default function ExpertConsultationPage() {
                     placeholder="••••••••"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -859,7 +870,7 @@ export default function ExpertConsultationPage() {
                     placeholder="e.g. 8"
                     value={regExperience}
                     onChange={(e) => setRegExperience(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -871,7 +882,7 @@ export default function ExpertConsultationPage() {
                     placeholder="e.g. 300"
                     value={regFee}
                     onChange={(e) => setRegFee(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
 
@@ -884,7 +895,7 @@ export default function ExpertConsultationPage() {
                   placeholder="Describe your practical field experience..."
                   value={regBio}
                   onChange={(e) => setRegBio(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
               </div>
 
@@ -893,7 +904,7 @@ export default function ExpertConsultationPage() {
                 disabled={!aadhaarValidationResult?.isValid}
                 className={`w-full py-3.5 rounded-xl font-black text-xs transition-all shadow-lg flex items-center justify-center gap-2 ${
                   aadhaarValidationResult?.isValid
-                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                     : "bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed"
                 }`}
               >
@@ -907,10 +918,10 @@ export default function ExpertConsultationPage() {
       {/* TAB 3: DEDICATED EXPERT SIGN IN */}
       {activeTab === "expert_login" && (
         <div className="max-w-md mx-auto">
-          <div className="bg-white dark:bg-[#1a1b23] border-2 border-green-500/40 rounded-3xl p-6 md:p-8 shadow-xl space-y-5">
+          <div className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500/40 rounded-3xl p-6 md:p-8 shadow-xl space-y-5">
             
             <div className="text-center space-y-2">
-              <div className="w-14 h-14 bg-green-100 dark:bg-green-950 text-green-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-black">
+              <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-black">
                 🔐
               </div>
               <h3 className="text-xl font-black text-gray-900 dark:text-white">Real Expert Account Sign In</h3>
@@ -922,7 +933,7 @@ export default function ExpertConsultationPage() {
             {loggedInExpert ? (
               <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border-2 border-emerald-500 space-y-3">
                 <div className="flex items-center gap-3">
-                  <img src={loggedInExpert.avatar} alt={loggedInExpert.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-green-500" />
+                  <img src={loggedInExpert.avatar} alt={loggedInExpert.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-500" />
                   <div>
                     <h4 className="font-extrabold text-sm text-gray-900 dark:text-white">{loggedInExpert.name}</h4>
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
@@ -955,7 +966,7 @@ export default function ExpertConsultationPage() {
                     placeholder="e.g. expert@agriuniv.edu.in or Aadhaar"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
@@ -965,154 +976,19 @@ export default function ExpertConsultationPage() {
                     type="password"
                     required
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" /> Sign In to Expert Portal
                 </button>
               </form>
             )}
           </div>
-        </div>
-      )}
-
-      {/* TAB 5: DEDICATED SEPARATE DEVELOPER SIGN IN & VERIFICATION PORTAL */}
-      {activeTab === "developer_portal" && (
-        <div className="max-w-4xl mx-auto space-y-6">
-          
-          {!isDeveloperAuthenticated ? (
-            /* DEDICATED DEVELOPER SIGN-IN CARD */
-            <div className="max-w-md mx-auto bg-purple-950 text-white border-2 border-purple-600 rounded-3xl p-6 md:p-8 shadow-2xl space-y-5">
-              <div className="text-center space-y-2">
-                <div className="w-16 h-16 bg-purple-800 text-yellow-300 rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg">
-                  🛡️
-                </div>
-                <h3 className="text-xl font-black text-white">Developer Sign In Desk</h3>
-                <p className="text-xs text-purple-200 font-medium">
-                  Protected Verification Portal for Developer <strong>Uday Pratap Singh Chauhan</strong> (udchauhan0987@gmail.com).
-                </p>
-              </div>
-
-              <form onSubmit={handleDeveloperSignIn} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-extrabold text-purple-200 mb-1">Developer Email / ID *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="udchauhan0987@gmail.com"
-                    value={devEmailInput}
-                    onChange={(e) => setDevEmailInput(e.target.value)}
-                    className="w-full px-4 py-3 border border-purple-500/50 rounded-xl text-xs font-bold bg-purple-900/60 text-white outline-none focus:ring-2 focus:ring-yellow-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-purple-200 mb-1">Developer Secret Key / Passcode *</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={devPasscodeInput}
-                    onChange={(e) => setDevPasscodeInput(e.target.value)}
-                    className="w-full px-4 py-3 border border-purple-500/50 rounded-xl text-xs font-bold bg-purple-900/60 text-white outline-none focus:ring-2 focus:ring-yellow-400"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-500 text-purple-950 font-black rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  <Unlock className="w-4 h-4" /> Authenticate Developer Access
-                </button>
-              </form>
-
-              <p className="text-[10px] text-center text-purple-300 font-semibold">
-                Developer Note: Enter <code>udchauhan0987@gmail.com</code> or Passcode <code>dev2026</code> to log in.
-              </p>
-            </div>
-          ) : (
-            /* AUTHENTICATED DEVELOPER DASHBOARD & APPROVAL QUEUE */
-            <div className="space-y-6">
-              <div className="bg-purple-900 text-white rounded-3xl p-6 shadow-xl border-2 border-purple-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-xs font-black text-yellow-300 mb-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-yellow-300" /> Developer Uday Pratap Singh Chauhan (Authenticated)
-                  </div>
-                  <h2 className="text-2xl font-black text-white">Developer Verification & Approval Portal</h2>
-                  <p className="text-purple-200 text-xs font-medium mt-0.5">
-                    Review incoming human expert registration requests, verify credentials, and approve accounts.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/10 px-4 py-2 rounded-2xl text-xs font-black text-white">
-                    Pending Requests: {pendingExperts.length}
-                  </div>
-                  <button
-                    onClick={() => setIsDeveloperAuthenticated(false)}
-                    className="px-3.5 py-2 bg-red-600/80 hover:bg-red-700 text-white text-xs font-black rounded-xl transition-all"
-                  >
-                    Lock Portal
-                  </button>
-                </div>
-              </div>
-
-              {pendingExperts.length === 0 ? (
-                <div className="bg-white dark:bg-[#1a1b23] p-12 text-center rounded-3xl border border-gray-100 dark:border-white/10 space-y-2">
-                  <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
-                  <h3 className="text-base font-extrabold text-gray-900 dark:text-white">Developer Queue is Clear!</h3>
-                  <p className="text-xs text-gray-400 font-medium">There are no pending human expert account verification requests waiting for developer approval.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {pendingExperts.map(exp => (
-                    <div key={exp.id} className="bg-white dark:bg-[#1a1b23] border-2 border-purple-300 dark:border-purple-800 rounded-3xl p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                      
-                      <div className="flex items-start gap-4">
-                        <img src={exp.avatar} alt={exp.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-purple-500 shrink-0" />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 text-[10px] font-black px-2.5 py-0.5 rounded-md border border-purple-300">
-                              {exp.category.toUpperCase()} SPECIALIST
-                            </span>
-                            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-0.5 rounded-md flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Aadhaar Verified: {exp.aadhaarNumber}
-                            </span>
-                          </div>
-
-                          <h3 className="text-lg font-black text-gray-900 dark:text-white mt-1">{exp.name}</h3>
-                          <p className="text-xs font-extrabold text-green-600 dark:text-green-400">{exp.title} • {exp.qualification}</p>
-                          <p className="text-xs text-gray-500 font-medium mt-1">Experience: {exp.experience} Years | Fee: ₹{exp.feePerSession}/session | Phone: {exp.phone} | Email: {exp.email}</p>
-                          <p className="text-xs text-gray-400 font-normal mt-2 italic max-w-xl">"{exp.bio}"</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <button
-                          onClick={() => handleApproveExpert(exp.id)}
-                          className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition-all"
-                        >
-                          <CheckCircle2 className="w-4 h-4" /> Approve Expert Account
-                        </button>
-                        <button
-                          onClick={() => handleRejectExpert(exp.id)}
-                          className="px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-extrabold text-xs rounded-xl transition-all"
-                        >
-                          Reject Account
-                        </button>
-                      </div>
-
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -1124,7 +1000,7 @@ export default function ExpertConsultationPage() {
               <h3 className="text-base font-extrabold text-gray-900 dark:text-white">My Scheduled Consultations & Payment Receipts</h3>
               <p className="text-xs text-gray-400 font-medium mt-0.5">View scheduled sessions and digital payment transaction receipts.</p>
             </div>
-            <span className="text-xs font-black text-green-600 bg-green-50 dark:bg-green-950 px-3 py-1.5 rounded-xl border border-green-200">
+            <span className="text-xs font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-200">
               Total Bookings: {bookings.length}
             </span>
           </div>
@@ -1141,10 +1017,10 @@ export default function ExpertConsultationPage() {
                 <div key={b.id} className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 rounded-3xl p-5 shadow-sm space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
-                      <img src={b.expertAvatar} alt={b.expertName} className="w-12 h-12 rounded-2xl object-cover border-2 border-green-500" />
+                      <img src={b.expertAvatar} alt={b.expertName} className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-500" />
                       <div>
                         <h4 className="font-extrabold text-sm text-gray-900 dark:text-white">{b.expertName}</h4>
-                        <p className="text-xs font-bold text-green-600">{b.expertTitle}</p>
+                        <p className="text-xs font-bold text-emerald-600">{b.expertTitle}</p>
                       </div>
                     </div>
                     <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black px-2.5 py-1 rounded-lg border border-emerald-300">
@@ -1171,7 +1047,7 @@ export default function ExpertConsultationPage() {
                     </div>
                     <div className="flex justify-between text-sm pt-1">
                       <span className="text-gray-400 font-bold">Total Fee Paid:</span>
-                      <span className="text-green-600 dark:text-green-400 font-black">₹{b.feePaid}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-black">₹{b.feePaid}</span>
                     </div>
                   </div>
                 </div>
@@ -1180,6 +1056,152 @@ export default function ExpertConsultationPage() {
           )}
         </div>
       )}
+
+      {/* ULTRA-PREMIUM DISCRETE DEVELOPER VERIFICATION DESK MODAL */}
+      <AnimatePresence>
+        {showDeveloperModal && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-gradient-to-b from-slate-900 via-slate-900 to-purple-950 border-2 border-purple-500/50 rounded-3xl max-w-4xl w-full p-6 md:p-8 relative shadow-2xl space-y-6 text-white overflow-hidden"
+            >
+              {/* Background ambient glow */}
+              <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+
+              <button 
+                onClick={() => setShowDeveloperModal(false)} 
+                className="absolute top-6 right-6 text-slate-400 hover:text-white p-1.5 rounded-full bg-slate-800/60 border border-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {!isDeveloperAuthenticated ? (
+                /* HIGH-END DEVELOPER LOGIN VIEW */
+                <div className="max-w-md mx-auto space-y-6 py-4">
+                  <div className="text-center space-y-2">
+                    <div className="w-16 h-16 bg-purple-900/60 border-2 border-purple-500 text-yellow-300 rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-xl">
+                      🛡️
+                    </div>
+                    <h3 className="text-2xl font-black text-white">Developer Security Desk</h3>
+                    <p className="text-xs text-purple-200 font-medium">
+                      Restricted Access Portal for Developer <strong>Uday Pratap Singh Chauhan</strong> (udchauhan0987@gmail.com).
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleDeveloperSignIn} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-black text-purple-200 mb-1">Developer Email / Username *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="udchauhan0987@gmail.com"
+                        value={devEmailInput}
+                        onChange={(e) => setDevEmailInput(e.target.value)}
+                        className="w-full px-4 py-3 border border-purple-500/40 rounded-xl text-xs font-bold bg-slate-950/80 text-white outline-none focus:ring-2 focus:ring-yellow-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-purple-200 mb-1">Developer Passcode / Secret Key *</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={devPasscodeInput}
+                        onChange={(e) => setDevPasscodeInput(e.target.value)}
+                        className="w-full px-4 py-3 border border-purple-500/40 rounded-xl text-xs font-bold bg-slate-950/80 text-white outline-none focus:ring-2 focus:ring-yellow-400"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black rounded-xl text-xs shadow-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      <Unlock className="w-4 h-4" /> Authenticate Developer Access
+                    </button>
+                  </form>
+
+                  <p className="text-[10px] text-center text-purple-300 font-semibold">
+                    Developer Passcode: <code>dev2026</code> or <code>udchauhan0987@gmail.com</code>
+                  </p>
+                </div>
+              ) : (
+                /* AUTHENTICATED DEVELOPER VERIFICATION DESK */
+                <div className="space-y-6">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-purple-500/30">
+                    <div>
+                      <div className="inline-flex items-center gap-2 bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-black border border-yellow-400/40 mb-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-yellow-300" /> Authenticated Developer: Uday Pratap Singh Chauhan
+                      </div>
+                      <h2 className="text-2xl font-black text-white">Developer Account Approval Desk</h2>
+                      <p className="text-xs text-purple-200 font-medium">Review and verify incoming human expert account applications.</p>
+                    </div>
+
+                    <button
+                      onClick={() => setIsDeveloperAuthenticated(false)}
+                      className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/50 text-xs font-black rounded-xl transition-all"
+                    >
+                      Lock Desk
+                    </button>
+                  </div>
+
+                  {pendingExperts.length === 0 ? (
+                    <div className="bg-slate-950/60 p-12 text-center rounded-3xl border border-purple-500/20 space-y-2">
+                      <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
+                      <h3 className="text-base font-extrabold text-white">Verification Queue is Clear!</h3>
+                      <p className="text-xs text-purple-300 font-medium">There are no pending human expert registration requests waiting for developer approval.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-none">
+                      {pendingExperts.map(exp => (
+                        <div key={exp.id} className="bg-slate-950/80 border border-purple-500/40 rounded-3xl p-5 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+                          
+                          <div className="flex items-start gap-4">
+                            <img src={exp.avatar} alt={exp.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-purple-400 shrink-0" />
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="bg-purple-500/20 text-purple-300 text-[10px] font-black px-2.5 py-0.5 rounded-md border border-purple-400/30">
+                                  {exp.category.toUpperCase()} SPECIALIST
+                                </span>
+                                <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-md border border-emerald-400/30 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Aadhaar Verified: {exp.aadhaarNumber}
+                                </span>
+                              </div>
+
+                              <h3 className="text-base font-black text-white">{exp.name}</h3>
+                              <p className="text-xs font-bold text-emerald-400">{exp.title} • {exp.qualification}</p>
+                              <p className="text-xs text-slate-400 font-medium">Exp: {exp.experience} Yrs | Fee: ₹{exp.feePerSession} | Phone: {exp.phone} | Email: {exp.email}</p>
+                              <p className="text-xs text-slate-300 font-normal italic max-w-xl">"{exp.bio}"</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <button
+                              onClick={() => handleApproveExpert(exp.id)}
+                              className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-xl shadow-lg flex items-center gap-1.5 transition-all"
+                            >
+                              <CheckCircle2 className="w-4 h-4" /> Approve Expert Account
+                            </button>
+                            <button
+                              onClick={() => handleRejectExpert(exp.id)}
+                              className="px-4 py-2.5 bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/40 font-extrabold text-xs rounded-xl transition-all"
+                            >
+                              Reject
+                            </button>
+                          </div>
+
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* AADHAAR OTP VERIFICATION MODAL */}
       <AnimatePresence>
@@ -1241,7 +1263,7 @@ export default function ExpertConsultationPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-[#1a1b23] border-2 border-green-500/40 rounded-3xl max-w-lg w-full p-6 md:p-8 relative shadow-2xl space-y-5"
+              className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500/40 rounded-3xl max-w-lg w-full p-6 md:p-8 relative shadow-2xl space-y-5"
             >
               <button onClick={() => setBookingExpert(null)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
@@ -1258,7 +1280,7 @@ export default function ExpertConsultationPage() {
                   <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 text-left text-xs font-semibold space-y-2">
                     <div className="flex justify-between border-b border-gray-200 dark:border-white/10 pb-2 font-bold text-gray-900 dark:text-white">
                       <span>Transaction Receipt ID:</span>
-                      <span className="font-mono text-green-600">{confirmedBookingDetails.transactionId}</span>
+                      <span className="font-mono text-emerald-600">{confirmedBookingDetails.transactionId}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Expert Name:</span>
@@ -1274,7 +1296,7 @@ export default function ExpertConsultationPage() {
                     </div>
                     <div className="flex justify-between text-sm font-black pt-1">
                       <span className="text-gray-700 dark:text-gray-300">Amount Paid:</span>
-                      <span className="text-green-600">₹{confirmedBookingDetails.feePaid}</span>
+                      <span className="text-emerald-600">₹{confirmedBookingDetails.feePaid}</span>
                     </div>
                   </div>
 
@@ -1283,7 +1305,7 @@ export default function ExpertConsultationPage() {
                       setBookingExpert(null);
                       setActiveTab("my_bookings");
                     }}
-                    className="w-full bg-green-600 text-white font-extrabold py-3 rounded-xl text-xs shadow-md"
+                    className="w-full bg-emerald-600 text-white font-extrabold py-3 rounded-xl text-xs shadow-md"
                   >
                     View My Scheduled Sessions Dashboard
                   </button>
@@ -1292,10 +1314,10 @@ export default function ExpertConsultationPage() {
                 /* STEP 1: SESSION & FARMER DETAILS */
                 <form onSubmit={handleProceedToPayment} className="space-y-4">
                   <div className="flex items-center gap-3 pb-3 border-b border-gray-100 dark:border-white/10">
-                    <img src={bookingExpert.avatar} alt={bookingExpert.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-green-500" />
+                    <img src={bookingExpert.avatar} alt={bookingExpert.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-500" />
                     <div>
                       <h3 className="font-extrabold text-base text-gray-900 dark:text-white">{bookingExpert.name}</h3>
-                      <p className="text-xs font-bold text-green-600">{bookingExpert.title}</p>
+                      <p className="text-xs font-bold text-emerald-600">{bookingExpert.title}</p>
                     </div>
                   </div>
 
@@ -1308,7 +1330,7 @@ export default function ExpertConsultationPage() {
                         placeholder="e.g. Ramesh Kumar"
                         value={farmerNameInput}
                         onChange={(e) => setFarmerNameInput(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
 
@@ -1320,7 +1342,7 @@ export default function ExpertConsultationPage() {
                         placeholder="+91 98765 43210"
                         value={farmerPhoneInput}
                         onChange={(e) => setFarmerPhoneInput(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
 
@@ -1331,7 +1353,7 @@ export default function ExpertConsultationPage() {
                         required
                         value={bookingDate}
                         onChange={(e) => setBookingDate(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
 
@@ -1341,7 +1363,7 @@ export default function ExpertConsultationPage() {
                         required
                         value={bookingTimeSlot}
                         onChange={(e) => setBookingTimeSlot(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                       >
                         <option value="">Choose slot...</option>
                         <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option>
@@ -1359,18 +1381,18 @@ export default function ExpertConsultationPage() {
                       placeholder="e.g. Yellow leaf disease in cotton crop"
                       value={cropConcernInput}
                       onChange={(e) => setCropConcernInput(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
 
                   <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-2xl flex justify-between items-center text-xs font-bold">
                     <span className="text-gray-500">Consultation Session Fee:</span>
-                    <span className="text-sm font-black text-green-600 dark:text-green-400">₹{bookingExpert.feePerSession}</span>
+                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">₹{bookingExpert.feePerSession}</span>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3.5 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-2"
                   >
                     <span>Proceed to Payment Gateway</span>
                     <CreditCard className="w-4 h-4" />
@@ -1381,12 +1403,12 @@ export default function ExpertConsultationPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-3">
                     <div>
-                      <span className="text-[10px] font-black uppercase text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <Lock className="w-3 h-3" /> 256-Bit SSL Secure Payment Gateway
                       </span>
                       <h3 className="text-base font-extrabold text-gray-900 dark:text-white">Select Payment Method</h3>
                     </div>
-                    <span className="text-sm font-black text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/80 px-3 py-1 rounded-xl border border-green-300">
+                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-3 py-1 rounded-xl border border-emerald-300">
                       Total Fee: ₹{bookingExpert.feePerSession}
                     </span>
                   </div>
@@ -1398,7 +1420,7 @@ export default function ExpertConsultationPage() {
                       onClick={() => setPaymentMethod("upi")}
                       className={`p-3 rounded-2xl border-2 text-center transition-all ${
                         paymentMethod === "upi"
-                          ? "bg-green-600 border-green-600 text-white shadow-md font-extrabold"
+                          ? "bg-emerald-600 border-emerald-600 text-white shadow-md font-extrabold"
                           : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 font-bold"
                       }`}
                     >
@@ -1411,7 +1433,7 @@ export default function ExpertConsultationPage() {
                       onClick={() => setPaymentMethod("credit")}
                       className={`p-3 rounded-2xl border-2 text-center transition-all ${
                         paymentMethod === "credit"
-                          ? "bg-green-600 border-green-600 text-white shadow-md font-extrabold"
+                          ? "bg-emerald-600 border-emerald-600 text-white shadow-md font-extrabold"
                           : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 font-bold"
                       }`}
                     >
@@ -1424,7 +1446,7 @@ export default function ExpertConsultationPage() {
                       onClick={() => setPaymentMethod("debit")}
                       className={`p-3 rounded-2xl border-2 text-center transition-all ${
                         paymentMethod === "debit"
-                          ? "bg-green-600 border-green-600 text-white shadow-md font-extrabold"
+                          ? "bg-emerald-600 border-emerald-600 text-white shadow-md font-extrabold"
                           : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 font-bold"
                       }`}
                     >
@@ -1487,7 +1509,7 @@ export default function ExpertConsultationPage() {
 
                         <button
                           type="submit"
-                          className="w-full py-3.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition-all"
+                          className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition-all"
                         >
                           <span>Pay via UPI ID (Open Installed App)</span>
                           <ArrowRight className="w-4 h-4" />
@@ -1508,7 +1530,7 @@ export default function ExpertConsultationPage() {
                           placeholder="4532 •••• •••• 8912"
                           value={cardNumberInput}
                           onChange={(e) => setCardNumberInput(e.target.value)}
-                          className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-white dark:bg-[#1a1b23] text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500 tracking-wider"
+                          className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-white dark:bg-[#1a1b23] text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 tracking-wider"
                         />
                       </div>
 
@@ -1541,7 +1563,7 @@ export default function ExpertConsultationPage() {
                         type="button"
                         onClick={handleExecuteCardOrNetBankingPayment}
                         disabled={isProcessingPayment}
-                        className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+                        className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
                       >
                         {isProcessingPayment ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4 text-yellow-300" />}
                         <span>Pay ₹{bookingExpert.feePerSession} via Credit Card</span>
@@ -1572,7 +1594,7 @@ export default function ExpertConsultationPage() {
                         type="button"
                         onClick={handleExecuteCardOrNetBankingPayment}
                         disabled={isProcessingPayment}
-                        className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+                        className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
                       >
                         {isProcessingPayment ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4 text-yellow-300" />}
                         <span>Pay ₹{bookingExpert.feePerSession} via NetBanking</span>
@@ -1595,7 +1617,7 @@ export default function ExpertConsultationPage() {
                 <div className="space-y-5 text-center py-2">
                   <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
                     <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping" />
-                    <div className="w-16 h-16 bg-green-600 text-white rounded-2xl flex items-center justify-center text-3xl shadow-xl relative z-10">
+                    <div className="w-16 h-16 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-3xl shadow-xl relative z-10">
                       📱
                     </div>
                   </div>
@@ -1618,8 +1640,8 @@ export default function ExpertConsultationPage() {
                     </div>
                     <div className="flex justify-between border-t border-emerald-200 dark:border-emerald-800 pt-2">
                       <span className="text-gray-500">Status:</span>
-                      <span className="text-green-600 dark:text-green-400 font-black flex items-center gap-1">
-                        <RefreshCw className="w-3 h-3 animate-spin text-green-600" /> Auto-Verifying Session...
+                      <span className="text-emerald-600 dark:text-emerald-400 font-black flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3 animate-spin text-emerald-600" /> Auto-Verifying Session...
                       </span>
                     </div>
                   </div>
@@ -1638,7 +1660,7 @@ export default function ExpertConsultationPage() {
                     <a
                       href={activeUpiLink || `upi://pay?pa=udaychauhan0751@ibl&pn=AgroPulse&am=${bookingExpert.feePerSession}&cu=INR`}
                       target="_self"
-                      className="py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all"
+                      className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all"
                     >
                       <span>📱 Open Any UPI App</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1678,11 +1700,11 @@ export default function ExpertConsultationPage() {
             
             <div className="p-4 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-gray-50/50 dark:bg-white/5">
               <div className="flex gap-3 items-center">
-                <img src={chatExpert.avatar} alt={chatExpert.name} className="w-10 h-10 rounded-xl object-cover border-2 border-green-500" />
+                <img src={chatExpert.avatar} alt={chatExpert.name} className="w-10 h-10 rounded-xl object-cover border-2 border-emerald-500" />
                 <div>
                   <h4 className="font-extrabold text-sm text-gray-900 dark:text-white">{chatExpert.name}</h4>
-                  <span className="text-[10px] text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Verified Real Expert Online
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Verified Real Expert Online
                   </span>
                 </div>
               </div>
@@ -1699,11 +1721,11 @@ export default function ExpertConsultationPage() {
                 <div key={msg.id} className={`flex ${msg.sender === "farmer" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] p-3 rounded-2xl text-xs font-semibold ${
                     msg.sender === "farmer"
-                      ? "bg-green-600 text-white rounded-br-none"
+                      ? "bg-emerald-600 text-white rounded-br-none"
                       : "bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-100 rounded-bl-none"
                   }`}>
                     <div>{msg.text}</div>
-                    <span className={`text-[8px] font-bold mt-1 block text-right ${msg.sender === "farmer" ? "text-green-200" : "text-gray-400"}`}>
+                    <span className={`text-[8px] font-bold mt-1 block text-right ${msg.sender === "farmer" ? "text-emerald-200" : "text-gray-400"}`}>
                       {msg.timestamp}
                     </span>
                   </div>
@@ -1717,9 +1739,9 @@ export default function ExpertConsultationPage() {
                 value={chatInputText}
                 onChange={(e) => setChatInputText(e.target.value)}
                 placeholder="Type your question to real expert..."
-                className="flex-1 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold bg-white dark:bg-[#1a1b23] text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold bg-white dark:bg-[#1a1b23] text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
               />
-              <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1">
+              <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1">
                 <Send className="w-3.5 h-3.5" />
               </button>
             </form>

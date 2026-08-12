@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -17,6 +17,13 @@ import { Providers } from "@/components/Providers";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+};
 
 export const metadata: Metadata = {
   title: "AgroPulse - Modern Agriculture & Direct Farm Trading Portal",

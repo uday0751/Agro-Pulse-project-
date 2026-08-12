@@ -626,10 +626,10 @@ export default function CustomerMarketplacePage() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 font-sans w-full max-w-7xl mx-auto pt-[78px]">
+    <div className="min-h-screen w-full px-4 sm:px-6 md:px-10 lg:px-12 py-6 pt-[84px] font-sans">
       
-      {/* Customer Header Bar with Account Login & Privacy Indicator */}
-      <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md">
+      {/* Customer Header Bar spanning FULL WIDTH */}
+      <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md w-full">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
@@ -750,12 +750,12 @@ export default function CustomerMarketplacePage() {
         )}
       </AnimatePresence>
 
-      {/* BROWSE CROPS TO BUY (CLEAN FULL-PAGE SPACIOUS GRID) */}
+      {/* BROWSE CROPS TO BUY (TRUE 100% FULL WIDTH FLUID GRID) */}
       {activeTab === "browse" && (
-        <div className="space-y-8">
+        <div className="space-y-8 w-full">
           
-          {/* Controls & Filter Bar */}
-          <div className="bg-white dark:bg-[#1a1b23] p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-white/10 space-y-4">
+          {/* Controls & Filter Bar (FULL WIDTH) */}
+          <div className="bg-white dark:bg-[#1a1b23] p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-white/10 space-y-4 w-full">
             <div className="flex flex-col md:flex-row gap-4 items-center">
               
               {/* Search Bar */}
@@ -771,7 +771,7 @@ export default function CustomerMarketplacePage() {
               </div>
 
               {/* Complete 36 States & UTs Dropdown */}
-              <div className="relative w-full md:w-60">
+              <div className="relative w-full md:w-64">
                 <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 pointer-events-none" />
                 <select
                   value={selectedState}
@@ -784,7 +784,7 @@ export default function CustomerMarketplacePage() {
               </div>
 
               {/* Sort By Dropdown */}
-              <div className="relative w-full md:w-48">
+              <div className="relative w-full md:w-52">
                 <ArrowUpDown className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 pointer-events-none" />
                 <select
                   value={sortBy}
@@ -820,7 +820,7 @@ export default function CustomerMarketplacePage() {
             </div>
 
             {/* Category Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pt-2 scrollbar-none">
+            <div className="flex items-center gap-2.5 overflow-x-auto pt-2 scrollbar-none">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
@@ -837,9 +837,9 @@ export default function CustomerMarketplacePage() {
             </div>
           </div>
 
-          {/* LISTINGS DISPLAY GROUPED (FULL PAGE SPACIOUS 3-4 COLUMN GRID) */}
+          {/* LISTINGS DISPLAY GROUPED (TRUE 100% FULL SCREEN EDGE-TO-EDGE GRID) */}
           {filteredListings.length === 0 ? (
-            <div className="bg-white dark:bg-[#1a1b23] border border-gray-100 dark:border-white/10 rounded-3xl p-12 text-center my-8">
+            <div className="bg-white dark:bg-[#1a1b23] border border-gray-100 dark:border-white/10 rounded-3xl p-12 text-center my-8 w-full">
               <ShoppingBag className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
               <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">No crop listings match "{searchQuery}"</h3>
               <button 
@@ -851,24 +851,24 @@ export default function CustomerMarketplacePage() {
             </div>
           ) : (
             Object.entries(groupedData).map(([groupTitle, items]) => (
-              <div key={groupTitle} className="mb-10">
+              <div key={groupTitle} className="mb-10 w-full">
                 <div className="flex items-center justify-between mb-5 border-b border-gray-200 dark:border-white/10 pb-3">
                   <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2.5">
                     {groupBy === "crop" ? "📦" : "📍"} {groupTitle}
                     <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-3 py-1 rounded-full ml-1">
-                      {items.length} Mandi Listings
+                      {items.length} Mandi Listings Available
                     </span>
                   </h2>
                 </div>
 
-                {/* FULL PAGE SPACIOUS SYMMETRICAL GRID */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                {/* FLUID FULL WIDTH 4-5 COLUMN RESPONSIVE GRID */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6 md:gap-8 w-full">
                   {items.map((listing) => (
                     <motion.div
                       key={listing.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 hover:border-emerald-500 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group"
+                      className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 hover:border-emerald-500 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group w-full"
                     >
                       <div>
                         {/* Image Header with Click to Inspect Overlay */}
@@ -965,74 +965,74 @@ export default function CustomerMarketplacePage() {
 
       {/* PRIVACY SCOPED CUSTOMER ORDERS (USERS CAN ONLY SEE THEIR OWN ORDERS) */}
       {activeTab === "my_orders" && (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           
           {/* STATS OVERVIEW CARDS */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            <div className="bg-white dark:bg-[#1a1b23] p-4 rounded-2xl border-2 border-emerald-500/40 shadow-sm flex flex-col justify-between">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 w-full">
+            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-2xl border-2 border-emerald-500/40 shadow-sm flex flex-col justify-between">
               <span className="text-[10px] font-black text-gray-400 uppercase">My Lifetime Spend</span>
-              <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">₹{buyerTransactionStats.totalLifetimeSpend.toLocaleString("en-IN")}</div>
+              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">₹{buyerTransactionStats.totalLifetimeSpend.toLocaleString("en-IN")}</div>
               <span className="text-[10px] text-gray-500 font-bold">{buyerTransactionStats.totalOrders} My Orders</span>
             </div>
 
             <button
               onClick={() => setStatusFilter(statusFilter === "Pending" ? "All" : "Pending")}
-              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 statusFilter === "Pending" ? "bg-amber-500 text-white border-amber-600 shadow-md" : "bg-white dark:bg-[#1a1b23] border-amber-200 dark:border-amber-900/40"
               }`}
             >
               <span className={`text-[10px] font-black uppercase ${statusFilter === "Pending" ? "text-white" : "text-amber-600"}`}>⏳ Pending</span>
-              <div className={`text-lg font-black mt-1 ${statusFilter === "Pending" ? "text-white" : "text-amber-500"}`}>{buyerTransactionStats.pendingCount}</div>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Pending" ? "text-white" : "text-amber-500"}`}>{buyerTransactionStats.pendingCount}</div>
               <span className="text-[10px] opacity-80 font-bold">Filter Pending</span>
             </button>
 
             <button
               onClick={() => setStatusFilter(statusFilter === "Accepted" ? "All" : "Accepted")}
-              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 statusFilter === "Accepted" ? "bg-blue-600 text-white border-blue-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-blue-200 dark:border-blue-900/40"
               }`}
             >
               <span className={`text-[10px] font-black uppercase ${statusFilter === "Accepted" ? "text-white" : "text-blue-600"}`}>🔵 Accepted</span>
-              <div className={`text-lg font-black mt-1 ${statusFilter === "Accepted" ? "text-white" : "text-blue-600"}`}>{buyerTransactionStats.acceptedCount}</div>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Accepted" ? "text-white" : "text-blue-600"}`}>{buyerTransactionStats.acceptedCount}</div>
               <span className="text-[10px] opacity-80 font-bold">Filter Accepted</span>
             </button>
 
             <button
               onClick={() => setStatusFilter(statusFilter === "Dispatched" ? "All" : "Dispatched")}
-              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 statusFilter === "Dispatched" ? "bg-purple-600 text-white border-purple-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-purple-200 dark:border-purple-900/40"
               }`}
             >
               <span className={`text-[10px] font-black uppercase ${statusFilter === "Dispatched" ? "text-white" : "text-purple-600"}`}>🚚 Dispatched</span>
-              <div className={`text-lg font-black mt-1 ${statusFilter === "Dispatched" ? "text-white" : "text-purple-600"}`}>{buyerTransactionStats.dispatchedCount}</div>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Dispatched" ? "text-white" : "text-purple-600"}`}>{buyerTransactionStats.dispatchedCount}</div>
               <span className="text-[10px] opacity-80 font-bold">Filter En Route</span>
             </button>
 
             <button
               onClick={() => setStatusFilter(statusFilter === "Completed" ? "All" : "Completed")}
-              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 statusFilter === "Completed" ? "bg-emerald-600 text-white border-emerald-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-emerald-200 dark:border-emerald-900/40"
               }`}
             >
               <span className={`text-[10px] font-black uppercase ${statusFilter === "Completed" ? "text-white" : "text-emerald-600"}`}>✅ Completed</span>
-              <div className={`text-lg font-black mt-1 ${statusFilter === "Completed" ? "text-white" : "text-emerald-600"}`}>{buyerTransactionStats.completedCount}</div>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Completed" ? "text-white" : "text-emerald-600"}`}>{buyerTransactionStats.completedCount}</div>
               <span className="text-[10px] opacity-80 font-bold">Filter Delivered</span>
             </button>
 
             <button
               onClick={() => setStatusFilter(statusFilter === "Cancelled by Farmer" ? "All" : "Cancelled by Farmer")}
-              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 statusFilter === "Cancelled by Farmer" ? "bg-red-600 text-white border-red-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-red-200 dark:border-red-900/40"
               }`}
             >
               <span className={`text-[10px] font-black uppercase ${statusFilter === "Cancelled by Farmer" ? "text-white" : "text-red-600"}`}>❌ Cancelled</span>
-              <div className={`text-lg font-black mt-1 ${statusFilter === "Cancelled by Farmer" ? "text-white" : "text-red-600"}`}>{buyerTransactionStats.cancelledByFarmerCount}</div>
+              <div className={`text-xl font-black mt-1 ${statusFilter === "Cancelled by Farmer" ? "text-white" : "text-red-600"}`}>{buyerTransactionStats.cancelledByFarmerCount}</div>
               <span className="text-[10px] opacity-80 font-bold">Filter Cancelled</span>
             </button>
           </div>
 
           {/* PRIVACY SECURITY BANNER */}
-          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs w-full">
             <div className="flex items-center gap-2.5">
               <Lock className="w-5 h-5 text-emerald-600 shrink-0" />
               <div>
@@ -1052,7 +1052,7 @@ export default function CustomerMarketplacePage() {
           </div>
 
           {/* CONTROLS HEADER BAR */}
-          <div className="bg-white dark:bg-[#1a1b23] p-4 rounded-3xl border-2 border-gray-200 dark:border-white/10 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-gray-200 dark:border-white/10 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
             <div>
               <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Receipt className="w-5 h-5 text-emerald-600" />
@@ -1067,7 +1067,7 @@ export default function CustomerMarketplacePage() {
                 <select
                   value={orderSort}
                   onChange={(e: any) => setOrderSort(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="newest">🕒 Latest First (Newest to Oldest)</option>
                   <option value="oldest">⏳ Oldest First</option>
@@ -1079,7 +1079,7 @@ export default function CustomerMarketplacePage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="All">All Statuses ({myPrivateOrders.length})</option>
                   <option value="Pending">⏳ Pending ({buyerTransactionStats.pendingCount})</option>
@@ -1095,7 +1095,7 @@ export default function CustomerMarketplacePage() {
 
           {/* DISTINCT INDIVIDUAL ORDER CARDS GRID */}
           {filteredOrders.length === 0 ? (
-            <div className="bg-white dark:bg-[#1a1b23] border-2 border-dashed border-gray-200 dark:border-white/10 p-12 text-center rounded-3xl space-y-3">
+            <div className="bg-white dark:bg-[#1a1b23] border-2 border-dashed border-gray-200 dark:border-white/10 p-12 text-center rounded-3xl space-y-3 w-full">
               <Receipt className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto" />
               <h4 className="text-base font-extrabold text-gray-900 dark:text-white">No purchase orders found for your account</h4>
               <p className="text-xs text-gray-400 font-medium max-w-md mx-auto">
@@ -1109,7 +1109,7 @@ export default function CustomerMarketplacePage() {
               </button>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-6 w-full">
               {filteredOrders.map((order) => {
                 const style = getOrderCardStyles(order.status);
 
@@ -1118,7 +1118,7 @@ export default function CustomerMarketplacePage() {
                     key={order.orderId}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`bg-white dark:bg-[#1a1b23] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all ${style.border}`}
+                    className={`bg-white dark:bg-[#1a1b23] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all ${style.border} w-full`}
                   >
                     {/* CARD HEADER BANNER WITH DISTINCT COLOR ACCENT */}
                     <div className={`px-6 py-3.5 ${style.headerBg} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-inner`}>

@@ -407,6 +407,7 @@ export default function CustomerMarketplacePage() {
   // Detailed Modals State
   const [inspectingCrop, setInspectingCrop] = useState<FarmerCropListing | null>(null);
   const [billOrder, setBillOrder] = useState<BuyerOrderRequest | null>(null);
+  const [sellerBillModal, setSellerBillModal] = useState<FarmerCropListing | null>(null);
 
   // Multi-step Checkout Modal State
   const [buyingListing, setBuyingListing] = useState<FarmerCropListing | null>(null);
@@ -1038,22 +1039,34 @@ export default function CustomerMarketplacePage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="p-6 pt-0 grid grid-cols-2 gap-3">
-                        <button
-                          onClick={() => setInspectingCrop(listing)}
-                          className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-extrabold py-3 rounded-2xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5"
-                        >
-                          <Eye className="w-4 h-4 text-emerald-600" /> View Details
-                        </button>
+                      {/* Action Buttons WITH EXPLICIT SELLER BILL / MANDI CERTIFICATE OPTION */}
+                      <div className="p-6 pt-0 space-y-2">
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setInspectingCrop(listing)}
+                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-extrabold py-3 rounded-2xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            <Eye className="w-4 h-4 text-emerald-600" /> Inspect Crop
+                          </button>
 
+                          <button
+                            onClick={() => startCheckout(listing)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md"
+                          >
+                            <ShoppingBag className="w-4 h-4" /> Buy Crop Now
+                          </button>
+                        </div>
+
+                        {/* EXPLICIT SELLER MANDI BILL & VERIFICATION CERTIFICATE OPTION */}
                         <button
-                          onClick={() => startCheckout(listing)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md"
+                          onClick={() => setSellerBillModal(listing)}
+                          className="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-extrabold rounded-2xl text-xs border border-emerald-200 dark:border-emerald-800 transition-all flex items-center justify-center gap-2 shadow-sm"
                         >
-                          <ShoppingBag className="w-4 h-4" /> Buy Crop Now
+                          <Receipt className="w-4 h-4 text-emerald-600" />
+                          <span>View Seller Mandi Bill & Registration Details</span>
                         </button>
                       </div>
+
                     </motion.div>
                   ))}
                 </div>
@@ -1345,6 +1358,110 @@ export default function CustomerMarketplacePage() {
           )}
         </div>
       )}
+
+      {/* OFFICIAL VERIFIED SELLER MANDI BILL & REGISTRATION CERTIFICATE MODAL */}
+      <AnimatePresence>
+        {sellerBillModal && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white text-gray-900 border-4 border-emerald-600 rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl relative space-y-6 font-sans overflow-hidden"
+            >
+              <button 
+                onClick={() => setSellerBillModal(null)}
+                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-800 rounded-full bg-gray-100 border"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-emerald-600 pb-4 gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">👨‍🌾</span>
+                    <span className="text-xl font-black text-emerald-800 tracking-tight">APMC Verified Farmer Certificate</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 font-bold mt-0.5">
+                    Official Mandi Produce Registration & e-KYC Certified Seller Details
+                  </p>
+                </div>
+
+                <div className="text-left sm:text-right text-xs">
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-1 rounded-md border border-emerald-300 block">
+                    e-KYC VERIFIED SELLER
+                  </span>
+                  <div className="text-gray-500 font-mono text-[10px] mt-1">CERT-2026-{sellerBillModal.id}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-1.5">
+                  <span className="text-[10px] font-black uppercase text-emerald-900 tracking-wider block border-b border-emerald-200 pb-1 mb-1">
+                    👨‍🌾 Registered Farmer Seller:
+                  </span>
+                  <div className="font-black text-base text-gray-900">{sellerBillModal.farmerName}</div>
+                  <div className="text-gray-600 font-medium">Location: {sellerBillModal.village}, {sellerBillModal.district}, {sellerBillModal.state}</div>
+                  <div className="text-gray-600 font-medium">Contact Phone: <strong>{sellerBillModal.phone}</strong></div>
+                  <div className="text-emerald-700 font-bold text-[11px] pt-1">Seller Rating: ★ {sellerBillModal.rating} / 5.0</div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-1.5">
+                  <span className="text-[10px] font-black uppercase text-gray-700 tracking-wider block border-b border-gray-200 pb-1 mb-1">
+                    🌾 Crop Produce Benchmark:
+                  </span>
+                  <div className="font-black text-base text-gray-900">{sellerBillModal.cropName}</div>
+                  <div className="text-gray-600 font-medium">Category: {sellerBillModal.category}</div>
+                  <div className="text-gray-600 font-medium">Quality Grade: <strong className="text-emerald-700">{sellerBillModal.qualityGrade}</strong></div>
+                  <div className="text-gray-600 font-medium">Available Stock: <strong>{sellerBillModal.availableQuantityQuintals} Quintals</strong></div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-xs space-y-2">
+                <h4 className="font-black text-gray-900 uppercase text-[10px]">Mandi Price & Freight Logistics Breakdown</h4>
+                <div className="grid grid-cols-3 gap-2 text-center font-extrabold">
+                  <div className="bg-white p-2.5 rounded-xl border">
+                    <span className="text-[9px] text-gray-400 block uppercase">Listed Mandi Rate</span>
+                    <span className="text-sm text-emerald-700">₹{sellerBillModal.pricePerQuintal.toLocaleString("en-IN")}/q</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-xl border">
+                    <span className="text-[9px] text-gray-400 block uppercase">Delivery Option</span>
+                    <span className="text-xs text-gray-800">{sellerBillModal.deliveryOption}</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-xl border">
+                    <span className="text-[9px] text-gray-400 block uppercase">APMC Verification</span>
+                    <span className="text-xs text-emerald-700">Verified APMC Yard</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-gray-500 font-bold gap-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>Certified Mandi Trade Certificate by Developer Uday Pratap Singh Chauhan</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <Printer className="w-4 h-4" /> Print Seller Mandi Certificate
+                  </button>
+
+                  <button
+                    onClick={() => setSellerBillModal(null)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 font-black rounded-xl text-xs"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* OFFICIAL PRINTABLE TAX INVOICE BILL RECEIPT MODAL */}
       <AnimatePresence>
@@ -1708,7 +1825,7 @@ export default function CustomerMarketplacePage() {
         )}
       </AnimatePresence>
 
-      {/* INSPECT CROP MODAL */}
+      {/* INSPECT CROP MODAL WITH SELLER BILL CERTIFICATE TRIGGER */}
       <AnimatePresence>
         {inspectingCrop && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -1734,17 +1851,31 @@ export default function CustomerMarketplacePage() {
                 </div>
               </div>
 
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-2xl flex justify-between items-center text-xs">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-3">
                 <div>
                   <span className="text-gray-400 font-bold uppercase text-[10px]">APMC Mandi Rate</span>
                   <div className="text-xl font-black text-emerald-700">₹{inspectingCrop.pricePerQuintal.toLocaleString("en-IN")}/quintal</div>
                 </div>
-                <button
-                  onClick={() => startCheckout(inspectingCrop)}
-                  className="bg-emerald-600 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-md text-xs"
-                >
-                  Buy This Crop Now
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const crop = inspectingCrop;
+                      setInspectingCrop(null);
+                      setSellerBillModal(crop);
+                    }}
+                    className="bg-white dark:bg-white/10 text-emerald-700 dark:text-emerald-300 border border-emerald-300 font-extrabold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5"
+                  >
+                    <Receipt className="w-4 h-4" /> View Seller Mandi Bill
+                  </button>
+
+                  <button
+                    onClick={() => startCheckout(inspectingCrop)}
+                    className="bg-emerald-600 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-md text-xs"
+                  >
+                    Buy This Crop Now
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-end pt-2">

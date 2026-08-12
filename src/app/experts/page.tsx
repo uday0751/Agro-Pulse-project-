@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Stethoscope, Star, Calendar, MessageSquare, Video, PhoneCall, X, 
   CheckCircle, Search, ShieldCheck, UserCheck, AlertCircle, FileText, 
-  Award, Lock, PlusCircle, CheckCircle2, Clock, ThumbsUp, RefreshCw, Send, Paperclip, CreditCard, Smartphone, Building, QrCode, BellRing, ExternalLink, ArrowRight
+  Award, Lock, PlusCircle, CheckCircle2, Clock, ThumbsUp, RefreshCw, Send, Paperclip, CreditCard, Smartphone, Building, QrCode, BellRing, ExternalLink, ArrowRight, LogIn, UserPlus, ShieldAlert
 } from "lucide-react";
 
 export interface RealExpert {
@@ -28,6 +28,7 @@ export interface RealExpert {
   rating: number;
   reviewsCount: number;
   joinedDate: string;
+  loginPassword?: string;
 }
 
 export interface ConsultationBooking {
@@ -104,100 +105,18 @@ export function validateAadhaarNumber(aadhaar: string): { isValid: boolean; mess
   return { isValid: true, message: "✓ Aadhaar Verified via Official Verhoeff Checksum!" };
 }
 
-// SEED VERIFIED REAL HUMAN EXPERTS
-const INITIAL_REAL_EXPERTS: RealExpert[] = [
-  {
-    id: "exp-201",
-    name: "Dr. Rameshwar V. Patil",
-    category: "pest",
-    title: "Senior Entomologist & Crop Protection Scientist",
-    qualification: "Ph.D. Agricultural Entomology (IARI Pusa)",
-    experience: 14,
-    aadhaarNumber: "4321 8765 9012",
-    aadhaarVerified: true,
-    phone: "+91 98221 45678",
-    email: "rameshwar.patil@agriuniv.edu.in",
-    feePerSession: 350,
-    languages: ["English", "Hindi", "Marathi"],
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80",
-    availability: "Mon - Fri, 10:00 AM - 04:00 PM",
-    bio: "Ex-ICAR Senior Agronomist specializing in IPM (Integrated Pest Management), pink bollworm control in cotton, and fall armyworm control in maize.",
-    status: "Approved",
-    rating: 4.9,
-    reviewsCount: 142,
-    joinedDate: "2026-01-15"
-  },
-  {
-    id: "exp-202",
-    name: "Dr. Ananya S. Rao",
-    category: "soil",
-    title: "Soil Health Scientist & Micronutrient Specialist",
-    qualification: "M.Sc. Soil Science & Agricultural Chemistry",
-    experience: 9,
-    aadhaarNumber: "5678 1234 9087",
-    aadhaarVerified: true,
-    phone: "+91 94480 12345",
-    email: "ananya.rao@soilhealth.org",
-    feePerSession: 300,
-    languages: ["English", "Telugu", "Hindi"],
-    avatar: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&w=300&q=80",
-    availability: "Mon - Sat, 09:00 AM - 01:00 PM",
-    bio: "Specialist in alkaline soil reclamation, NPK organic fertilization, drip fertigation schedules, and micro-nutrient deficient soil correction.",
-    status: "Approved",
-    rating: 4.8,
-    reviewsCount: 98,
-    joinedDate: "2026-02-10"
-  },
-  {
-    id: "exp-203",
-    name: "Dr. Gurcharan Singh Dhillon",
-    category: "disease",
-    title: "Chief Plant Pathologist (Fungal & Viral Diseases)",
-    qualification: "Ph.D. Plant Pathology (PAU Ludhiana)",
-    experience: 18,
-    aadhaarNumber: "9876 5432 1098",
-    aadhaarVerified: true,
-    phone: "+91 98140 98765",
-    email: "gurcharan.dhillon@pau.edu",
-    feePerSession: 400,
-    languages: ["Punjabi", "Hindi", "English"],
-    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=300&q=80",
-    availability: "Tue - Thu, 02:00 PM - 06:00 PM",
-    bio: "18+ years advising wheat, paddy, and sugarcane farmers on yellow rust, blast disease, sheath blight, and bio-fungicide treatments.",
-    status: "Approved",
-    rating: 5.0,
-    reviewsCount: 215,
-    joinedDate: "2025-11-20"
-  },
-  {
-    id: "exp-204",
-    name: "Dr. Savitri Devi Sharma",
-    category: "organic",
-    title: "Natural Farming & Organic Certification Expert",
-    qualification: "M.Sc. Organic Agriculture (CSKHPKV Palampur)",
-    experience: 11,
-    aadhaarNumber: "3456 7890 1234",
-    aadhaarVerified: true,
-    phone: "+91 98260 55443",
-    email: "savitri.organic@gmail.com",
-    feePerSession: 250,
-    languages: ["Hindi", "Gujarati", "Bengali"],
-    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80",
-    availability: "Mon - Fri, 03:00 PM - 07:00 PM",
-    bio: "Zero Budget Natural Farming (ZBNF) specialist. Expert in Jeevamrut, Beejamrut preparation, vermicomposting, and NPOP organic exports.",
-    status: "Approved",
-    rating: 4.9,
-    reviewsCount: 167,
-    joinedDate: "2026-03-01"
-  }
-];
+// NO ARTIFICIAL BOTS OR SEED ACCOUNTS — ONLY REAL EXPERTS REGISTERED BY HUMANS AND APPROVED BY DEVELOPER
+const INITIAL_REAL_EXPERTS: RealExpert[] = [];
 
 export default function ExpertConsultationPage() {
-  const [activeTab, setActiveTab] = useState<"directory" | "register" | "my_bookings" | "admin_review">("directory");
+  const [activeTab, setActiveTab] = useState<"directory" | "register" | "expert_login" | "my_bookings" | "admin_review">("directory");
   const [experts, setExperts] = useState<RealExpert[]>(INITIAL_REAL_EXPERTS);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Logged-in Expert Session State
+  const [loggedInExpert, setLoggedInExpert] = useState<RealExpert | null>(null);
 
   // Expert Registration Form State
   const [regName, setRegName] = useState("");
@@ -208,10 +127,15 @@ export default function ExpertConsultationPage() {
   const [regAadhaar, setRegAadhaar] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
   const [regFee, setRegFee] = useState("");
   const [regLanguages, setRegLanguages] = useState("English, Hindi");
   const [regBio, setRegBio] = useState("");
   const [regAvatar, setRegAvatar] = useState("");
+
+  // Expert Sign-In State
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginAadhaar, setLoginAadhaar] = useState("");
 
   // Aadhaar Verification State
   const [aadhaarValidationResult, setAadhaarValidationResult] = useState<{ isValid: boolean; message: string } | null>(null);
@@ -236,7 +160,6 @@ export default function ExpertConsultationPage() {
   const [cardNumberInput, setCardNumberInput] = useState("");
   const [cardExpiryInput, setCardExpiryInput] = useState("");
   const [cardCvvInput, setCardCvvInput] = useState("");
-  const [cardNameInput, setCardNameInput] = useState("");
   const [selectedBank, setSelectedBank] = useState("HDFC Bank");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [waitingTimer, setWaitingTimer] = useState(180);
@@ -245,20 +168,16 @@ export default function ExpertConsultationPage() {
 
   // Live Chat State
   const [chatExpert, setChatExpert] = useState<RealExpert | null>(null);
-  const [chatMessagesMap, setChatMessagesMap] = useState<Record<string, ChatMessage[]>>({
-    "exp-201": [
-      { id: "m1", sender: "expert", text: "Namaste! I am Dr. Rameshwar Patil. Please describe your crop pest concern or share photos of affected plants.", timestamp: "10:00 AM" }
-    ]
-  });
+  const [chatMessagesMap, setChatMessagesMap] = useState<Record<string, ChatMessage[]>>({});
   const [chatInputText, setChatInputText] = useState("");
 
   // Load from localStorage
   useEffect(() => {
-    const savedExperts = localStorage.getItem("agropulse_real_experts");
+    const savedExperts = localStorage.getItem("agropulse_real_human_experts");
     if (savedExperts) {
       try {
         const parsed = JSON.parse(savedExperts);
-        if (Array.isArray(parsed) && parsed.length > 0) setExperts(parsed);
+        if (Array.isArray(parsed)) setExperts(parsed);
       } catch (e) { console.error(e); }
     }
 
@@ -281,7 +200,6 @@ export default function ExpertConsultationPage() {
         setWaitingTimer(prev => (prev > 0 ? prev - 1 : 0));
       }, 1000);
 
-      // Automatically verify & confirm session as soon as user approves payment
       autoConfirmTimeout = setTimeout(() => {
         handleCompleteUpiApproval();
       }, 4500);
@@ -336,12 +254,13 @@ export default function ExpertConsultationPage() {
         aadhaarVerified: true,
         phone: regPhone,
         email: regEmail,
+        loginPassword: regPassword || "expert123",
         feePerSession: Number(regFee) || 300,
         languages: regLanguages.split(",").map(s => s.trim()),
         avatar: regAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
         availability: "Mon - Sat, 10:00 AM - 05:00 PM",
-        bio: regBio || "Verified Agricultural Expert ready to guide Indian farmers in high-yield organic farming.",
-        status: "Pending Verification",
+        bio: regBio || "Verified Agricultural Expert ready to guide Indian farmers.",
+        status: "Pending Verification", // REQUIRES DEVELOPER APPROVAL
         rating: 5.0,
         reviewsCount: 0,
         joinedDate: new Date().toISOString().split("T")[0]
@@ -349,7 +268,7 @@ export default function ExpertConsultationPage() {
 
       const updated = [newExpert, ...experts];
       setExperts(updated);
-      localStorage.setItem("agropulse_real_experts", JSON.stringify(updated));
+      localStorage.setItem("agropulse_real_human_experts", JSON.stringify(updated));
 
       setShowOtpModal(false);
       setOtpInput("");
@@ -357,23 +276,48 @@ export default function ExpertConsultationPage() {
 
       setRegName(""); setRegTitle(""); setRegQualification(""); setRegAadhaar(""); setRegPhone(""); setRegEmail(""); setRegFee(""); setRegBio(""); setAadhaarValidationResult(null);
 
-      alert("🎉 Real Expert Registration Submitted Successfully! Your Aadhaar has been verified via UIDAI Verhoeff Checksum.");
+      alert("🎉 Real Expert Account Created Successfully! Your Aadhaar e-KYC has been verified via UIDAI Verhoeff Checksum. Your account is now in the Developer Verification Queue awaiting approval.");
       setActiveTab("admin_review");
     }, 1500);
   };
 
-  // Developer / Admin Approval Handler
+  // Expert Sign-In Handler
+  const handleExpertLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const found = experts.find(e => e.email.toLowerCase() === loginEmail.trim().toLowerCase() || e.aadhaarNumber.includes(loginAadhaar.trim()));
+    
+    if (!found) {
+      alert("No registered expert account found with these credentials. Please create an account first.");
+      return;
+    }
+
+    if (found.status === "Pending Verification") {
+      alert("🔒 Your expert account is currently pending developer approval. Once approved by Developer, you can access your dashboard.");
+      setLoggedInExpert(found);
+      return;
+    }
+
+    if (found.status === "Rejected") {
+      alert("❌ Your expert verification request was rejected by the Developer.");
+      return;
+    }
+
+    setLoggedInExpert(found);
+    alert(`Welcome back, ${found.name}! Your Real Expert Account is active.`);
+  };
+
+  // Developer Approval Handler
   const handleApproveExpert = (expertId: string) => {
     const updated = experts.map(e => e.id === expertId ? { ...e, status: "Approved" as const, aadhaarVerified: true } : e);
     setExperts(updated);
-    localStorage.setItem("agropulse_real_experts", JSON.stringify(updated));
+    localStorage.setItem("agropulse_real_human_experts", JSON.stringify(updated));
     alert("✓ Expert Application Approved & Activated in Public Directory!");
   };
 
   const handleRejectExpert = (expertId: string) => {
     const updated = experts.map(e => e.id === expertId ? { ...e, status: "Rejected" as const } : e);
     setExperts(updated);
-    localStorage.setItem("agropulse_real_experts", JSON.stringify(updated));
+    localStorage.setItem("agropulse_real_human_experts", JSON.stringify(updated));
   };
 
   // Step 1 -> Step 2
@@ -386,21 +330,19 @@ export default function ExpertConsultationPage() {
     setBookingStep(2);
   };
 
-  // REAL-TIME DIRECT REDIRECTION TO INSTALLED UPI APP (PHONEPE / GPAY / PAYTM)
+  // REAL-TIME DIRECT REDIRECTION TO INSTALLED UPI APP
   const handleLaunchUpiDirectRedirection = () => {
     if (!bookingExpert) return;
 
     const payeeUpi = "udaychauhan0751@ibl";
     const fee = bookingExpert.feePerSession;
     
-    // Universal NPCI & Native PhonePe App Deep Links
     const upiUri = `upi://pay?pa=${payeeUpi}&pn=AgroPulse&am=${fee}&cu=INR&tn=Expert%20Booking%20Session%20${encodeURIComponent(bookingExpert.name)}`;
     const phonepeUri = `phonepe://pay?pa=${payeeUpi}&pn=AgroPulse&am=${fee}&cu=INR&tn=Expert%20Booking%20Session`;
 
     setActiveUpiLink(upiUri);
     setPhonepeDirectLink(phonepeUri);
 
-    // Direct Browser Redirection Trigger
     if (typeof window !== "undefined") {
       try {
         const link = document.createElement("a");
@@ -510,22 +452,6 @@ export default function ExpertConsultationPage() {
 
     setChatMessagesMap(prev => ({ ...prev, [chatExpert.id]: updatedMsgs }));
     setChatInputText("");
-
-    setTimeout(() => {
-      const expertReplies = [
-        `Thank you for sharing. Based on your description, apply Chlorpyrifos 20% EC at 2ml/liter of water or Neem oil (10,000 ppm) for natural pest control.`,
-        `Please ensure soil moisture is maintained at 60-70%. I recommend testing soil NPK levels before applying nitrogenous fertilizer.`,
-        `I have noted your concern. Make sure to spray in early morning or late evening to prevent flower drop.`
-      ];
-      const replyText = expertReplies[Math.floor(Math.random() * expertReplies.length)];
-      const replyMsg: ChatMessage = {
-        id: `msg-reply-${Date.now()}`,
-        sender: "expert",
-        text: replyText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setChatMessagesMap(prev => ({ ...prev, [chatExpert.id]: [...(prev[chatExpert.id] || []), replyMsg] }));
-    }, 1800);
   };
 
   const approvedExperts = useMemo(() => experts.filter(e => e.status === "Approved"), [experts]);
@@ -546,8 +472,8 @@ export default function ExpertConsultationPage() {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-green-500/30 shadow-md">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-green-300 dark:border-green-800 flex items-center gap-1">
-              🛡️ 100% Real Human Experts Only • Instant UPI ID Payment Gateway
+            <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+              🛡️ Zero AI Bots • 100% Real Human Experts Approved by Developer
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white flex items-center gap-2.5">
@@ -555,7 +481,7 @@ export default function ExpertConsultationPage() {
             Real Human Expert Agriculture Consultants
           </h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
-            Enter your UPI ID to trigger instant payment redirection to your UPI app.
+            Experts create their account with Aadhaar e-KYC. Every expert account must be verified & approved by Developer.
           </p>
         </div>
 
@@ -576,7 +502,16 @@ export default function ExpertConsultationPage() {
               activeTab === "register" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
             }`}
           >
-            <PlusCircle className="w-3.5 h-3.5 text-yellow-300" /> Register as Expert
+            <UserPlus className="w-3.5 h-3.5 text-yellow-300" /> Create Expert Account
+          </button>
+
+          <button
+            onClick={() => setActiveTab("expert_login")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              activeTab === "expert_login" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+            }`}
+          >
+            <LogIn className="w-3.5 h-3.5" /> Expert Sign In
           </button>
 
           <button
@@ -596,7 +531,7 @@ export default function ExpertConsultationPage() {
                 : "border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50"
             }`}
           >
-            <ShieldCheck className="w-3.5 h-3.5" /> Dev Verification Queue
+            <ShieldCheck className="w-3.5 h-3.5" /> Developer Approval Queue
             {pendingExperts.length > 0 && (
               <span className="bg-amber-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
                 {pendingExperts.length}
@@ -606,7 +541,7 @@ export default function ExpertConsultationPage() {
         </div>
       </header>
 
-      {/* TAB 1: VERIFIED REAL EXPERTS DIRECTORY */}
+      {/* TAB 1: VERIFIED REAL EXPERTS DIRECTORY (ONLY APPROVED REAL HUMANS) */}
       {activeTab === "directory" && (
         <div className="space-y-6">
           
@@ -616,7 +551,7 @@ export default function ExpertConsultationPage() {
               <Search className="absolute left-3.5 top-3 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search real experts by name or degree..."
+                placeholder="Search real approved experts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white"
@@ -647,88 +582,117 @@ export default function ExpertConsultationPage() {
             </div>
           </div>
 
-          {/* Real Experts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredExperts.map(expert => (
-              <div
-                key={expert.id}
-                className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 rounded-3xl p-5 shadow-sm flex flex-col justify-between hover:border-green-500/60 transition-all group"
-              >
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" /> Aadhaar Verified
-                    </span>
-                    <span className="text-xs font-black text-amber-500 flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" /> {expert.rating} ({expert.reviewsCount})
-                    </span>
-                  </div>
-
-                  <div className="text-center space-y-2">
-                    <div className="relative w-20 h-20 mx-auto">
-                      <img
-                        src={expert.avatar}
-                        alt={expert.name}
-                        className="w-full h-full rounded-2xl object-cover border-2 border-green-500 shadow-md"
-                      />
-                      <span className="absolute -bottom-1 -right-1 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm">
-                        ✓
+          {/* NO BOTS / EMPTY STATE WHEN NO EXPERTS ARE APPROVED YET */}
+          {filteredExperts.length === 0 ? (
+            <div className="bg-white dark:bg-[#1a1b23] border-2 border-dashed border-gray-200 dark:border-white/10 p-12 text-center rounded-3xl space-y-4 max-w-2xl mx-auto">
+              <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950/80 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-3xl font-black">
+                👨‍⚕️
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white">No AI Bot Experts Available</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
+                  We have removed all automated bot accounts. Real human experts must create an account using <strong>"Create Expert Account"</strong> and get approved by the Developer to appear here.
+                </p>
+              </div>
+              <div className="flex justify-center gap-3 pt-2">
+                <button
+                  onClick={() => setActiveTab("register")}
+                  className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <UserPlus className="w-4 h-4" /> Create Real Expert Account
+                </button>
+                <button
+                  onClick={() => setActiveTab("admin_review")}
+                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Open Developer Queue
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Real Experts Grid */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredExperts.map(expert => (
+                <div
+                  key={expert.id}
+                  className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 rounded-3xl p-5 shadow-sm flex flex-col justify-between hover:border-green-500/60 transition-all group"
+                >
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" /> Developer Approved
+                      </span>
+                      <span className="text-xs font-black text-amber-500 flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 fill-amber-400" /> {expert.rating} ({expert.reviewsCount})
                       </span>
                     </div>
 
-                    <div>
-                      <h3 className="font-extrabold text-sm text-gray-900 dark:text-white group-hover:text-green-600 transition-colors">{expert.name}</h3>
-                      <p className="text-[11px] font-black text-green-600 dark:text-green-400">{expert.title}</p>
-                      <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{expert.qualification}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 space-y-2 text-xs font-semibold">
-                    <div className="flex justify-between text-gray-500">
-                      <span>Experience:</span>
-                      <span className="font-black text-gray-900 dark:text-white">{expert.experience} Years</span>
-                    </div>
-                    <div className="flex justify-between text-gray-500">
-                      <span>Consultation Fee:</span>
-                      <span className="font-black text-green-600 dark:text-green-400">₹{expert.feePerSession} / Session</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {expert.languages.map(l => (
-                        <span key={l} className="text-[9px] font-bold px-2 py-0.5 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 rounded-md">
-                          {l}
+                    <div className="text-center space-y-2">
+                      <div className="relative w-20 h-20 mx-auto">
+                        <img
+                          src={expert.avatar}
+                          alt={expert.name}
+                          className="w-full h-full rounded-2xl object-cover border-2 border-green-500 shadow-md"
+                        />
+                        <span className="absolute -bottom-1 -right-1 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm">
+                          ✓
                         </span>
-                      ))}
+                      </div>
+
+                      <div>
+                        <h3 className="font-extrabold text-sm text-gray-900 dark:text-white group-hover:text-green-600 transition-colors">{expert.name}</h3>
+                        <p className="text-[11px] font-black text-green-600 dark:text-green-400">{expert.title}</p>
+                        <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{expert.qualification}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 space-y-2 text-xs font-semibold">
+                      <div className="flex justify-between text-gray-500">
+                        <span>Experience:</span>
+                        <span className="font-black text-gray-900 dark:text-white">{expert.experience} Years</span>
+                      </div>
+                      <div className="flex justify-between text-gray-500">
+                        <span>Consultation Fee:</span>
+                        <span className="font-black text-green-600 dark:text-green-400">₹{expert.feePerSession} / Session</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {expert.languages.map(l => (
+                          <span key={l} className="text-[9px] font-bold px-2 py-0.5 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 rounded-md">
+                            {l}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-5">
-                  <button
-                    onClick={() => {
-                      setBookingExpert(expert);
-                      setBookingStep(1);
-                      setBookingDate(""); setBookingTimeSlot(""); setFarmerNameInput(""); setFarmerPhoneInput(""); setCropConcernInput("");
-                      setBookingSuccess(false); setConfirmedBookingDetails(null);
-                    }}
-                    className="bg-green-600 hover:bg-green-700 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all"
-                  >
-                    <Calendar className="w-3.5 h-3.5" /> Book Session
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-5">
+                    <button
+                      onClick={() => {
+                        setBookingExpert(expert);
+                        setBookingStep(1);
+                        setBookingDate(""); setBookingTimeSlot(""); setFarmerNameInput(""); setFarmerPhoneInput(""); setCropConcernInput("");
+                        setBookingSuccess(false); setConfirmedBookingDetails(null);
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all"
+                    >
+                      <Calendar className="w-3.5 h-3.5" /> Book Session
+                    </button>
 
-                  <button
-                    onClick={() => setChatExpert(expert)}
-                    className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 hover:bg-green-100 text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 text-green-600" /> Live Chat
-                  </button>
+                    <button
+                      onClick={() => setChatExpert(expert)}
+                      className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 hover:bg-green-100 text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-green-600" /> Live Chat
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* TAB 2: REGISTER AS REAL EXPERT */}
+      {/* TAB 2: CREATE REAL EXPERT ACCOUNT */}
       {activeTab === "register" && (
         <div className="max-w-3xl mx-auto">
           <div className="bg-white dark:bg-[#1a1b23] border-2 border-green-500/40 rounded-3xl p-6 md:p-8 shadow-xl space-y-6">
@@ -738,9 +702,9 @@ export default function ExpertConsultationPage() {
                 🆔
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">Real Human Expert Registration Form</h2>
+                <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">Create Real Human Expert Account</h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                  Mandatory 12-digit Aadhaar Verification via UIDAI Verhoeff Checksum to prevent fake bot accounts.
+                  Mandatory 12-digit Aadhaar Verification via UIDAI Verhoeff Checksum. Accounts are submitted to the Developer for approval.
                 </p>
               </div>
             </div>
@@ -832,7 +796,7 @@ export default function ExpertConsultationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Mobile Number *</label>
+                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Mobile Phone Number *</label>
                   <input
                     type="tel"
                     required
@@ -851,6 +815,18 @@ export default function ExpertConsultationPage() {
                     placeholder="expert@agriuniv.edu.in"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Create Account Password *</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
                     className="w-full px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
                   />
                 </div>
@@ -882,7 +858,7 @@ export default function ExpertConsultationPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Bio & Practical Agricultural Experience</label>
+                <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Bio & Practical Experience Summary</label>
                 <textarea
                   rows={3}
                   placeholder="Describe your practical field experience..."
@@ -901,14 +877,91 @@ export default function ExpertConsultationPage() {
                     : "bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed"
                 }`}
               >
-                <ShieldCheck className="w-4 h-4" /> Verify Aadhaar via UIDAI & Submit Registration
+                <ShieldCheck className="w-4 h-4" /> Submit Account for Developer Approval
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* TAB 3: DEVELOPER VERIFICATION QUEUE */}
+      {/* TAB 3: DEDICATED EXPERT SIGN IN */}
+      {activeTab === "expert_login" && (
+        <div className="max-w-md mx-auto">
+          <div className="bg-white dark:bg-[#1a1b23] border-2 border-green-500/40 rounded-3xl p-6 md:p-8 shadow-xl space-y-5">
+            
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 bg-green-100 dark:bg-green-950 text-green-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-black">
+                🔐
+              </div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white">Real Expert Account Sign In</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                Log into your registered expert account to manage consultations and answer farmer questions.
+              </p>
+            </div>
+
+            {loggedInExpert ? (
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border-2 border-emerald-500 space-y-3">
+                <div className="flex items-center gap-3">
+                  <img src={loggedInExpert.avatar} alt={loggedInExpert.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-green-500" />
+                  <div>
+                    <h4 className="font-extrabold text-sm text-gray-900 dark:text-white">{loggedInExpert.name}</h4>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                      loggedInExpert.status === "Approved" ? "bg-emerald-200 text-emerald-800" : "bg-amber-200 text-amber-800"
+                    }`}>
+                      Account Status: {loggedInExpert.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 space-y-1 pt-2 border-t border-emerald-200 dark:border-emerald-800">
+                  <div><strong>Specialty:</strong> {loggedInExpert.title}</div>
+                  <div><strong>Aadhaar Status:</strong> Verified ({loggedInExpert.aadhaarNumber})</div>
+                </div>
+
+                <button
+                  onClick={() => setLoggedInExpert(null)}
+                  className="w-full py-2 bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 rounded-xl text-xs font-black hover:bg-red-200 transition-all"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleExpertLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Email Address / Aadhaar Number *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. expert@agriuniv.edu.in or Aadhaar"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Account Password *</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" /> Sign In to Expert Portal
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: DEVELOPER & ADMIN VERIFICATION QUEUE */}
       {activeTab === "admin_review" && (
         <div className="space-y-6">
           <div className="bg-purple-900 text-white rounded-3xl p-6 shadow-xl border border-purple-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -916,22 +969,22 @@ export default function ExpertConsultationPage() {
               <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-xs font-black text-purple-300 mb-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-yellow-400" /> Developer & Admin Verification Desk
               </div>
-              <h2 className="text-2xl font-black text-white">Pending Real Expert Verification Requests</h2>
+              <h2 className="text-2xl font-black text-white">Pending Real Expert Account Requests</h2>
               <p className="text-purple-200 text-xs font-medium mt-0.5">
-                Review submitted expert applications, verify degree credentials and Aadhaar Verhoeff status.
+                Only accounts approved by Developer will appear in the public Directory.
               </p>
             </div>
 
             <div className="bg-white/10 px-4 py-2 rounded-2xl text-xs font-black text-white">
-              Pending Queue: {pendingExperts.length} Requests
+              Pending Queue: {pendingExperts.length} Accounts
             </div>
           </div>
 
           {pendingExperts.length === 0 ? (
             <div className="bg-white dark:bg-[#1a1b23] p-12 text-center rounded-3xl border border-gray-100 dark:border-white/10 space-y-2">
               <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
-              <h3 className="text-base font-extrabold text-gray-900 dark:text-white">All Pending Expert Applications Reviewed!</h3>
-              <p className="text-xs text-gray-400 font-medium">There are no pending verification requests in the developer queue.</p>
+              <h3 className="text-base font-extrabold text-gray-900 dark:text-white">All Expert Applications Reviewed!</h3>
+              <p className="text-xs text-gray-400 font-medium">There are no pending expert account verification requests in the developer queue.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -952,7 +1005,7 @@ export default function ExpertConsultationPage() {
 
                       <h3 className="text-lg font-black text-gray-900 dark:text-white mt-1">{exp.name}</h3>
                       <p className="text-xs font-extrabold text-green-600 dark:text-green-400">{exp.title} • {exp.qualification}</p>
-                      <p className="text-xs text-gray-500 font-medium mt-1">Experience: {exp.experience} Years | Fee: ₹{exp.feePerSession}/session | Phone: {exp.phone}</p>
+                      <p className="text-xs text-gray-500 font-medium mt-1">Experience: {exp.experience} Years | Fee: ₹{exp.feePerSession}/session | Phone: {exp.phone} | Email: {exp.email}</p>
                       <p className="text-xs text-gray-400 font-normal mt-2 italic max-w-xl">"{exp.bio}"</p>
                     </div>
                   </div>
@@ -979,13 +1032,13 @@ export default function ExpertConsultationPage() {
         </div>
       )}
 
-      {/* TAB 4: MY BOOKED CONSULTATIONS DASHBOARD */}
+      {/* TAB 5: MY BOOKED CONSULTATIONS DASHBOARD */}
       {activeTab === "my_bookings" && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border border-gray-100 dark:border-white/10 flex justify-between items-center">
             <div>
               <h3 className="text-base font-extrabold text-gray-900 dark:text-white">My Scheduled Consultations & Payment Receipts</h3>
-              <p className="text-xs text-gray-400 font-medium mt-0.5">View scheduled sessions and 256-bit encrypted digital payment transaction receipts.</p>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">View scheduled sessions and digital payment transaction receipts.</p>
             </div>
             <span className="text-xs font-black text-green-600 bg-green-50 dark:bg-green-950 px-3 py-1.5 rounded-xl border border-green-200">
               Total Bookings: {bookings.length}

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShoppingBag, Search, MapPin, Phone, MessageSquare, 
-  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle, PackageCheck, Filter, ChevronUp, Map, CreditCard, RefreshCw
+  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle, PackageCheck, Filter, ChevronUp, Map, CreditCard, RefreshCw, Printer, ExternalLink
 } from "lucide-react";
 import Link from "next/link";
 
@@ -54,6 +54,9 @@ export interface BuyerOrderRequest {
   status: "Pending" | "Accepted" | "Dispatched" | "Completed" | "Cancelled by Buyer" | "Cancelled by Farmer";
   cancellationReason?: string;
   paymentMethod: string;
+  qualityGrade?: string;
+  deliveryOption?: string;
+  farmLocation?: string;
 }
 
 export const ALL_INDIAN_STATES_AND_UTS = [
@@ -263,7 +266,10 @@ const INITIAL_ORDERS: BuyerOrderRequest[] = [
     totalPrice: 26000,
     orderDate: "Today, 02:30 PM",
     status: "Pending",
-    paymentMethod: "Cash on Delivery / Direct Bank"
+    paymentMethod: "Cash on Delivery / Direct Bank",
+    qualityGrade: "Organic Certified",
+    deliveryOption: "Doorstep Delivery",
+    farmLocation: "Baramati, Pune, Maharashtra"
   },
   {
     sequenceNo: 2,
@@ -286,7 +292,10 @@ const INITIAL_ORDERS: BuyerOrderRequest[] = [
     orderDate: "Yesterday",
     status: "Cancelled by Farmer",
     cancellationReason: "Stock depleted due to heavy unseasonal rains at farm orchard in Ratnagiri.",
-    paymentMethod: "Prepaid Bank Transfer"
+    paymentMethod: "Prepaid Bank Transfer",
+    qualityGrade: "GI-Tagged Original Hapus",
+    deliveryOption: "Doorstep Delivery",
+    farmLocation: "Devgad, Ratnagiri, Maharashtra"
   },
   {
     sequenceNo: 3,
@@ -308,7 +317,10 @@ const INITIAL_ORDERS: BuyerOrderRequest[] = [
     totalPrice: 37500,
     orderDate: "2 days ago",
     status: "Accepted",
-    paymentMethod: "Prepaid Direct"
+    paymentMethod: "Prepaid Direct",
+    qualityGrade: "Export Quality",
+    deliveryOption: "Doorstep Delivery",
+    farmLocation: "Lasalgaon, Nashik, Maharashtra"
   }
 ];
 
@@ -578,7 +590,10 @@ export default function CustomerMarketplacePage() {
       totalPrice: checkoutCalculations.grandTotal,
       orderDate: "Today, Just Now",
       status: "Pending",
-      paymentMethod: "Cash on Delivery / Direct Bank Transfer"
+      paymentMethod: "Cash on Delivery / Direct Bank Transfer",
+      qualityGrade: buyingListing.qualityGrade,
+      deliveryOption: buyingListing.deliveryOption,
+      farmLocation: `${buyingListing.village}, ${buyingListing.district}, ${buyingListing.state}`
     };
 
     const updatedOrders = [newOrder, ...orders];
@@ -910,7 +925,7 @@ export default function CustomerMarketplacePage() {
         </div>
       )}
 
-      {/* REDESIGNED MY CUSTOMER ORDERS (DISTINCT INDIVIDUAL CARDS WITH HIGH VISUAL CONTRAST) */}
+      {/* REDESIGNED MY CUSTOMER ORDERS WITH EXHAUSTIVE "SHOW FULL PURCHASE DETAILS" MODAL */}
       {activeTab === "my_orders" && (
         <div className="space-y-6">
           
@@ -983,9 +998,9 @@ export default function CustomerMarketplacePage() {
             <div>
               <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Receipt className="w-5 h-5 text-emerald-600" />
-                My Crop Orders ({filteredOrders.length})
+                My Crop Purchase Orders ({filteredOrders.length})
               </h3>
-              <p className="text-xs text-gray-400 font-medium mt-0.5">Each order card below is color-coded and clearly structured with distinct item details.</p>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">Click "Show Full Purchase Details" on any order card to view the complete tax invoice and full metadata.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -1108,16 +1123,6 @@ export default function CustomerMarketplacePage() {
                         </div>
                       )}
 
-                      {order.status === "Cancelled by Buyer" && (
-                        <div className="bg-amber-50 dark:bg-amber-950/40 p-4 rounded-2xl border-2 border-amber-500/50 text-xs font-bold text-amber-900 dark:text-amber-200 flex items-start gap-3 shadow-sm">
-                          <XCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-black text-amber-700 dark:text-amber-400 block text-xs">Buyer Cancellation Note:</span>
-                            <p className="mt-0.5 text-amber-800 dark:text-amber-200 font-semibold">{order.cancellationReason || "Order cancelled manually by customer."}</p>
-                          </div>
-                        </div>
-                      )}
-
                       {/* SECTION 2: ITEMIZED ORDER DATA GRID */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 text-xs font-semibold">
                         <div>
@@ -1141,27 +1146,38 @@ export default function CustomerMarketplacePage() {
                         </div>
                       </div>
 
-                      {/* SECTION 3: DELIVERY ADDRESS & CANCEL ACTION BAR */}
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-2">
+                      {/* SECTION 3: DELIVERY ADDRESS & EXPLICIT "SHOW FULL PURCHASE DETAILS" ACTION BUTTON */}
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
                         <div className="flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 w-full md:w-auto">
                           <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
                           <span>Delivery Address: <strong>{order.buyerAddress}</strong> (PIN: {order.buyerPincode})</span>
                         </div>
 
-                        {/* BUYER CANCEL ORDER ACTION */}
-                        {!order.status.includes("Cancelled") && order.status !== "Completed" && (
+                        <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+                          {/* PROMINENT SHOW FULL PURCHASE DETAILS BUTTON */}
                           <button
-                            onClick={() => {
-                              const reason = prompt("Optional: Enter your reason for cancelling this order:") || "Cancelled manually by buyer";
-                              const updated = orders.map(o => o.orderId === order.orderId ? { ...o, status: "Cancelled by Buyer" as const, cancellationReason: reason } : o);
-                              setOrders(updated);
-                              localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updated));
-                            }}
-                            className="w-full md:w-auto px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-extrabold rounded-xl text-xs border border-red-200 dark:border-red-900/60 transition-all flex items-center justify-center gap-1.5 shadow-sm shrink-0"
+                            onClick={() => setInspectingOrder(order)}
+                            className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
                           >
-                            <XCircle className="w-4 h-4 text-red-600" /> Cancel This Order
+                            <Eye className="w-4 h-4 text-yellow-300" />
+                            <span>Show Full Purchase Details</span>
                           </button>
-                        )}
+
+                          {/* BUYER CANCEL ORDER ACTION */}
+                          {!order.status.includes("Cancelled") && order.status !== "Completed" && (
+                            <button
+                              onClick={() => {
+                                const reason = prompt("Optional: Enter your reason for cancelling this order:") || "Cancelled manually by buyer";
+                                const updated = orders.map(o => o.orderId === order.orderId ? { ...o, status: "Cancelled by Buyer" as const, cancellationReason: reason } : o);
+                                setOrders(updated);
+                                localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updated));
+                              }}
+                              className="px-3.5 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-extrabold rounded-xl text-xs border border-red-200 dark:border-red-900/60 transition-all flex items-center justify-center gap-1 shadow-sm"
+                            >
+                              <XCircle className="w-4 h-4 text-red-600" /> Cancel
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                     </div>
@@ -1172,6 +1188,165 @@ export default function CustomerMarketplacePage() {
           )}
         </div>
       )}
+
+      {/* EXHAUSTIVE PURCHASE DETAILS INSPECTION MODAL */}
+      <AnimatePresence>
+        {inspectingOrder && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500/50 rounded-3xl max-w-3xl w-full p-6 md:p-8 shadow-2xl relative space-y-6 text-gray-900 dark:text-white"
+            >
+              <button 
+                onClick={() => setInspectingOrder(null)}
+                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full bg-gray-100 dark:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* MODAL HEADER WITH TAX INVOICE BADGE */}
+              <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl font-black shrink-0">
+                  📄
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
+                      Official Tax Invoice & Metadata Receipt
+                    </span>
+                    <span className="font-mono text-xs font-extrabold text-gray-400">{inspectingOrder.orderId}</span>
+                  </div>
+                  <h2 className="text-xl font-black text-gray-900 dark:text-white mt-0.5">
+                    Full Purchase Details — {inspectingOrder.cropName}
+                  </h2>
+                </div>
+              </div>
+
+              {/* EXHAUSTIVE METADATA SECTIONS GRID */}
+              <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1 scrollbar-none">
+                
+                {/* 1. ORDER & TIMELINE SUMMARY */}
+                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
+                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" /> 1. Order Identifiers & Timeline
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-semibold pt-1">
+                    <div><span className="text-gray-400 block">Sequence #:</span> #{inspectingOrder.sequenceNo}</div>
+                    <div><span className="text-gray-400 block">Order ID:</span> <strong className="font-mono text-emerald-600">{inspectingOrder.orderId}</strong></div>
+                    <div><span className="text-gray-400 block">Purchase Date:</span> {inspectingOrder.orderDate}</div>
+                    <div><span className="text-gray-400 block">Order Status:</span> <strong className="text-emerald-600">{inspectingOrder.status}</strong></div>
+                  </div>
+                </div>
+
+                {/* 2. CROP & QUALITY METADATA */}
+                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
+                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                    <Sprout className="w-4 h-4" /> 2. Crop & Produce Specifications
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs font-semibold pt-1">
+                    <div><span className="text-gray-400 block">Crop Name:</span> <strong>{inspectingOrder.cropName}</strong></div>
+                    <div><span className="text-gray-400 block">Quality Grade:</span> <strong className="text-emerald-600">{inspectingOrder.qualityGrade || "Grade A Premium"}</strong></div>
+                    <div><span className="text-gray-400 block">Delivery Method:</span> <strong>{inspectingOrder.deliveryOption || "Doorstep Delivery"}</strong></div>
+                  </div>
+                </div>
+
+                {/* 3. FARMER / SELLER DIRECT DETAILS */}
+                <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-4 rounded-2xl border-2 border-emerald-500/40 space-y-2">
+                  <h4 className="text-xs font-black uppercase text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-emerald-600" /> 3. Verified Farmer / Seller Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-semibold pt-1">
+                    <div><span className="text-gray-500 block">Seller Name:</span> <strong className="text-gray-900 dark:text-white">{inspectingOrder.farmerName}</strong></div>
+                    <div><span className="text-gray-500 block">Contact Phone:</span> <strong>{inspectingOrder.farmerPhone}</strong></div>
+                    <div><span className="text-gray-500 block">Farm Location:</span> <strong>{inspectingOrder.farmLocation || "Baramati, Pune, Maharashtra"}</strong></div>
+                  </div>
+                  {inspectingOrder.farmerWhatsapp && (
+                    <div className="pt-1">
+                      <a
+                        href={`https://wa.me/${inspectingOrder.farmerWhatsapp}?text=Namaste%20${encodeURIComponent(inspectingOrder.farmerName)},%20I%20have%20a%20question%20regarding%20my%20order%20${inspectingOrder.orderId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-sm transition-all"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" /> Chat Directly on WhatsApp with {inspectingOrder.farmerName}
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. BUYER & SHIPPING INFORMATION */}
+                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
+                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4" /> 4. Shipping & Buyer Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-semibold pt-1">
+                    <div><span className="text-gray-400 block">Customer Name:</span> <strong>{inspectingOrder.buyerName}</strong></div>
+                    <div><span className="text-gray-400 block">Customer Phone:</span> <strong>{inspectingOrder.buyerPhone}</strong></div>
+                    <div><span className="text-gray-400 block">Delivery Pincode:</span> <strong className="text-emerald-600">{inspectingOrder.buyerPincode}</strong></div>
+                  </div>
+                  <div className="text-xs font-semibold pt-1">
+                    <span className="text-gray-400 block">Full Delivery Address:</span>
+                    <strong className="text-gray-900 dark:text-white">{inspectingOrder.buyerAddress}</strong>
+                  </div>
+                </div>
+
+                {/* 5. FINANCIAL INVOICE BREAKDOWN */}
+                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
+                  <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4" /> 5. Itemized Financial Breakdown
+                  </h4>
+                  <div className="space-y-1.5 text-xs font-semibold pt-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Purchased Quantity:</span>
+                      <strong>{inspectingOrder.quantityQuintals} Quintals</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Mandi Price Rate:</span>
+                      <strong>₹{inspectingOrder.pricePerQuintal.toLocaleString("en-IN")} / quintal</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Crop Subtotal:</span>
+                      <strong>₹{inspectingOrder.subtotal.toLocaleString("en-IN")}</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Freight Transport Charge:</span>
+                      <strong className="text-emerald-600">₹{inspectingOrder.deliveryFee}</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Payment Gateway Method:</span>
+                      <strong>{inspectingOrder.paymentMethod || "Cash on Delivery / Direct Bank"}</strong>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-white/10 text-sm font-black text-emerald-600 dark:text-emerald-400">
+                      <span>Grand Total Amount Paid:</span>
+                      <span>₹{inspectingOrder.totalPrice.toLocaleString("en-IN")}</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* MODAL FOOTER WITH PRINT RECEIPT ACTION */}
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
+                <button
+                  onClick={() => window.print()}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 font-extrabold rounded-xl text-xs hover:bg-gray-200 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Printer className="w-4 h-4" /> Print Tax Receipt Invoice
+                </button>
+
+                <button
+                  onClick={() => setInspectingOrder(null)}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all"
+                >
+                  Close Purchase Details
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* MULTI-STEP CHECKOUT MODAL */}
       <AnimatePresence>

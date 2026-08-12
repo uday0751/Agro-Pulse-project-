@@ -55,10 +55,24 @@ export default function AICropPlannerCalendarPage() {
   const [selectedCropName, setSelectedCropName] = useState<string>("Tomato (Hybrid)");
   const [customCropName, setCustomCropName] = useState<string>("");
   const [sowingDate, setSowingDate] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [landAcres, setLandAcres] = useState<number>(3);
+  const [landSizeInput, setLandSizeInput] = useState<string>("3");
+  const [landUnit, setLandUnit] = useState<"Acres" | "Hectares" | "Bigha" | "Guntha">("Acres");
   const [selectedState, setSelectedState] = useState<string>("Maharashtra");
   const [farmingType, setFarmingType] = useState<"Chemical/Traditional" | "Organic Certified" | "Drip & Fertigation">("Drip & Fertigation");
   const [irrigationSource, setIrrigationSource] = useState<string>("Borewell Drip Irrigation");
+
+  // Normalized Acres for yield calculations
+  const landAcres = useMemo(() => {
+    const val = parseFloat(landSizeInput);
+    if (isNaN(val) || val <= 0) return 1;
+    switch (landUnit) {
+      case "Hectares": return val * 2.471;
+      case "Bigha": return val * 0.625;
+      case "Guntha": return val * 0.025;
+      case "Acres":
+      default: return val;
+    }
+  }, [landSizeInput, landUnit]);
 
   // Schedule State
   const [plannerGenerated, setPlannerGenerated] = useState<boolean>(false);
@@ -441,16 +455,46 @@ export default function AICropPlannerCalendarPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-gray-600 dark:text-gray-300 mb-1">Total Land Size (Acres):</label>
-              <input
-                type="number"
-                min="0.5"
-                step="0.5"
-                value={landAcres}
-                onChange={(e) => setLandAcres(Number(e.target.value) || 1)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-gray-900 dark:text-white"
-              />
+            <div className="space-y-1">
+              <label className="block text-gray-600 dark:text-gray-300 mb-1">Total Land Size & Unit:</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  placeholder="e.g. 5"
+                  value={landSizeInput}
+                  onChange={(e) => setLandSizeInput(e.target.value)}
+                  className="w-2/3 px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-gray-900 dark:text-white text-sm"
+                />
+                <select
+                  value={landUnit}
+                  onChange={(e) => setLandUnit(e.target.value as any)}
+                  className="w-1/3 px-2 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-700 dark:text-emerald-400 text-xs"
+                >
+                  <option value="Acres">Acres (एकड़)</option>
+                  <option value="Hectares">Hectares</option>
+                  <option value="Bigha">Bigha (बीघा)</option>
+                  <option value="Guntha">Guntha</option>
+                </select>
+              </div>
+
+              {/* QUICK PRESET BUTTONS */}
+              <div className="flex items-center gap-1.5 pt-1.5 flex-wrap">
+                <span className="text-[10px] text-gray-400 font-bold">Quick:</span>
+                {["1", "2", "3", "5", "10", "20"].map(size => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setLandSizeInput(size)}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-all ${
+                      landSizeInput === size ? "bg-emerald-600 text-white shadow-sm" : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-emerald-50"
+                    }`}
+                  >
+                    {size} {landUnit}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

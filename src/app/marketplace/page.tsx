@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShoppingBag, Search, MapPin, Phone, MessageSquare, 
@@ -420,6 +420,36 @@ export default function CustomerMarketplacePage() {
   const [buyerCity, setBuyerCity] = useState("");
   const [buyerPincode, setBuyerPincode] = useState("");
 
+  // RE-SYNC ALL LISTINGS AND ORDERS LIVE FROM LOCALSTORAGE AND EVENTS
+  const syncMarketplaceData = useCallback(() => {
+    const savedListings = localStorage.getItem("agropulse_farmer_listings");
+    if (savedListings) {
+      try {
+        const parsed = JSON.parse(savedListings);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map(p => p.id));
+          const merged = [...parsed];
+          INITIAL_REAL_LISTINGS.forEach(item => {
+            if (!existingIds.has(item.id)) merged.push(item);
+          });
+          setListings(merged);
+        }
+      } catch (e) { console.error(e); }
+    } else {
+      setListings(INITIAL_REAL_LISTINGS);
+    }
+
+    const savedOrders = localStorage.getItem("agropulse_farmer_orders");
+    if (savedOrders) {
+      try {
+        const parsed = JSON.parse(savedOrders);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setOrders(parsed);
+        }
+      } catch (e) { console.error(e); }
+    }
+  }, []);
+
   useEffect(() => {
     // Restore Logged In Buyer Identity
     const savedPhone = localStorage.getItem("agropulse_buyer_phone");
@@ -439,34 +469,26 @@ export default function CustomerMarketplacePage() {
       setBuyerName("Uday Pratap Singh");
     }
 
-    let currentListings = INITIAL_REAL_LISTINGS;
-    const savedListings = localStorage.getItem("agropulse_farmer_listings");
-    if (savedListings) {
-      try {
-        const parsed = JSON.parse(savedListings);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const existingIds = new Set(parsed.map(p => p.id));
-          const merged = [...parsed];
-          INITIAL_REAL_LISTINGS.forEach(item => {
-            if (!existingIds.has(item.id)) merged.push(item);
-          });
-          currentListings = merged;
-        }
-      } catch (e) { console.error(e); }
-    }
+    syncMarketplaceData();
 
-    setListings(currentListings);
+    // Listen to real-time storage events & custom listing update events
+    window.addEventListener("storage", syncMarketplaceData);
+    window.addEventListener("agropulse_listings_updated", syncMarketplaceData);
+    window.addEventListener("focus", syncMarketplaceData);
 
-    const savedOrders = localStorage.getItem("agropulse_farmer_orders");
-    if (savedOrders) {
-      try {
-        const parsed = JSON.parse(savedOrders);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setOrders(parsed);
-        }
-      } catch (e) { console.error(e); }
+    return () => {
+      window.removeEventListener("storage", syncMarketplaceData);
+      window.removeEventListener("agropulse_listings_updated", syncMarketplaceData);
+      window.removeEventListener("focus", syncMarketplaceData);
+    };
+  }, [syncMarketplaceData]);
+
+  // Re-sync whenever tab changes to browse
+  useEffect(() => {
+    if (activeTab === "browse") {
+      syncMarketplaceData();
     }
-  }, []);
+  }, [activeTab, syncMarketplaceData]);
 
   const handleBuyerLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -643,6 +665,8 @@ export default function CustomerMarketplacePage() {
     const updatedOrders = [newOrder, ...orders];
     setOrders(updatedOrders);
     localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updatedOrders));
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("agropulse_listings_updated"));
 
     if (!loggedInBuyerPhone) {
       setLoggedInBuyerPhone(newOrder.buyerPhone);
@@ -719,7 +743,7 @@ export default function CustomerMarketplacePage() {
   return (
     <div className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 pt-[84px] font-sans">
       
-      {/* Customer Header Bar spanning 100% FULL WIDTH */}
+      {/* Customer Header Bar */}
       <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md w-full">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -1076,7 +1100,7 @@ export default function CustomerMarketplacePage() {
         </div>
       )}
 
-      {/* PRIVACY SCOPED CUSTOMER ORDERS (USERS CAN ONLY SEE THEIR OWN ORDERS) */}
+      {/* PRIVACY SCOPED CUSTOMER ORDERS */}
       {activeTab === "my_orders" && (
         <div className="space-y-6 w-full">
           
@@ -1233,7 +1257,7 @@ export default function CustomerMarketplacePage() {
                     animate={{ opacity: 1, y: 0 }}
                     className={`bg-white dark:bg-[#1a1b23] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all ${style.border} w-full`}
                   >
-                    {/* CARD HEADER BANNER WITH DISTINCT COLOR ACCENT */}
+                    {/* CARD HEADER BANNER */}
                     <div className={`px-6 py-3.5 ${style.headerBg} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-inner`}>
                       <div className="flex items-center gap-3">
                         <span className="bg-black/30 text-white font-black text-xs px-2.5 py-1 rounded-lg border border-white/20">
@@ -1247,14 +1271,13 @@ export default function CustomerMarketplacePage() {
                         </span>
                       </div>
 
-                      {/* STATUS BADGE WITH ANIMATED ICON */}
                       <span className={`text-xs font-black px-3.5 py-1 rounded-xl flex items-center gap-1.5 shadow-sm ${style.badgeBg}`}>
                         {style.icon}
                         <span>{style.label}</span>
                       </span>
                     </div>
 
-                    {/* CARD BODY WITH CLEAR VISUAL SECTIONS */}
+                    {/* CARD BODY */}
                     <div className="p-6 space-y-5">
                       
                       {/* SECTION 1: CROP & FARMER DETAILS */}
@@ -1284,7 +1307,7 @@ export default function CustomerMarketplacePage() {
                         </div>
                       </div>
 
-                      {/* CANCELLATION REASON BANNER IF CANCELLED BY FARMER OR BUYER */}
+                      {/* CANCELLATION REASON BANNER */}
                       {order.status === "Cancelled by Farmer" && (
                         <div className="bg-red-50 dark:bg-red-950/40 p-4 rounded-2xl border-2 border-red-500/50 text-xs font-bold text-red-900 dark:text-red-200 flex items-start gap-3 shadow-sm">
                           <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
@@ -1318,7 +1341,7 @@ export default function CustomerMarketplacePage() {
                         </div>
                       </div>
 
-                      {/* SECTION 3: DELIVERY ADDRESS & EXPLICIT "VIEW OFFICIAL TAX INVOICE BILL" ACTION BUTTON */}
+                      {/* SECTION 3: DELIVERY ADDRESS & EXPLICIT ACTION BUTTON */}
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
                         <div className="flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 w-full md:w-auto">
                           <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -1341,6 +1364,8 @@ export default function CustomerMarketplacePage() {
                                 const updated = orders.map(o => o.orderId === order.orderId ? { ...o, status: "Cancelled by Buyer" as const, cancellationReason: reason } : o);
                                 setOrders(updated);
                                 localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updated));
+                                window.dispatchEvent(new Event("storage"));
+                                window.dispatchEvent(new Event("agropulse_listings_updated"));
                               }}
                               className="px-3.5 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-extrabold rounded-xl text-xs border border-red-200 dark:border-red-900/60 transition-all flex items-center justify-center gap-1 shadow-sm"
                             >
@@ -1359,7 +1384,7 @@ export default function CustomerMarketplacePage() {
         </div>
       )}
 
-      {/* OFFICIAL VERIFIED SELLER MANDI BILL & REGISTRATION CERTIFICATE MODAL */}
+      {/* OFFICIAL VERIFIED SELLER MANDI BILL MODAL */}
       <AnimatePresence>
         {sellerBillModal && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -1825,7 +1850,7 @@ export default function CustomerMarketplacePage() {
         )}
       </AnimatePresence>
 
-      {/* INSPECT CROP MODAL WITH SELLER BILL CERTIFICATE TRIGGER */}
+      {/* INSPECT CROP MODAL */}
       <AnimatePresence>
         {inspectingCrop && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">

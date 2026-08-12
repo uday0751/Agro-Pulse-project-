@@ -277,6 +277,8 @@ export default function FarmerSellerPortalPage() {
 
     setListings(updated);
     localStorage.setItem("agropulse_farmer_listings", JSON.stringify(updated));
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("agropulse_listings_updated"));
     setEditingCrop(null);
   };
 
@@ -285,6 +287,8 @@ export default function FarmerSellerPortalPage() {
     const updated = listings.filter(item => item.id !== cropId);
     setListings(updated);
     localStorage.setItem("agropulse_farmer_listings", JSON.stringify(updated));
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("agropulse_listings_updated"));
   };
 
   const handleCreateListing = (e: React.FormEvent) => {
@@ -320,6 +324,10 @@ export default function FarmerSellerPortalPage() {
     const updatedListings = [newListing, ...listings];
     setListings(updatedListings);
     localStorage.setItem("agropulse_farmer_listings", JSON.stringify(updatedListings));
+    
+    // Broadcast live update event so Buy Crop section updates instantly!
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("agropulse_listings_updated"));
 
     setPostSuccess(true);
     setTimeout(() => {
@@ -355,6 +363,8 @@ export default function FarmerSellerPortalPage() {
 
     setOrders(updated);
     localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updated));
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("agropulse_listings_updated"));
   };
 
   const filteredOrders = useMemo(() => {

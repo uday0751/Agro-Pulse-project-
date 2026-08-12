@@ -52,6 +52,7 @@ export interface BuyerOrderRequest {
   deliveryFee: number;
   totalPrice: number;
   orderDate: string;
+  expectedDeliveryDate?: string;
   status: "Pending" | "Accepted" | "Dispatched" | "Completed" | "Cancelled by Buyer" | "Cancelled by Farmer";
   cancellationReason?: string;
   paymentMethod: string;
@@ -67,6 +68,19 @@ export const ALL_INDIAN_STATES_AND_UTS = [
   "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", 
   "Dadra and Nagar Haveli and Daman and Diu", "Delhi NCR", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
 ];
+
+// Helper to generate realistic Expected Delivery Date
+export const calculateExpectedDeliveryDate = (deliveryOption?: string) => {
+  const date = new Date();
+  const daysToAdd = deliveryOption === "Farmer Location Pickup" ? 2 : deliveryOption === "Mandi Transport" ? 5 : 4;
+  date.setDate(date.getDate() + daysToAdd);
+  return date.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+};
 
 // AUTHENTIC REAL MANDI BENCHMARKED CROPS LISTING DATABASE
 const INITIAL_REAL_LISTINGS: FarmerCropListing[] = [
@@ -362,6 +376,7 @@ const INITIAL_ORDERS: BuyerOrderRequest[] = [
     deliveryFee: 500,
     totalPrice: 26000,
     orderDate: "Today, 02:30 PM",
+    expectedDeliveryDate: "Mon, 17 Aug 2026",
     status: "Pending",
     paymentMethod: "Cash on Delivery / Direct Bank",
     qualityGrade: "Organic Certified",
@@ -471,7 +486,6 @@ export default function CustomerMarketplacePage() {
 
     syncMarketplaceData();
 
-    // Listen to real-time storage events & custom listing update events
     window.addEventListener("storage", syncMarketplaceData);
     window.addEventListener("agropulse_listings_updated", syncMarketplaceData);
     window.addEventListener("focus", syncMarketplaceData);
@@ -483,7 +497,6 @@ export default function CustomerMarketplacePage() {
     };
   }, [syncMarketplaceData]);
 
-  // Re-sync whenever tab changes to browse
   useEffect(() => {
     if (activeTab === "browse") {
       syncMarketplaceData();
@@ -510,7 +523,6 @@ export default function CustomerMarketplacePage() {
     setShowAuthModal(false);
   };
 
-  // Filter listings
   const filteredListings = useMemo(() => {
     let result = [...listings];
 
@@ -548,7 +560,6 @@ export default function CustomerMarketplacePage() {
     return result;
   }, [listings, searchQuery, selectedCategory, selectedState, selectedGrade, sortBy]);
 
-  // PRIVACY SCOPED BUYER ORDERS (ONLY SHOWS THE CURRENT LOGGED-IN BUYER'S ORDERS)
   const myPrivateOrders = useMemo(() => {
     if (!loggedInBuyerPhone) return [];
     const cleanPhone = loggedInBuyerPhone.replace(/\D/g, "");
@@ -561,7 +572,6 @@ export default function CustomerMarketplacePage() {
     });
   }, [orders, loggedInBuyerPhone, loggedInBuyerName]);
 
-  // Filter & Sort Private Customer Orders
   const filteredOrders = useMemo(() => {
     let list = myPrivateOrders.filter(o => {
       const matchStatus = statusFilter === "All" || o.status === statusFilter;
@@ -578,7 +588,6 @@ export default function CustomerMarketplacePage() {
     return list;
   }, [myPrivateOrders, statusFilter, monthFilter, orderSort]);
 
-  // Lifetime Customer Transaction Stats for Current Logged-In Buyer
   const buyerTransactionStats = useMemo(() => {
     const activeOrders = myPrivateOrders.filter(o => !o.status.includes("Cancelled"));
     const totalLifetimeSpend = activeOrders.reduce((sum, o) => sum + o.totalPrice, 0);
@@ -635,6 +644,7 @@ export default function CustomerMarketplacePage() {
 
     const fullAddress = `${buyerStreet}, ${buyerCity}, ${buyingListing.state}`;
     const nextSeq = orders.length > 0 ? Math.max(...orders.map(o => o.sequenceNo || 0)) + 1 : 1;
+    const expectedDelivery = calculateExpectedDeliveryDate(buyingListing.deliveryOption);
     
     const newOrder: BuyerOrderRequest = {
       sequenceNo: nextSeq,
@@ -655,6 +665,7 @@ export default function CustomerMarketplacePage() {
       deliveryFee: checkoutCalculations.deliveryFee,
       totalPrice: checkoutCalculations.grandTotal,
       orderDate: "Today, Just Now",
+      expectedDeliveryDate: expectedDelivery,
       status: "Pending",
       paymentMethod: "Cash on Delivery / Direct Bank Transfer",
       qualityGrade: buyingListing.qualityGrade,
@@ -869,7 +880,7 @@ export default function CustomerMarketplacePage() {
       {activeTab === "browse" && (
         <div className="space-y-8 w-full">
           
-          {/* Controls & Filter Bar (FULL WIDTH) */}
+          {/* Controls & Filter Bar */}
           <div className="bg-white dark:bg-[#1a1b23] p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-white/10 space-y-4 w-full">
             <div className="flex flex-col md:flex-row gap-4 items-center">
               
@@ -1063,7 +1074,7 @@ export default function CustomerMarketplacePage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons WITH EXPLICIT SELLER BILL / MANDI CERTIFICATE OPTION */}
+                      {/* Action Buttons */}
                       <div className="p-6 pt-0 space-y-2">
                         <div className="grid grid-cols-2 gap-3">
                           <button
@@ -1081,7 +1092,6 @@ export default function CustomerMarketplacePage() {
                           </button>
                         </div>
 
-                        {/* EXPLICIT SELLER MANDI BILL & VERIFICATION CERTIFICATE OPTION */}
                         <button
                           onClick={() => setSellerBillModal(listing)}
                           className="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-extrabold rounded-2xl text-xs border border-emerald-200 dark:border-emerald-800 transition-all flex items-center justify-center gap-2 shadow-sm"
@@ -1100,7 +1110,7 @@ export default function CustomerMarketplacePage() {
         </div>
       )}
 
-      {/* PRIVACY SCOPED CUSTOMER ORDERS */}
+      {/* PRIVACY SCOPED CUSTOMER ORDERS WITH EXPECTED DELIVERY DATES */}
       {activeTab === "my_orders" && (
         <div className="space-y-6 w-full">
           
@@ -1249,6 +1259,7 @@ export default function CustomerMarketplacePage() {
             <div className="space-y-6 w-full">
               {filteredOrders.map((order) => {
                 const style = getOrderCardStyles(order.status);
+                const expDate = order.expectedDeliveryDate || calculateExpectedDeliveryDate(order.deliveryOption);
 
                 return (
                   <motion.div
@@ -1267,7 +1278,7 @@ export default function CustomerMarketplacePage() {
                           {order.orderId}
                         </span>
                         <span className="text-xs font-bold opacity-90 flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" /> {order.orderDate}
+                          <Calendar className="w-3.5 h-3.5" /> Order Date: {order.orderDate}
                         </span>
                       </div>
 
@@ -1306,6 +1317,29 @@ export default function CustomerMarketplacePage() {
                           <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">₹{order.totalPrice.toLocaleString("en-IN")}</div>
                         </div>
                       </div>
+
+                      {/* EXPECTED DELIVERY DATE BANNER (HIGHLIGHTED IN PROMINENT GREEN/BLUE BOX) */}
+                      {!order.status.includes("Cancelled") && (
+                        <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 dark:from-emerald-950/50 dark:to-teal-950/50 p-4 rounded-2xl border-2 border-emerald-500/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-sm shrink-0">
+                              <Truck className="w-5 h-5 animate-pulse" />
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 block">
+                                📅 Guaranteed Freight Delivery Timeline:
+                              </span>
+                              <div className="text-base font-black text-emerald-900 dark:text-emerald-200 mt-0.5">
+                                Expected Delivery Date: <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{expDate}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="bg-white dark:bg-white/10 px-3.5 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 text-[11px] font-extrabold text-emerald-800 dark:text-emerald-300 shrink-0">
+                            ⚡ Status: {order.status === "Completed" ? "Delivered" : "In Transit / Dispatch"}
+                          </div>
+                        </div>
+                      )}
 
                       {/* CANCELLATION REASON BANNER */}
                       {order.status === "Cancelled by Farmer" && (
@@ -1488,7 +1522,7 @@ export default function CustomerMarketplacePage() {
         )}
       </AnimatePresence>
 
-      {/* OFFICIAL PRINTABLE TAX INVOICE BILL RECEIPT MODAL */}
+      {/* OFFICIAL PRINTABLE TAX INVOICE BILL RECEIPT MODAL WITH EXPECTED DELIVERY DATE */}
       <AnimatePresence>
         {billOrder && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -1521,8 +1555,10 @@ export default function CustomerMarketplacePage() {
 
                 <div className="text-left sm:text-right text-xs">
                   <div className="font-black text-emerald-900">INVOICE #: <span className="font-mono text-emerald-700">INV-2026-{billOrder.orderId}</span></div>
-                  <div className="text-gray-600 font-semibold">Date: {billOrder.orderDate}</div>
-                  <div className="text-gray-600 font-semibold">Payment Status: <strong className="text-emerald-700 uppercase">{billOrder.status}</strong></div>
+                  <div className="text-gray-600 font-semibold">Order Date: {billOrder.orderDate}</div>
+                  <div className="text-emerald-700 font-extrabold flex items-center justify-end gap-1">
+                    <Truck className="w-3.5 h-3.5" /> Expected Delivery: {billOrder.expectedDeliveryDate || calculateExpectedDeliveryDate(billOrder.deliveryOption)}
+                  </div>
                 </div>
               </div>
 
@@ -1578,8 +1614,8 @@ export default function CustomerMarketplacePage() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 text-xs pt-2">
                 <div className="space-y-1 text-gray-600 font-medium">
                   <div>• Payment Method: <strong>{billOrder.paymentMethod || "Cash on Delivery / Direct Bank"}</strong></div>
+                  <div>• Expected Delivery Date: <strong className="text-emerald-700">{billOrder.expectedDeliveryDate || calculateExpectedDeliveryDate(billOrder.deliveryOption)}</strong></div>
                   <div>• GST Exempt: <strong>Agricultural Raw Produce (0% CGST / SGST)</strong></div>
-                  <div>• Guarantee: <strong>100% Direct Farmer Settlement Guarantee</strong></div>
                 </div>
 
                 <div className="w-full sm:w-72 bg-emerald-900 text-white p-4 rounded-2xl space-y-1.5 shadow-lg">
@@ -1630,7 +1666,7 @@ export default function CustomerMarketplacePage() {
         )}
       </AnimatePresence>
 
-      {/* MULTI-STEP CHECKOUT MODAL */}
+      {/* MULTI-STEP CHECKOUT MODAL WITH EXPECTED DELIVERY DATE PREVIEW */}
       <AnimatePresence>
         {buyingListing && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -1804,6 +1840,12 @@ export default function CustomerMarketplacePage() {
                       <span className="text-gray-500">Freight Transport Charge:</span>
                       <span className="font-bold">₹{checkoutCalculations.deliveryFee}</span>
                     </div>
+
+                    <div className="flex justify-between p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-extrabold">
+                      <span className="flex items-center gap-1"><Truck className="w-4 h-4" /> Expected Delivery Date:</span>
+                      <span>{calculateExpectedDeliveryDate(buyingListing.deliveryOption)}</span>
+                    </div>
+
                     <div className="flex justify-between pt-2 border-t font-black text-sm text-emerald-700 dark:text-emerald-400">
                       <span>Total Amount Payable:</span>
                       <span>₹{checkoutCalculations.grandTotal.toLocaleString("en-IN")}</span>
@@ -1831,6 +1873,11 @@ export default function CustomerMarketplacePage() {
                 <div className="text-center space-y-4 py-4">
                   <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto" />
                   <h3 className="text-xl font-black text-gray-900 dark:text-white">Order Confirmed Successfully!</h3>
+                  
+                  <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-200 text-xs text-emerald-800 dark:text-emerald-300 font-bold">
+                    📅 Expected Delivery Date: <strong>{calculateExpectedDeliveryDate(buyingListing.deliveryOption)}</strong>
+                  </div>
+
                   <p className="text-xs text-gray-500 font-medium">Your purchase order for {orderQuantity} quintals of {buyingListing.cropName} has been transmitted directly to the farmer.</p>
                   
                   <button

@@ -7,7 +7,7 @@ import {
   Clock, Check, Truck, XCircle, ShieldCheck, MapPin, ArrowRightLeft, Sprout, Eye, X, Info, Calendar, Award, Receipt, DollarSign, Edit3, Trash2, Save, Sparkles, AlertCircle, Lock, LogIn, RefreshCw, User, ShieldAlert, PackageCheck, Printer
 } from "lucide-react";
 import Link from "next/link";
-import { ALL_INDIAN_STATES_AND_UTS, FarmerCropListing, BuyerOrderRequest } from "@/app/marketplace/page";
+import { ALL_INDIAN_STATES_AND_UTS, FarmerCropListing, BuyerOrderRequest, calculateExpectedDeliveryDate } from "@/app/marketplace/page";
 
 const INITIAL_LISTINGS: FarmerCropListing[] = [
   {
@@ -55,6 +55,7 @@ const INITIAL_ORDERS: BuyerOrderRequest[] = [
     deliveryFee: 500,
     totalPrice: 26000,
     orderDate: "Today, 02:30 PM",
+    expectedDeliveryDate: "Mon, 17 Aug 2026",
     status: "Pending",
     paymentMethod: "Cash on Delivery / Direct Bank"
   },
@@ -77,6 +78,7 @@ const INITIAL_ORDERS: BuyerOrderRequest[] = [
     deliveryFee: 600,
     totalPrice: 64350,
     orderDate: "Yesterday",
+    expectedDeliveryDate: "Sun, 16 Aug 2026",
     status: "Accepted",
     paymentMethod: "Prepaid Bank"
   },
@@ -99,6 +101,7 @@ const INITIAL_ORDERS: BuyerOrderRequest[] = [
     deliveryFee: 450,
     totalPrice: 38700,
     orderDate: "3 days ago",
+    expectedDeliveryDate: "Sat, 15 Aug 2026",
     status: "Dispatched",
     paymentMethod: "Prepaid Direct"
   }
@@ -216,7 +219,7 @@ export default function FarmerSellerPortalPage() {
     setShowAuthModal(false);
   };
 
-  // PRIVACY SCOPED FARMER ORDERS (FARMER ONLY SEES ORDERS RECEIVED FOR THEIR OWN CROPS)
+  // PRIVACY SCOPED FARMER ORDERS
   const myPrivateFarmerOrders = useMemo(() => {
     if (!loggedInFarmerPhone) return [];
     const cleanPhone = loggedInFarmerPhone.replace(/\D/g, "");
@@ -325,7 +328,6 @@ export default function FarmerSellerPortalPage() {
     setListings(updatedListings);
     localStorage.setItem("agropulse_farmer_listings", JSON.stringify(updatedListings));
     
-    // Broadcast live update event so Buy Crop section updates instantly!
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new Event("agropulse_listings_updated"));
 
@@ -467,7 +469,6 @@ export default function FarmerSellerPortalPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-          {/* FARMER ACCOUNT PRIVACY DESK STATUS */}
           <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 p-2 px-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800">
             <User className="w-4 h-4 text-emerald-600 shrink-0" />
             <div className="text-left text-xs">
@@ -688,6 +689,7 @@ export default function FarmerSellerPortalPage() {
             <div className="space-y-6 w-full">
               {filteredOrders.map((order) => {
                 const style = getOrderCardStyles(order.status);
+                const expDate = order.expectedDeliveryDate || calculateExpectedDeliveryDate(order.deliveryOption);
 
                 return (
                   <motion.div
@@ -754,6 +756,21 @@ export default function FarmerSellerPortalPage() {
                         </div>
                       </div>
 
+                      {/* EXPECTED DELIVERY DATE BANNER FOR FARMER */}
+                      {!order.status.includes("Cancelled") && (
+                        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-2">
+                            <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span className="font-extrabold text-gray-800 dark:text-gray-200">
+                              Buyer Expected Delivery Date: <strong className="text-emerald-700 dark:text-emerald-400">{expDate}</strong>
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                            Dispatch On Time
+                          </span>
+                        </div>
+                      )}
+
                       {/* ITEM DETAILS */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 text-xs font-semibold">
                         <div>
@@ -787,7 +804,6 @@ export default function FarmerSellerPortalPage() {
                         {/* STATUS ACTION BUTTONS & VIEW BILL RECEIPT OPTION FOR FARMER */}
                         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
                           
-                          {/* EXPLICIT VIEW OFFICIAL TAX INVOICE BILL BUTTON */}
                           <button
                             onClick={() => setBillOrder(order)}
                             className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
@@ -1087,8 +1103,10 @@ export default function FarmerSellerPortalPage() {
 
                 <div className="text-left sm:text-right text-xs">
                   <div className="font-black text-emerald-900">INVOICE #: <span className="font-mono text-emerald-700">INV-2026-{billOrder.orderId}</span></div>
-                  <div className="text-gray-600 font-semibold">Date: {billOrder.orderDate}</div>
-                  <div className="text-gray-600 font-semibold">Payment Status: <strong className="text-emerald-700 uppercase">{billOrder.status}</strong></div>
+                  <div className="text-gray-600 font-semibold">Order Date: {billOrder.orderDate}</div>
+                  <div className="text-emerald-700 font-extrabold flex items-center justify-end gap-1">
+                    <Truck className="w-3.5 h-3.5" /> Expected Delivery: {billOrder.expectedDeliveryDate || calculateExpectedDeliveryDate(billOrder.deliveryOption)}
+                  </div>
                 </div>
               </div>
 
@@ -1144,8 +1162,8 @@ export default function FarmerSellerPortalPage() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 text-xs pt-2">
                 <div className="space-y-1 text-gray-600 font-medium">
                   <div>• Payment Method: <strong>{billOrder.paymentMethod || "Cash on Delivery / Direct Bank"}</strong></div>
+                  <div>• Expected Delivery Date: <strong className="text-emerald-700">{billOrder.expectedDeliveryDate || calculateExpectedDeliveryDate(billOrder.deliveryOption)}</strong></div>
                   <div>• GST Exempt: <strong>Agricultural Raw Produce (0% CGST / SGST)</strong></div>
-                  <div>• Guarantee: <strong>100% Direct Farmer Settlement Guarantee</strong></div>
                 </div>
 
                 <div className="w-full sm:w-72 bg-emerald-900 text-white p-4 rounded-2xl space-y-1.5 shadow-lg">

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShoppingBag, Search, MapPin, Phone, MessageSquare, 
-  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle, PackageCheck, Filter, ChevronUp, Map, CreditCard, RefreshCw, Printer, ExternalLink, Download, Lock, LogIn, LogOut, ShieldAlert, TrendingUp, TrendingDown, HelpCircle
+  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle, PackageCheck, Filter, ChevronUp, Map, CreditCard, RefreshCw, Printer, ExternalLink, Download, Lock, LogIn, LogOut, ShieldAlert, TrendingUp
 } from "lucide-react";
 import Link from "next/link";
 
@@ -68,7 +68,7 @@ export const ALL_INDIAN_STATES_AND_UTS = [
   "Dadra and Nagar Haveli and Daman and Diu", "Delhi NCR", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
 ];
 
-// AUTHENTIC REAL MANDI BENCHMARKED CROPS LISTING DATABASE (Agmarknet & APMC Rates)
+// AUTHENTIC REAL MANDI BENCHMARKED CROPS LISTING DATABASE
 const INITIAL_REAL_LISTINGS: FarmerCropListing[] = [
   {
     id: "lst-101",
@@ -291,16 +291,6 @@ const CATEGORIES = [
   "Oilseeds",
   "Spices & Herbs",
   "Commercial & Plantation"
-];
-
-// LIVE GOVERNMENT APMC MANDI BENCHMARK RATES DATA FOR SIDEBAR
-const GOVT_MANDI_BENCHMARKS = [
-  { crop: "Wheat (Lokwan / Sharbati)", msp: "₹2,425/q", mandiAvg: "₹2,550/q", trend: "+4.2%", isUp: true },
-  { crop: "Paddy Basmati (1121)", msp: "₹2,300/q", mandiAvg: "₹4,350/q", trend: "+6.1%", isUp: true },
-  { crop: "Red Onion (Nashik)", msp: "₹1,400/q", mandiAvg: "₹1,850/q", trend: "-1.8%", isUp: false },
-  { crop: "Red Tomatoes (Kolar)", msp: "₹1,200/q", mandiAvg: "₹1,650/q", trend: "+8.4%", isUp: true },
-  { crop: "Tur / Arhar Dal (Latur)", msp: "₹7,550/q", mandiAvg: "₹10,200/q", trend: "+3.5%", isUp: true },
-  { crop: "Desi Chana (Ujjain)", msp: "₹5,650/q", mandiAvg: "₹6,250/q", trend: "+1.2%", isUp: true }
 ];
 
 export default function CustomerMarketplacePage() {
@@ -636,16 +626,16 @@ export default function CustomerMarketplacePage() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 font-sans w-full max-w-[1536px] mx-auto pt-[78px]">
+    <div className="min-h-screen p-4 md:p-8 font-sans w-full max-w-7xl mx-auto pt-[78px]">
       
       {/* Customer Header Bar with Account Login & Privacy Indicator */}
-      <header className="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-emerald-500/30 shadow-md">
+      <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
               <ShieldCheck className="w-3 h-3 text-emerald-600" /> APMC Mandi Affiliated Market
             </span>
-            <span className="text-xs text-gray-400 font-semibold">• Real Mandi Prices & Private Buyer Desk</span>
+            <span className="text-xs text-gray-400 font-semibold">• Real Mandi Prices & Direct Farmer Procurement</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2.5">
             <ShoppingBag className="w-8 h-8 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -653,14 +643,14 @@ export default function CustomerMarketplacePage() {
           </h1>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
           {/* USER ACCOUNT PRIVACY DESK STATUS */}
-          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 p-2 px-3 rounded-2xl border border-emerald-200 dark:border-emerald-800">
+          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 p-2 px-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800">
             <User className="w-4 h-4 text-emerald-600 shrink-0" />
             <div className="text-left text-xs">
-              <span className="text-[10px] text-gray-400 font-bold block">Logged In Account:</span>
+              <span className="text-[10px] text-gray-400 font-bold block">Account:</span>
               <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">
-                {loggedInBuyerName || "Customer Buyer"} ({loggedInBuyerPhone || "+91 98765..."})
+                {loggedInBuyerName || "Customer Buyer"}
               </strong>
             </div>
             <button
@@ -674,7 +664,7 @@ export default function CustomerMarketplacePage() {
           <div className="flex bg-gray-100 dark:bg-white/10 p-1.5 rounded-2xl">
             <button
               onClick={() => setActiveTab("browse")}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
                 activeTab === "browse" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
               }`}
             >
@@ -682,7 +672,7 @@ export default function CustomerMarketplacePage() {
             </button>
             <button
               onClick={() => setActiveTab("my_orders")}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
                 activeTab === "my_orders" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
               }`}
             >
@@ -760,291 +750,216 @@ export default function CustomerMarketplacePage() {
         )}
       </AnimatePresence>
 
-      {/* BROWSE CROPS TO BUY (BALANCED 2-COLUMN DASHBOARD LAYOUT) */}
+      {/* BROWSE CROPS TO BUY (CLEAN FULL-PAGE SPACIOUS GRID) */}
       {activeTab === "browse" && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="space-y-8">
           
-          {/* MAIN CROPS COLUMN (3 SPAN COLS) */}
-          <div className="lg:col-span-3 space-y-6">
-            
-            {/* Controls Bar */}
-            <div className="bg-white dark:bg-[#1a1b23] p-4 md:p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-white/10 space-y-4">
-              <div className="flex flex-col md:flex-row gap-3 items-center">
-                
-                {/* Search Bar */}
-                <div className="relative flex-1 w-full">
-                  <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    className="block w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 text-sm font-semibold bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Search by crop, farmer name, district, or state..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                {/* Complete 36 States & UTs Dropdown */}
-                <div className="relative w-full md:w-56">
-                  <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                  <select
-                    value={selectedState}
-                    onChange={(e) => setSelectedState(e.target.value)}
-                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-                  >
-                    <option value="All">All 36 States & UTs</option>
-                    {ALL_INDIAN_STATES_AND_UTS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-
-                {/* Sort By Dropdown */}
-                <div className="relative w-full md:w-44">
-                  <ArrowUpDown className="absolute left-3 top-3.5 h-4 w-4 text-gray-400 pointer-events-none" />
-                  <select
-                    value={sortBy}
-                    onChange={(e: any) => setSortBy(e.target.value)}
-                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-                  >
-                    <option value="newest">Sort: Newest First</option>
-                    <option value="price_asc">Price: Low to High</option>
-                    <option value="price_desc">Price: High to Low</option>
-                    <option value="quantity">Max Stock Quantity</option>
-                  </select>
-                </div>
-
-                {/* Group By Toggle */}
-                <div className="flex items-center bg-gray-100 dark:bg-white/5 p-1 rounded-xl shrink-0 w-full md:w-auto">
-                  <button
-                    onClick={() => setGroupBy("crop")}
-                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      groupBy === "crop" ? "bg-white dark:bg-[#1a1b23] text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-gray-500"
-                    }`}
-                  >
-                    By Crop Type
-                  </button>
-                  <button
-                    onClick={() => setGroupBy("location")}
-                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      groupBy === "location" ? "bg-white dark:bg-[#1a1b23] text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-gray-500"
-                    }`}
-                  >
-                    By Location
-                  </button>
-                </div>
+          {/* Controls & Filter Bar */}
+          <div className="bg-white dark:bg-[#1a1b23] p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-white/10 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              
+              {/* Search Bar */}
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  className="block w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 text-sm font-semibold bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Search by crop, farmer name, district, or state..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
 
-              {/* Category Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pt-2 scrollbar-none">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border shrink-0 ${
-                      selectedCategory === cat
-                        ? "bg-emerald-600 border-emerald-600 text-white"
-                        : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-emerald-400"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* LISTINGS DISPLAY GROUPED (SYMMETRICAL RESPONSIVE GRID) */}
-            {filteredListings.length === 0 ? (
-              <div className="bg-white dark:bg-[#1a1b23] border border-gray-100 dark:border-white/10 rounded-3xl p-12 text-center my-8">
-                <ShoppingBag className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">No crop listings match "{searchQuery}"</h3>
-                <button 
-                  onClick={() => { setSearchQuery(""); setSelectedState("All"); setSelectedCategory("All Categories"); setSelectedGrade("All"); }}
-                  className="mt-4 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold"
+              {/* Complete 36 States & UTs Dropdown */}
+              <div className="relative w-full md:w-60">
+                <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
-                  Reset Search Filters
+                  <option value="All">All 36 States & UTs</option>
+                  {ALL_INDIAN_STATES_AND_UTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              {/* Sort By Dropdown */}
+              <div className="relative w-full md:w-48">
+                <ArrowUpDown className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                <select
+                  value={sortBy}
+                  onChange={(e: any) => setSortBy(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                >
+                  <option value="newest">Sort: Newest First</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="quantity">Max Stock Quantity</option>
+                </select>
+              </div>
+
+              {/* Group By Toggle */}
+              <div className="flex items-center bg-gray-100 dark:bg-white/5 p-1.5 rounded-2xl shrink-0 w-full md:w-auto">
+                <button
+                  onClick={() => setGroupBy("crop")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    groupBy === "crop" ? "bg-white dark:bg-[#1a1b23] text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-gray-500"
+                  }`}
+                >
+                  By Crop Type
+                </button>
+                <button
+                  onClick={() => setGroupBy("location")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    groupBy === "location" ? "bg-white dark:bg-[#1a1b23] text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-gray-500"
+                  }`}
+                >
+                  By Location
                 </button>
               </div>
-            ) : (
-              Object.entries(groupedData).map(([groupTitle, items]) => (
-                <div key={groupTitle} className="mb-8">
-                  <div className="flex items-center justify-between mb-4 border-b border-gray-200 dark:border-white/10 pb-2">
-                    <h2 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                      {groupBy === "crop" ? "📦" : "📍"} {groupTitle}
-                      <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full ml-1">
-                        {items.length} Mandi Listings
-                      </span>
-                    </h2>
-                  </div>
+            </div>
 
-                  {/* PERFECTLY BALANCED RESPONSIVE GRID */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {items.map((listing) => (
-                      <motion.div
-                        key={listing.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 hover:border-emerald-500 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group"
-                      >
-                        <div>
-                          {/* Image Header with Click to Inspect Overlay */}
-                          <div 
-                            onClick={() => setInspectingCrop(listing)}
-                            className="relative h-48 w-full bg-gray-100 dark:bg-white/5 overflow-hidden cursor-pointer"
-                          >
-                            <img 
-                              src={listing.imageUrl} 
-                              alt={listing.cropName}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
-                              <ShieldCheck className="w-3 h-3" /> {listing.qualityGrade}
+            {/* Category Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pt-2 scrollbar-none">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border shrink-0 ${
+                    selectedCategory === cat
+                      ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
+                      : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-emerald-400"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* LISTINGS DISPLAY GROUPED (FULL PAGE SPACIOUS 3-4 COLUMN GRID) */}
+          {filteredListings.length === 0 ? (
+            <div className="bg-white dark:bg-[#1a1b23] border border-gray-100 dark:border-white/10 rounded-3xl p-12 text-center my-8">
+              <ShoppingBag className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">No crop listings match "{searchQuery}"</h3>
+              <button 
+                onClick={() => { setSearchQuery(""); setSelectedState("All"); setSelectedCategory("All Categories"); setSelectedGrade("All"); }}
+                className="mt-4 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold"
+              >
+                Reset Search Filters
+              </button>
+            </div>
+          ) : (
+            Object.entries(groupedData).map(([groupTitle, items]) => (
+              <div key={groupTitle} className="mb-10">
+                <div className="flex items-center justify-between mb-5 border-b border-gray-200 dark:border-white/10 pb-3">
+                  <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2.5">
+                    {groupBy === "crop" ? "📦" : "📍"} {groupTitle}
+                    <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-3 py-1 rounded-full ml-1">
+                      {items.length} Mandi Listings
+                    </span>
+                  </h2>
+                </div>
+
+                {/* FULL PAGE SPACIOUS SYMMETRICAL GRID */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                  {items.map((listing) => (
+                    <motion.div
+                      key={listing.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white dark:bg-[#1a1b23] border-2 border-gray-100 dark:border-white/10 hover:border-emerald-500 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group"
+                    >
+                      <div>
+                        {/* Image Header with Click to Inspect Overlay */}
+                        <div 
+                          onClick={() => setInspectingCrop(listing)}
+                          className="relative h-52 w-full bg-gray-100 dark:bg-white/5 overflow-hidden cursor-pointer"
+                        >
+                          <img 
+                            src={listing.imageUrl} 
+                            alt={listing.cropName}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" /> {listing.qualityGrade}
+                          </span>
+
+                          <span className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                            <Truck className="w-3.5 h-3.5 text-emerald-400" /> {listing.deliveryOption}
+                          </span>
+
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="bg-white/90 text-gray-900 font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg">
+                              <Eye className="w-4 h-4 text-emerald-600" /> View Details
                             </span>
-
-                            <span className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                              <Truck className="w-3.5 h-3.5 text-emerald-400" /> {listing.deliveryOption}
-                            </span>
-
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="bg-white/90 text-gray-900 font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg">
-                                <Eye className="w-4 h-4 text-emerald-600" /> View Crop Details
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Card Details */}
-                          <div className="p-5" onClick={() => setInspectingCrop(listing)}>
-                            <div className="flex justify-between items-start mb-2 cursor-pointer">
-                              <div>
-                                <h3 className="font-extrabold text-gray-900 dark:text-white text-base leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                  {listing.cropName}
-                                </h3>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                                    Seller: {listing.farmerName}
-                                  </span>
-                                  <span className="flex items-center text-[11px] text-yellow-500 font-bold bg-yellow-50 dark:bg-yellow-950/30 px-1.5 py-0.5 rounded-md">
-                                    <Star className="w-3 h-3 fill-yellow-400 mr-0.5" /> {listing.rating}
-                                  </span>
-                                </div>
-                              </div>
-                              <span className="text-2xl">{listing.iconEmoji}</span>
-                            </div>
-
-                            <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">
-                              <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                              <span>{listing.village}, {listing.district}, {listing.state}</span>
-                            </div>
-
-                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 leading-relaxed">
-                              {listing.description}
-                            </p>
-
-                            {/* Price Banner */}
-                            <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3.5 rounded-2xl flex justify-between items-center mb-1">
-                              <div>
-                                <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase">Mandi Rate</span>
-                                <div className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400">₹{listing.pricePerQuintal.toLocaleString("en-IN")}<span className="text-xs font-bold text-gray-500">/quintal</span></div>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-[10px] text-gray-400 block font-semibold">Available Stock</span>
-                                <span className="text-xs font-extrabold text-gray-900 dark:text-white">{listing.availableQuantityQuintals} Quintals</span>
-                              </div>
-                            </div>
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="p-5 pt-0 grid grid-cols-2 gap-2">
-                          <button
-                            onClick={() => setInspectingCrop(listing)}
-                            className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-extrabold py-2.5 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-emerald-600" /> View Details
-                          </button>
+                        {/* Card Details */}
+                        <div className="p-5" onClick={() => setInspectingCrop(listing)}>
+                          <div className="flex justify-between items-start mb-2 cursor-pointer">
+                            <div>
+                              <h3 className="font-extrabold text-gray-900 dark:text-white text-base leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                {listing.cropName}
+                              </h3>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                  Seller: {listing.farmerName}
+                                </span>
+                                <span className="flex items-center text-[11px] text-yellow-500 font-bold bg-yellow-50 dark:bg-yellow-950/30 px-1.5 py-0.5 rounded-md">
+                                  <Star className="w-3 h-3 fill-yellow-400 mr-0.5" /> {listing.rating}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-2xl">{listing.iconEmoji}</span>
+                          </div>
 
-                          <button
-                            onClick={() => startCheckout(listing)}
-                            className="bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl text-xs hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-                          >
-                            <ShoppingBag className="w-4 h-4" /> Buy Now
-                          </button>
+                          <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">
+                            <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span>{listing.village}, {listing.district}, {listing.state}</span>
+                          </div>
+
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 leading-relaxed">
+                            {listing.description}
+                          </p>
+
+                          {/* Price Banner */}
+                          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3.5 rounded-2xl flex justify-between items-center mb-1">
+                            <div>
+                              <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase">Mandi Rate</span>
+                              <div className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400">₹{listing.pricePerQuintal.toLocaleString("en-IN")}<span className="text-xs font-bold text-gray-500">/quintal</span></div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] text-gray-400 block font-semibold">Available Stock</span>
+                              <span className="text-xs font-extrabold text-gray-900 dark:text-white">{listing.availableQuantityQuintals} Quintals</span>
+                            </div>
+                          </div>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="p-5 pt-0 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => setInspectingCrop(listing)}
+                          className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-extrabold py-2.5 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-emerald-600" /> View Details
+                        </button>
+
+                        <button
+                          onClick={() => startCheckout(listing)}
+                          className="bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl text-xs hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <ShoppingBag className="w-4 h-4" /> Buy Now
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* RIGHT SIDEBAR FOR LIVE MANDI INTELLIGENCE & ACCESSIBILITY (BALANCES THE RIGHT SIDE OF SCREEN) */}
-          <div className="lg:col-span-1 space-y-6">
-            
-            {/* 1. LIVE APMC MANDI BENCHMARK RATES SIDEBAR CARD */}
-            <div className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500/30 rounded-3xl p-5 shadow-md space-y-4">
-              <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-3">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white">Govt APMC Mandi Rates</h3>
-                </div>
-                <span className="text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-300">
-                  Agmarknet Live
-                </span>
               </div>
-
-              <div className="space-y-3">
-                {GOVT_MANDI_BENCHMARKS.map((b) => (
-                  <div key={b.crop} className="bg-gray-50 dark:bg-white/5 p-3 rounded-2xl border border-gray-100 dark:border-white/5 space-y-1 text-xs">
-                    <div className="flex justify-between font-bold text-gray-900 dark:text-white">
-                      <span>{b.crop}</span>
-                      <span className={`flex items-center gap-0.5 text-[11px] font-extrabold ${b.isUp ? "text-emerald-600" : "text-red-500"}`}>
-                        {b.isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        {b.trend}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-[11px] text-gray-500 font-semibold">
-                      <span>Govt MSP: <strong className="text-gray-700 dark:text-gray-300">{b.msp}</strong></span>
-                      <span>Mandi Avg: <strong className="text-emerald-600">{b.mandiAvg}</strong></span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 2. BUYER PROTECTION GUARANTEE SIDEBAR CARD */}
-            <div className="bg-gradient-to-br from-emerald-900 to-teal-950 text-white p-6 rounded-3xl border-2 border-emerald-500/40 shadow-lg space-y-3">
-              <div className="flex items-center gap-2 text-yellow-300 font-black text-xs uppercase tracking-wider">
-                <ShieldCheck className="w-5 h-5" /> 100% Trade Guarantee
-              </div>
-              <h4 className="text-base font-black leading-snug">Direct Settlement & Quality Verified</h4>
-              <p className="text-xs text-emerald-100 leading-relaxed font-medium">
-                Every crop order is backed by direct farmer contact, e-KYC verification, and full tax invoice receipts. Zero middleman commission.
-              </p>
-              <div className="pt-2">
-                <Link
-                  href="/seller"
-                  className="w-full bg-yellow-400 hover:bg-yellow-300 text-emerald-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
-                >
-                  <Sprout className="w-4 h-4" /> Are You a Farmer? List Crops Here →
-                </Link>
-              </div>
-            </div>
-
-            {/* 3. QUICK MANDI HELP DESK SIDEBAR CARD */}
-            <div className="bg-white dark:bg-[#1a1b23] border border-gray-200 dark:border-white/10 p-5 rounded-3xl shadow-sm text-xs space-y-2">
-              <span className="text-[10px] font-black uppercase text-gray-400">APMC Mandi Helpline</span>
-              <div className="font-extrabold text-gray-900 dark:text-white text-sm">Need Assistance with Bulk Purchases?</div>
-              <p className="text-gray-500 dark:text-gray-400 font-medium">Call our toll-free direct mandi support line for contract farming or bulk freight logistics.</p>
-              <div className="pt-1">
-                <a 
-                  href="tel:18001801551" 
-                  className="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-white/10 px-3.5 py-2 rounded-xl font-black text-emerald-600 dark:text-emerald-400 border hover:bg-gray-200"
-                >
-                  <Phone className="w-3.5 h-3.5" /> Call 1800-180-1551 (Kisan Helpline)
-                </a>
-              </div>
-            </div>
-
-          </div>
-
+            ))
+          )}
         </div>
       )}
 

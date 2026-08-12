@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   PlusCircle, ClipboardList, CheckCircle2, Phone, MessageSquare, 
-  Clock, Check, Truck, XCircle, ShieldCheck, MapPin, ArrowRightLeft, Sprout, Eye, X, Info, Calendar, Award, Receipt, DollarSign, Edit3, Trash2, Save, Sparkles, AlertCircle, Lock, LogIn, RefreshCw, User, ShieldAlert, PackageCheck
+  Clock, Check, Truck, XCircle, ShieldCheck, MapPin, ArrowRightLeft, Sprout, Eye, X, Info, Calendar, Award, Receipt, DollarSign, Edit3, Trash2, Save, Sparkles, AlertCircle, Lock, LogIn, RefreshCw, User, ShieldAlert, PackageCheck, Printer
 } from "lucide-react";
 import Link from "next/link";
 import { ALL_INDIAN_STATES_AND_UTS, FarmerCropListing, BuyerOrderRequest } from "@/app/marketplace/page";
@@ -115,7 +115,7 @@ const CATEGORIES = [
 ];
 
 export default function FarmerSellerPortalPage() {
-  const [activeTab, setActiveTab] = useState<"my_listings" | "orders" | "post">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "my_listings" | "post">("orders");
   const [listings, setListings] = useState<FarmerCropListing[]>(INITIAL_LISTINGS);
   const [orders, setOrders] = useState<BuyerOrderRequest[]>(INITIAL_ORDERS);
   
@@ -127,9 +127,8 @@ export default function FarmerSellerPortalPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Modals state
-  const [inspectingCrop, setInspectingCrop] = useState<FarmerCropListing | null>(null);
   const [editingCrop, setEditingCrop] = useState<FarmerCropListing | null>(null);
-  const [inspectingOrder, setInspectingOrder] = useState<BuyerOrderRequest | null>(null);
+  const [billOrder, setBillOrder] = useState<BuyerOrderRequest | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [orderSort, setOrderSort] = useState<"newest" | "oldest">("newest");
   const [monthFilter, setMonthFilter] = useState<string>("All");
@@ -169,7 +168,6 @@ export default function FarmerSellerPortalPage() {
       setLoggedInFarmerPhone(savedPhone);
       setNewPhone(savedPhone);
     } else {
-      // Default initial farmer identity
       setLoggedInFarmerPhone("+91 98221 45678");
       setNewPhone("+91 98221 45678");
     }
@@ -231,7 +229,7 @@ export default function FarmerSellerPortalPage() {
     });
   }, [orders, loggedInFarmerPhone, loggedInFarmerName]);
 
-  // PRIVACY SCOPED FARMER CROP LISTINGS (FARMER ONLY SEES LISTINGS CREATED BY THEM)
+  // PRIVACY SCOPED FARMER CROP LISTINGS
   const myPrivateListings = useMemo(() => {
     if (!loggedInFarmerPhone) return listings;
     const cleanPhone = loggedInFarmerPhone.replace(/\D/g, "");
@@ -329,7 +327,6 @@ export default function FarmerSellerPortalPage() {
       setActiveTab("my_listings");
     }, 1500);
 
-    // Reset Form
     setNewCropName("");
     setNewPrice("");
     setNewQuantity("");
@@ -339,7 +336,6 @@ export default function FarmerSellerPortalPage() {
     setNewImageUrl("");
   };
 
-  // Update Status of Received Order
   const handleUpdateOrderStatus = (orderId: string, newStatus: BuyerOrderRequest["status"]) => {
     let cancelReason: string | undefined = undefined;
     if (newStatus === "Cancelled by Farmer") {
@@ -445,7 +441,7 @@ export default function FarmerSellerPortalPage() {
   return (
     <div className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 pt-[84px] font-sans">
       
-      {/* Farmer Seller Header Bar with Identity & Security Status */}
+      {/* Farmer Seller Header Bar */}
       <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md w-full">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -771,15 +767,25 @@ export default function FarmerSellerPortalPage() {
                         </div>
                       </div>
 
-                      {/* DELIVERY ADDRESS & FARMER STATUS ACTIONS */}
+                      {/* DELIVERY ADDRESS & EXPLICIT "VIEW OFFICIAL TAX INVOICE BILL" ACTION BUTTON */}
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
                         <div className="flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 w-full md:w-auto">
                           <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
                           <span>Deliver To: <strong>{order.buyerAddress}</strong> (PIN: {order.buyerPincode})</span>
                         </div>
 
-                        {/* STATUS ACTION BUTTONS FOR FARMER */}
+                        {/* STATUS ACTION BUTTONS & VIEW BILL RECEIPT OPTION FOR FARMER */}
                         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+                          
+                          {/* EXPLICIT VIEW OFFICIAL TAX INVOICE BILL BUTTON */}
+                          <button
+                            onClick={() => setBillOrder(order)}
+                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
+                          >
+                            <Receipt className="w-4 h-4 text-yellow-300" />
+                            <span>View Official Tax Invoice Bill</span>
+                          </button>
+
                           {order.status === "Pending" && (
                             <>
                               <button
@@ -818,7 +824,7 @@ export default function FarmerSellerPortalPage() {
 
                           {order.status === "Completed" && (
                             <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1">
-                              <CheckCircle2 className="w-4 h-4" /> Transaction Settled & Completed
+                              <CheckCircle2 className="w-4 h-4" /> Transaction Settled
                             </span>
                           )}
                         </div>
@@ -1037,6 +1043,148 @@ export default function FarmerSellerPortalPage() {
           )}
         </div>
       )}
+
+      {/* OFFICIAL PRINTABLE TAX INVOICE BILL RECEIPT MODAL FOR FARMER SELLER */}
+      <AnimatePresence>
+        {billOrder && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white text-gray-900 border-4 border-emerald-600 rounded-3xl max-w-3xl w-full p-6 md:p-8 shadow-2xl relative space-y-6 font-sans overflow-hidden"
+            >
+              <button 
+                onClick={() => setBillOrder(null)}
+                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-800 rounded-full bg-gray-100 border"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-emerald-600 pb-4 gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🌾</span>
+                    <span className="text-2xl font-black text-emerald-800 tracking-tight">AgroPulse</span>
+                    <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded border border-emerald-300">
+                      OFFICIAL SELLER TAX INVOICE
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 font-bold mt-0.5">
+                    Direct Farm Trading & APMC Mandi Procurement Portal • GSTIN: 27AAAAA0000A1Z5
+                  </p>
+                </div>
+
+                <div className="text-left sm:text-right text-xs">
+                  <div className="font-black text-emerald-900">INVOICE #: <span className="font-mono text-emerald-700">INV-2026-{billOrder.orderId}</span></div>
+                  <div className="text-gray-600 font-semibold">Date: {billOrder.orderDate}</div>
+                  <div className="text-gray-600 font-semibold">Payment Status: <strong className="text-emerald-700 uppercase">{billOrder.status}</strong></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-emerald-900 tracking-wider block border-b border-emerald-200 pb-1 mb-1">
+                    👨‍🌾 Billed From (Farmer Seller):
+                  </span>
+                  <div className="font-black text-sm text-gray-900">{billOrder.farmerName}</div>
+                  <div className="text-gray-600 font-medium">Location: {billOrder.farmLocation || "Baramati, Pune, Maharashtra"}</div>
+                  <div className="text-gray-600 font-medium">Contact: {billOrder.farmerPhone}</div>
+                  <div className="text-gray-500 text-[10px]">Verified Farmer Identity: e-KYC Verified</div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-gray-700 tracking-wider block border-b border-gray-200 pb-1 mb-1">
+                    🛒 Billed To (Customer Buyer):
+                  </span>
+                  <div className="font-black text-sm text-gray-900">{billOrder.buyerName}</div>
+                  <div className="text-gray-600 font-medium">Address: {billOrder.buyerAddress}</div>
+                  <div className="text-gray-600 font-medium">PIN Code: {billOrder.buyerPincode}</div>
+                  <div className="text-gray-600 font-medium">Phone: {billOrder.buyerPhone}</div>
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-emerald-800 text-white font-black uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">S.No</th>
+                      <th className="p-3">Description of Produce</th>
+                      <th className="p-3">Quality Grade</th>
+                      <th className="p-3 text-right">Quantity</th>
+                      <th className="p-3 text-right">Rate / Quintal</th>
+                      <th className="p-3 text-right">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 font-semibold text-gray-800">
+                    <tr>
+                      <td className="p-3 font-black text-center">1</td>
+                      <td className="p-3 font-bold text-gray-900 flex items-center gap-1.5">
+                        <span className="text-base">{billOrder.iconEmoji}</span> {billOrder.cropName}
+                      </td>
+                      <td className="p-3 text-emerald-800 font-bold">{billOrder.qualityGrade || "Grade A Premium"}</td>
+                      <td className="p-3 text-right font-black">{billOrder.quantityQuintals} Quintals</td>
+                      <td className="p-3 text-right">₹{billOrder.pricePerQuintal.toLocaleString("en-IN")}</td>
+                      <td className="p-3 text-right font-black">₹{billOrder.subtotal.toLocaleString("en-IN")}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 text-xs pt-2">
+                <div className="space-y-1 text-gray-600 font-medium">
+                  <div>• Payment Method: <strong>{billOrder.paymentMethod || "Cash on Delivery / Direct Bank"}</strong></div>
+                  <div>• GST Exempt: <strong>Agricultural Raw Produce (0% CGST / SGST)</strong></div>
+                  <div>• Guarantee: <strong>100% Direct Farmer Settlement Guarantee</strong></div>
+                </div>
+
+                <div className="w-full sm:w-72 bg-emerald-900 text-white p-4 rounded-2xl space-y-1.5 shadow-lg">
+                  <div className="flex justify-between text-emerald-200">
+                    <span>Subtotal:</span>
+                    <span>₹{billOrder.subtotal.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-200">
+                    <span>Freight Transport:</span>
+                    <span>₹{billOrder.deliveryFee}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-200">
+                    <span>GST (0% Exempt):</span>
+                    <span>₹0</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-emerald-700 text-base font-black text-white">
+                    <span>Grand Total Payable:</span>
+                    <span className="text-yellow-300">₹{billOrder.totalPrice.toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-gray-500 font-bold gap-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>Digitally Certified Seller Tax Invoice by Developer Uday Pratap Singh Chauhan</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <Printer className="w-4 h-4" /> Print Seller Invoice Bill
+                  </button>
+
+                  <button
+                    onClick={() => setBillOrder(null)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 font-black rounded-xl text-xs"
+                  >
+                    Close Bill
+                  </button>
+                </div>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* EDIT CROP MODAL */}
       <AnimatePresence>

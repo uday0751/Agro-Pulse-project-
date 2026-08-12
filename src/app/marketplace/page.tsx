@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShoppingBag, Search, MapPin, Phone, MessageSquare, 
-  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle
+  CheckCircle2, X, ShieldCheck, ArrowRight, Truck, Star, ArrowUpDown, User, XCircle, Clock, ArrowRightCircle, Sparkles, Check, FileText, ChevronRight, Hash, Receipt, Eye, Calendar, Sprout, Award, Info, DollarSign, ListOrdered, ChevronDown, AlertTriangle, PackageCheck, Filter, ChevronUp, Map, CreditCard, RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 
@@ -371,7 +371,6 @@ export default function CustomerMarketplacePage() {
       } catch (e) { console.error(e); }
     }
 
-    // Read URL search, city, state, and mandi parameters if passed from Mandi Finder
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const query = params.get("search");
@@ -486,7 +485,7 @@ export default function CustomerMarketplacePage() {
     return result;
   }, [listings, searchQuery, selectedCategory, selectedState, selectedGrade, sortBy]);
 
-  // Filter & Sort Orders (Newest to Oldest, Oldest to Newest, Month-Wise)
+  // Filter & Sort Orders
   const filteredOrders = useMemo(() => {
     let list = orders.filter(o => {
       const matchStatus = statusFilter === "All" || o.status === statusFilter;
@@ -502,20 +501,6 @@ export default function CustomerMarketplacePage() {
 
     return list;
   }, [orders, statusFilter, monthFilter, orderSort]);
-
-  // Month-Wise Transaction Stats Calculation
-  const monthWiseStats = useMemo(() => {
-    const months = ["July 2026", "June 2026", "May 2026", "April 2026"];
-    return months.map(m => {
-      const mOrders = orders.filter(o => o.orderDate && o.orderDate.toLowerCase().includes(m.toLowerCase()));
-      const totalAmount = mOrders.reduce((sum, o) => sum + o.totalPrice, 0);
-      return {
-        monthName: m,
-        count: mOrders.length,
-        totalAmount
-      };
-    });
-  }, [orders]);
 
   // Lifetime Customer Transaction Stats
   const buyerTransactionStats = useMemo(() => {
@@ -591,7 +576,7 @@ export default function CustomerMarketplacePage() {
       subtotal: checkoutCalculations.subtotal,
       deliveryFee: checkoutCalculations.deliveryFee,
       totalPrice: checkoutCalculations.grandTotal,
-      orderDate: "Just now",
+      orderDate: "Today, Just Now",
       status: "Pending",
       paymentMethod: "Cash on Delivery / Direct Bank Transfer"
     };
@@ -611,20 +596,75 @@ export default function CustomerMarketplacePage() {
     setCheckoutStep(1);
   };
 
+  // Helper for Order Card Color Schemes
+  const getOrderCardStyles = (status: BuyerOrderRequest["status"]) => {
+    switch (status) {
+      case "Pending":
+        return {
+          border: "border-2 border-amber-400/60 dark:border-amber-500/40",
+          headerBg: "bg-gradient-to-r from-amber-500 to-amber-600 text-white",
+          badgeBg: "bg-amber-100 text-amber-900 border-amber-300",
+          icon: <Clock className="w-4 h-4 text-amber-100 animate-pulse" />,
+          label: "⏳ Pending Farmer Confirmation"
+        };
+      case "Accepted":
+        return {
+          border: "border-2 border-blue-500/60 dark:border-blue-500/40",
+          headerBg: "bg-gradient-to-r from-blue-600 to-indigo-600 text-white",
+          badgeBg: "bg-blue-100 text-blue-900 border-blue-300",
+          icon: <CheckCircle2 className="w-4 h-4 text-blue-100" />,
+          label: "🔵 Order Accepted by Farmer"
+        };
+      case "Dispatched":
+        return {
+          border: "border-2 border-purple-500/60 dark:border-purple-500/40",
+          headerBg: "bg-gradient-to-r from-purple-600 to-indigo-700 text-white",
+          badgeBg: "bg-purple-100 text-purple-900 border-purple-300",
+          icon: <Truck className="w-4 h-4 text-purple-100 animate-bounce" />,
+          label: "🚚 Order Dispatched — En Route"
+        };
+      case "Completed":
+        return {
+          border: "border-2 border-emerald-500/60 dark:border-emerald-500/40",
+          headerBg: "bg-gradient-to-r from-emerald-600 to-green-700 text-white",
+          badgeBg: "bg-emerald-100 text-emerald-900 border-emerald-300",
+          icon: <PackageCheck className="w-4 h-4 text-emerald-100" />,
+          label: "✅ Completed & Delivered"
+        };
+      case "Cancelled by Farmer":
+        return {
+          border: "border-2 border-red-500/60 dark:border-red-500/40",
+          headerBg: "bg-gradient-to-r from-red-600 to-rose-700 text-white",
+          badgeBg: "bg-red-100 text-red-900 border-red-300",
+          icon: <AlertTriangle className="w-4 h-4 text-red-100" />,
+          label: "❌ Cancelled by Farmer"
+        };
+      case "Cancelled by Buyer":
+      default:
+        return {
+          border: "border-2 border-gray-300 dark:border-gray-700",
+          headerBg: "bg-gradient-to-r from-gray-700 to-slate-800 text-white",
+          badgeBg: "bg-gray-100 text-gray-800 border-gray-300",
+          icon: <XCircle className="w-4 h-4 text-gray-200" />,
+          label: "🚫 Cancelled by Buyer"
+        };
+    }
+  };
+
   return (
-    <div className="min-h-screen p-4 md:p-8 font-sans max-w-7xl mx-auto">
+    <div className="min-h-screen p-4 md:p-8 font-sans max-w-7xl mx-auto pt-[78px]">
       
       {/* Customer Header Bar */}
-      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 dark:border-white/10 pb-5">
+      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-emerald-500/30 shadow-md">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-green-200 dark:border-green-800">
-              🛒 Customer Portal
+            <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+              🛒 Customer Crop Market
             </span>
-            <span className="text-xs text-gray-400 font-semibold">• Sequential Orders & Lifetime Spending</span>
+            <span className="text-xs text-gray-400 font-semibold">• Direct Farm Purchasing & Order Tracking</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2.5">
-            <ShoppingBag className="w-8 h-8 text-green-600 dark:text-green-400 shrink-0" />
+            <ShoppingBag className="w-8 h-8 text-emerald-600 dark:text-emerald-400 shrink-0" />
             Buy Crops Directly From Farmers & Mandis
           </h1>
         </div>
@@ -633,25 +673,25 @@ export default function CustomerMarketplacePage() {
           <div className="flex bg-gray-100 dark:bg-white/10 p-1.5 rounded-2xl">
             <button
               onClick={() => setActiveTab("browse")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
-                activeTab === "browse" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                activeTab === "browse" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
               }`}
             >
               <ShoppingBag className="w-4 h-4" /> Browse Crops ({filteredListings.length})
             </button>
             <button
               onClick={() => setActiveTab("my_orders")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
-                activeTab === "my_orders" ? "bg-green-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                activeTab === "my_orders" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"
               }`}
             >
-              <User className="w-4 h-4" /> My Orders ({orders.length})
+              <Receipt className="w-4 h-4" /> My Orders ({orders.length})
             </button>
           </div>
 
           <Link
             href="/seller"
-            className="hidden lg:flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 px-4 py-2.5 rounded-2xl text-xs font-extrabold hover:bg-amber-100 transition-colors shadow-sm"
+            className="hidden lg:flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 px-4 py-2.5 rounded-2xl text-xs font-black hover:bg-amber-100 transition-colors shadow-sm"
           >
             <span>Switch to Farmer Seller Desk</span>
             <ArrowRightCircle className="w-4 h-4 text-amber-600" />
@@ -671,7 +711,7 @@ export default function CustomerMarketplacePage() {
                 <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  className="block w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 text-sm font-semibold bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-green-500"
+                  className="block w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 text-sm font-semibold bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500"
                   placeholder="Search by crop, farmer name, district, or state..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -684,7 +724,7 @@ export default function CustomerMarketplacePage() {
                 <select
                   value={selectedState}
                   onChange={(e) => setSelectedState(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-green-500 cursor-pointer"
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
                   <option value="All">All 36 States & UTs</option>
                   {ALL_INDIAN_STATES_AND_UTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -697,7 +737,7 @@ export default function CustomerMarketplacePage() {
                 <select
                   value={sortBy}
                   onChange={(e: any) => setSortBy(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-green-500 cursor-pointer"
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
                   <option value="newest">Sort: Newest First</option>
                   <option value="price_asc">Price: Low to High</option>
@@ -711,7 +751,7 @@ export default function CustomerMarketplacePage() {
                 <button
                   onClick={() => setGroupBy("crop")}
                   className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                    groupBy === "crop" ? "bg-white dark:bg-[#1a1b23] text-green-700 dark:text-green-400 shadow-sm" : "text-gray-500"
+                    groupBy === "crop" ? "bg-white dark:bg-[#1a1b23] text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-gray-500"
                   }`}
                 >
                   By Crop Type
@@ -719,7 +759,7 @@ export default function CustomerMarketplacePage() {
                 <button
                   onClick={() => setGroupBy("location")}
                   className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                    groupBy === "location" ? "bg-white dark:bg-[#1a1b23] text-green-700 dark:text-green-400 shadow-sm" : "text-gray-500"
+                    groupBy === "location" ? "bg-white dark:bg-[#1a1b23] text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-gray-500"
                   }`}
                 >
                   By Location
@@ -735,8 +775,8 @@ export default function CustomerMarketplacePage() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border shrink-0 ${
                     selectedCategory === cat
-                      ? "bg-green-600 border-green-600 text-white"
-                      : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-green-400"
+                      ? "bg-emerald-600 border-emerald-600 text-white"
+                      : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-emerald-400"
                   }`}
                 >
                   {cat}
@@ -752,7 +792,7 @@ export default function CustomerMarketplacePage() {
               <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">No crop listings match "{searchQuery}"</h3>
               <button 
                 onClick={() => { setSearchQuery(""); setSelectedState("All"); setSelectedCategory("All Categories"); setSelectedGrade("All"); }}
-                className="mt-4 bg-green-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold"
+                className="mt-4 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold"
               >
                 Reset Search Filters
               </button>
@@ -763,7 +803,7 @@ export default function CustomerMarketplacePage() {
                 <div className="flex items-center justify-between mb-4 border-b border-gray-200 dark:border-white/10 pb-2">
                   <h2 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
                     {groupBy === "crop" ? "📦" : "📍"} {groupTitle}
-                    <span className="text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 px-2.5 py-0.5 rounded-full ml-1">
+                    <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full ml-1">
                       {items.length} Mandi Listings Available
                     </span>
                   </h2>
@@ -788,17 +828,17 @@ export default function CustomerMarketplacePage() {
                             alt={listing.cropName}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
-                          <span className="absolute top-3 left-3 bg-green-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+                          <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
                             <ShieldCheck className="w-3 h-3" /> {listing.qualityGrade}
                           </span>
 
                           <span className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                            <Truck className="w-3.5 h-3.5 text-green-400" /> {listing.deliveryOption}
+                            <Truck className="w-3.5 h-3.5 text-emerald-400" /> {listing.deliveryOption}
                           </span>
 
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <span className="bg-white/90 text-gray-900 font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg">
-                              <Eye className="w-4 h-4 text-green-600" /> View Crop Details
+                              <Eye className="w-4 h-4 text-emerald-600" /> View Crop Details
                             </span>
                           </div>
                         </div>
@@ -807,11 +847,11 @@ export default function CustomerMarketplacePage() {
                         <div className="p-5" onClick={() => setInspectingCrop(listing)}>
                           <div className="flex justify-between items-start mb-2 cursor-pointer">
                             <div>
-                              <h3 className="font-extrabold text-gray-900 dark:text-white text-base leading-snug group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                              <h3 className="font-extrabold text-gray-900 dark:text-white text-base leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                                 {listing.cropName}
                               </h3>
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="text-xs font-bold text-green-700 dark:text-green-400">
+                                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
                                   Seller: {listing.farmerName}
                                 </span>
                                 <span className="flex items-center text-[11px] text-yellow-500 font-bold bg-yellow-50 dark:bg-yellow-950/30 px-1.5 py-0.5 rounded-md">
@@ -832,10 +872,10 @@ export default function CustomerMarketplacePage() {
                           </p>
 
                           {/* Price Banner */}
-                          <div className="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900/40 p-3.5 rounded-xl flex justify-between items-center mb-4">
+                          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3.5 rounded-xl flex justify-between items-center mb-4">
                             <div>
-                              <span className="text-[10px] font-extrabold text-green-700 dark:text-green-400 uppercase">Mandi Rate</span>
-                              <div className="text-lg font-extrabold text-green-700 dark:text-green-400">₹{listing.pricePerQuintal.toLocaleString("en-IN")}<span className="text-xs font-bold text-gray-500">/quintal</span></div>
+                              <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase">Mandi Rate</span>
+                              <div className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400">₹{listing.pricePerQuintal.toLocaleString("en-IN")}<span className="text-xs font-bold text-gray-500">/quintal</span></div>
                             </div>
                             <div className="text-right">
                               <span className="text-[10px] text-gray-400 block font-semibold">Available Stock</span>
@@ -851,12 +891,12 @@ export default function CustomerMarketplacePage() {
                           onClick={() => setInspectingCrop(listing)}
                           className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-extrabold py-2.5 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
                         >
-                          <Eye className="w-3.5 h-3.5 text-green-600" /> View Details
+                          <Eye className="w-3.5 h-3.5 text-emerald-600" /> View Details
                         </button>
 
                         <button
                           onClick={() => startCheckout(listing)}
-                          className="bg-green-600 text-white font-extrabold py-2.5 rounded-xl text-xs hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                          className="bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl text-xs hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                         >
                           <ShoppingBag className="w-4 h-4" /> Buy Now
                         </button>
@@ -870,244 +910,246 @@ export default function CustomerMarketplacePage() {
         </div>
       )}
 
-      {/* MY CUSTOMER ORDERS (WITH EXPLICIT "CANCELLED BY FARMER" FILTER & BADGES) */}
+      {/* REDESIGNED MY CUSTOMER ORDERS (DISTINCT INDIVIDUAL CARDS WITH HIGH VISUAL CONTRAST) */}
       {activeTab === "my_orders" && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm border-l-4 border-l-green-600">
-              <span className="text-xs font-extrabold text-gray-400 uppercase">Lifetime Spend</span>
-              <div className="text-xl font-black text-green-600 dark:text-green-400 mt-1">₹{buyerTransactionStats.totalLifetimeSpend.toLocaleString("en-IN")}</div>
-              <span className="text-[10px] text-gray-400 font-semibold">{buyerTransactionStats.totalOrders} Orders</span>
+          
+          {/* STATS OVERVIEW CARDS */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="bg-white dark:bg-[#1a1b23] p-4 rounded-2xl border-2 border-emerald-500/40 shadow-sm flex flex-col justify-between">
+              <span className="text-[10px] font-black text-gray-400 uppercase">Lifetime Spend</span>
+              <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">₹{buyerTransactionStats.totalLifetimeSpend.toLocaleString("en-IN")}</div>
+              <span className="text-[10px] text-gray-500 font-bold">{buyerTransactionStats.totalOrders} Orders Total</span>
             </div>
 
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm border-l-4 border-l-blue-600">
-              <span className="text-xs font-extrabold text-gray-400 uppercase">🔵 Accepted</span>
-              <div className="text-xl font-black text-blue-600 dark:text-blue-400 mt-1">{buyerTransactionStats.acceptedCount} Orders</div>
-              <span className="text-[10px] text-blue-600 font-bold">Approved</span>
-            </div>
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Pending" ? "All" : "Pending")}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Pending" ? "bg-amber-500 text-white border-amber-600 shadow-md" : "bg-white dark:bg-[#1a1b23] border-amber-200 dark:border-amber-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Pending" ? "text-white" : "text-amber-600"}`}>⏳ Pending</span>
+              <div className={`text-lg font-black mt-1 ${statusFilter === "Pending" ? "text-white" : "text-amber-500"}`}>{buyerTransactionStats.pendingCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">Filter Pending</span>
+            </button>
 
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm border-l-4 border-l-purple-600">
-              <span className="text-xs font-extrabold text-gray-400 uppercase">🚚 Dispatched</span>
-              <div className="text-xl font-black text-purple-600 dark:text-purple-400 mt-1">{buyerTransactionStats.dispatchedCount} Orders</div>
-              <span className="text-[10px] text-purple-600 font-bold">En Route</span>
-            </div>
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Accepted" ? "All" : "Accepted")}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Accepted" ? "bg-blue-600 text-white border-blue-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-blue-200 dark:border-blue-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Accepted" ? "text-white" : "text-blue-600"}`}>🔵 Accepted</span>
+              <div className={`text-lg font-black mt-1 ${statusFilter === "Accepted" ? "text-white" : "text-blue-600"}`}>{buyerTransactionStats.acceptedCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">Filter Accepted</span>
+            </button>
 
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm border-l-4 border-l-amber-500">
-              <span className="text-xs font-extrabold text-gray-400 uppercase">⏳ Pending</span>
-              <div className="text-xl font-black text-amber-500 mt-1">{buyerTransactionStats.pendingCount} Orders</div>
-              <span className="text-[10px] text-amber-600 font-bold">Awaiting</span>
-            </div>
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Dispatched" ? "All" : "Dispatched")}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Dispatched" ? "bg-purple-600 text-white border-purple-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-purple-200 dark:border-purple-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Dispatched" ? "text-white" : "text-purple-600"}`}>🚚 Dispatched</span>
+              <div className={`text-lg font-black mt-1 ${statusFilter === "Dispatched" ? "text-white" : "text-purple-600"}`}>{buyerTransactionStats.dispatchedCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">Filter En Route</span>
+            </button>
 
-            <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm border-l-4 border-l-red-600">
-              <span className="text-xs font-extrabold text-gray-400 uppercase">❌ Cancelled by Farmer</span>
-              <div className="text-xl font-black text-red-600 dark:text-red-400 mt-1">{buyerTransactionStats.cancelledByFarmerCount} Orders</div>
-              <span className="text-[10px] text-red-600 font-bold">Rejected by Farmer</span>
-            </div>
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Completed" ? "All" : "Completed")}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Completed" ? "bg-emerald-600 text-white border-emerald-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-emerald-200 dark:border-emerald-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Completed" ? "text-white" : "text-emerald-600"}`}>✅ Completed</span>
+              <div className={`text-lg font-black mt-1 ${statusFilter === "Completed" ? "text-white" : "text-emerald-600"}`}>{buyerTransactionStats.completedCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">Filter Delivered</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter(statusFilter === "Cancelled by Farmer" ? "All" : "Cancelled by Farmer")}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                statusFilter === "Cancelled by Farmer" ? "bg-red-600 text-white border-red-700 shadow-md" : "bg-white dark:bg-[#1a1b23] border-red-200 dark:border-red-900/40"
+              }`}
+            >
+              <span className={`text-[10px] font-black uppercase ${statusFilter === "Cancelled by Farmer" ? "text-white" : "text-red-600"}`}>❌ Cancelled</span>
+              <div className={`text-lg font-black mt-1 ${statusFilter === "Cancelled by Farmer" ? "text-white" : "text-red-600"}`}>{buyerTransactionStats.cancelledByFarmerCount}</div>
+              <span className="text-[10px] opacity-80 font-bold">Filter Cancelled</span>
+            </button>
           </div>
 
-          {/* Month-Wise Transaction Breakdown Summary Cards with Distinct 2px Borders */}
-          <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-emerald-500/50 dark:border-emerald-500/40 shadow-lg space-y-3 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <span className="text-xs font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-950/80 px-3 py-1 rounded-xl border border-emerald-300 dark:border-emerald-800">
-                <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Month-Wise Purchase Transaction Details & Filters
-              </span>
-              <span className="text-[10px] font-black text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/80 px-2.5 py-1 rounded-lg border border-green-300 dark:border-green-800">
-                🔍 Click Any Month Pill Below to Filter Orders
-              </span>
+          {/* CONTROLS HEADER BAR */}
+          <div className="bg-white dark:bg-[#1a1b23] p-4 rounded-3xl border-2 border-gray-200 dark:border-white/10 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-emerald-600" />
+                My Crop Orders ({filteredOrders.length})
+              </h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">Each order card below is color-coded and clearly structured with distinct item details.</p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              {monthWiseStats.map((item) => (
-                <button
-                  key={item.monthName}
-                  onClick={() => setMonthFilter(monthFilter === item.monthName ? "All" : item.monthName)}
-                  className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
-                    monthFilter === item.monthName 
-                      ? "bg-green-600 border-green-600 text-white shadow-lg ring-4 ring-green-500/20 scale-[1.02]" 
-                      : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-emerald-500 text-gray-900 dark:text-white"
-                  }`}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* SORT DROPDOWN */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black text-gray-500 uppercase">Sort:</span>
+                <select
+                  value={orderSort}
+                  onChange={(e: any) => setOrderSort(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <div className="font-extrabold text-xs flex justify-between items-center">
-                    <span>{item.monthName}</span>
-                    {monthFilter === item.monthName && <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded font-black">Active Filter</span>}
-                  </div>
-                  <div className="text-sm font-black mt-1">₹{item.totalAmount.toLocaleString("en-IN")}</div>
-                  <div className="text-[10px] opacity-80 font-bold mt-0.5">{item.count} Transactions</div>
-                </button>
-              ))}
+                  <option value="newest">🕒 Latest First (Newest to Oldest)</option>
+                  <option value="oldest">⏳ Oldest First</option>
+                </select>
+              </div>
+
+              {/* STATUS FILTER DROPDOWN */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black text-gray-500 uppercase">Filter:</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="All">All Statuses ({orders.length})</option>
+                  <option value="Pending">⏳ Pending ({buyerTransactionStats.pendingCount})</option>
+                  <option value="Accepted">🔵 Accepted ({buyerTransactionStats.acceptedCount})</option>
+                  <option value="Dispatched">🚚 Dispatched ({buyerTransactionStats.dispatchedCount})</option>
+                  <option value="Completed">✅ Completed ({buyerTransactionStats.completedCount})</option>
+                  <option value="Cancelled by Farmer">❌ Cancelled by Farmer ({buyerTransactionStats.cancelledByFarmerCount})</option>
+                  <option value="Cancelled by Buyer">🚫 Cancelled by Buyer ({buyerTransactionStats.cancelledByBuyerCount})</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1a1b23] border-2 border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-md">
-            <div className="p-5 border-b-2 border-gray-100 dark:border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50/50 dark:bg-white/5">
-              <div>
-                <h3 className="text-base font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                  <User className="w-5 h-5 text-green-600" />
-                  My Customer Purchase Orders ({filteredOrders.length})
-                </h3>
-                <p className="text-xs text-gray-400 font-medium">Filter & sort latest transactions or month-wise crop orders.</p>
-              </div>
-
-              {/* DISTINCT BORDERED SORT & MONTH-WISE TRANSACTION CONTROLS BOX */}
-              <div className="flex flex-wrap items-center gap-2 p-2 bg-green-50/60 dark:bg-green-950/40 rounded-2xl border-2 border-green-500/40 dark:border-green-500/30">
-                
-                {/* SORT ORDER: NEWEST TO OLDEST / OLDEST TO NEWEST */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-green-800 dark:text-green-300 font-black uppercase">Sort:</span>
-                  <select
-                    value={orderSort}
-                    onChange={(e: any) => setOrderSort(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl border-2 border-green-400 dark:border-green-700 bg-white dark:bg-[#1a1b23] text-xs font-black text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-green-500 cursor-pointer"
-                  >
-                    <option value="newest">🕒 Newest to Oldest (Latest First)</option>
-                    <option value="oldest">⏳ Oldest to Newest</option>
-                  </select>
-                </div>
-
-                {/* MONTH FILTER */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-green-800 dark:text-green-300 font-black uppercase">Month:</span>
-                  <select
-                    value={monthFilter}
-                    onChange={(e) => setMonthFilter(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl border-2 border-green-400 dark:border-green-700 bg-white dark:bg-[#1a1b23] text-xs font-black text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-green-500 cursor-pointer"
-                  >
-                    <option value="All">All Months</option>
-                    <option value="July 2026">🗓️ July 2026</option>
-                    <option value="June 2026">🗓️ June 2026</option>
-                    <option value="May 2026">🗓️ May 2026</option>
-                    <option value="April 2026">🗓️ April 2026</option>
-                  </select>
-                </div>
-
-                {/* STATUS FILTER DROPDOWN */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-green-800 dark:text-green-300 font-black uppercase">Status:</span>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl border-2 border-green-400 dark:border-green-700 bg-white dark:bg-[#1a1b23] text-xs font-black text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-green-500 cursor-pointer"
-                  >
-                    <option value="All">All Statuses ({orders.length})</option>
-                    <option value="Pending">⏳ Pending Approval ({buyerTransactionStats.pendingCount})</option>
-                    <option value="Accepted">🔵 Accepted by Farmer ({buyerTransactionStats.acceptedCount})</option>
-                    <option value="Dispatched">🚚 Dispatched — En Route ({buyerTransactionStats.dispatchedCount})</option>
-                    <option value="Completed">✅ Completed & Delivered ({buyerTransactionStats.completedCount})</option>
-                    <option value="Cancelled by Farmer">❌ Cancelled by Farmer ({buyerTransactionStats.cancelledByFarmerCount})</option>
-                    <option value="Cancelled by Buyer">🚫 Cancelled by Buyer ({buyerTransactionStats.cancelledByBuyerCount})</option>
-                  </select>
-                </div>
-
-              </div>
+          {/* DISTINCT INDIVIDUAL ORDER CARDS GRID */}
+          {filteredOrders.length === 0 ? (
+            <div className="bg-white dark:bg-[#1a1b23] border-2 border-dashed border-gray-200 dark:border-white/10 p-12 text-center rounded-3xl space-y-3">
+              <Receipt className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto" />
+              <h4 className="text-base font-extrabold text-gray-900 dark:text-white">No orders found under "{statusFilter}" status filter</h4>
+              <button
+                onClick={() => setStatusFilter("All")}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 transition-all"
+              >
+                Reset Status Filter
+              </button>
             </div>
+          ) : (
+            <div className="space-y-6">
+              {filteredOrders.map((order) => {
+                const style = getOrderCardStyles(order.status);
 
-            {filteredOrders.length === 0 ? (
-              <div className="p-12 text-center">
-                <User className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200">No orders found matching status "{statusFilter}"</h4>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100 dark:divide-white/5">
-                {filteredOrders.map((order) => (
-                  <div key={order.orderId} className="p-5 md:p-6 hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors space-y-3">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                      
+                return (
+                  <motion.div
+                    key={order.orderId}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`bg-white dark:bg-[#1a1b23] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all ${style.border}`}
+                  >
+                    {/* CARD HEADER BANNER WITH DISTINCT COLOR ACCENT */}
+                    <div className={`px-6 py-3.5 ${style.headerBg} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-inner`}>
                       <div className="flex items-center gap-3">
-                        <span className="w-9 h-9 rounded-2xl bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-300 font-black text-sm flex items-center justify-center shrink-0 border border-green-200 dark:border-green-800">
+                        <span className="bg-black/30 text-white font-black text-xs px-2.5 py-1 rounded-lg border border-white/20">
                           #{order.sequenceNo}
                         </span>
-
-                        <span className="text-3xl p-2 bg-green-50 dark:bg-green-950/40 rounded-xl border border-green-200 dark:border-green-800">
-                          {order.iconEmoji}
+                        <span className="font-mono text-xs font-extrabold tracking-wider bg-white/10 px-2.5 py-0.5 rounded-md">
+                          {order.orderId}
                         </span>
-                        
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-gray-400 uppercase">{order.orderId}</span>
-                            <span className="text-xs text-gray-400 font-semibold">• {order.orderDate}</span>
-                          </div>
-                          <h4 className="text-base font-extrabold text-gray-900 dark:text-white mt-0.5">
-                            {order.cropName}
-                          </h4>
-                          <p className="text-xs font-bold text-green-700 dark:text-green-400">
-                            Seller Farmer: {order.farmerName} ({order.farmerPhone})
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* STATUS BADGES INCLUDING CANCELLED BY FARMER */}
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-extrabold px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm ${
-                          order.status === "Pending" ? "bg-amber-500 text-white" :
-                          order.status === "Accepted" ? "bg-blue-600 text-white" :
-                          order.status === "Dispatched" ? "bg-purple-600 text-white" :
-                          order.status === "Completed" ? "bg-green-600 text-white" :
-                          order.status === "Cancelled by Farmer" ? "bg-red-600 text-white" :
-                          "bg-gray-600 text-white"
-                        }`}>
-                          {order.status === "Pending" && <Clock className="w-3.5 h-3.5" />}
-                          {order.status === "Accepted" && <Check className="w-3.5 h-3.5" />}
-                          {order.status === "Dispatched" && <Truck className="w-3.5 h-3.5" />}
-                          {order.status === "Completed" && <CheckCircle2 className="w-3.5 h-3.5" />}
-                          {order.status === "Cancelled by Farmer" && <XCircle className="w-3.5 h-3.5" />}
-                          {order.status === "Cancelled by Buyer" && <XCircle className="w-3.5 h-3.5" />}
-                          
-                          {order.status === "Pending" ? "⏳ Pending Farmer Approval" :
-                           order.status === "Accepted" ? "🔵 Accepted by Farmer" :
-                           order.status === "Dispatched" ? "🚚 Dispatched — En Route" :
-                           order.status === "Completed" ? "✅ Completed & Delivered" :
-                           order.status === "Cancelled by Farmer" ? "❌ Cancelled by Farmer" :
-                           `Status: ${order.status}`}
+                        <span className="text-xs font-bold opacity-90 flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" /> {order.orderDate}
                         </span>
                       </div>
+
+                      {/* STATUS BADGE WITH ANIMATED ICON */}
+                      <span className={`text-xs font-black px-3.5 py-1 rounded-xl flex items-center gap-1.5 shadow-sm ${style.badgeBg}`}>
+                        {style.icon}
+                        <span>{style.label}</span>
+                      </span>
                     </div>
 
-                    {/* CANCELLATION REASON BANNER IF CANCELLED BY FARMER OR BUYER */}
-                    {order.status === "Cancelled by Farmer" && (
-                      <div className="bg-red-50 dark:bg-red-950/40 p-3 rounded-2xl border border-red-200 dark:border-red-900/60 text-xs font-bold text-red-800 dark:text-red-300 flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-                        <div>
-                          <span>Farmer Cancellation Reason: </span>
-                          <span className="font-normal">{order.cancellationReason || "Farmer was unable to fulfill order due to stock damage or weather."}</span>
+                    {/* CARD BODY WITH CLEAR VISUAL SECTIONS */}
+                    <div className="p-6 space-y-5">
+                      
+                      {/* SECTION 1: CROP & FARMER DETAILS */}
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-gray-100 dark:border-white/10">
+                        <div className="flex items-start gap-4">
+                          <div className="text-4xl p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border-2 border-emerald-500/30 shrink-0">
+                            {order.iconEmoji}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-black text-gray-900 dark:text-white">{order.cropName}</h3>
+                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs font-extrabold">
+                              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <User className="w-3.5 h-3.5" /> Seller: {order.farmerName}
+                              </span>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                <Phone className="w-3.5 h-3.5 text-gray-400" /> {order.farmerPhone}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* TOTAL PRICE HIGHLIGHT */}
+                        <div className="bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/40 px-5 py-3 rounded-2xl text-right shrink-0">
+                          <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">Total Order Amount</span>
+                          <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">₹{order.totalPrice.toLocaleString("en-IN")}</div>
                         </div>
                       </div>
-                    )}
 
-                    {order.status === "Cancelled by Buyer" && (
-                      <div className="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-2xl border border-amber-200 dark:border-amber-900/60 text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                        <XCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                      {/* CANCELLATION REASON BANNER IF CANCELLED BY FARMER OR BUYER */}
+                      {order.status === "Cancelled by Farmer" && (
+                        <div className="bg-red-50 dark:bg-red-950/40 p-4 rounded-2xl border-2 border-red-500/50 text-xs font-bold text-red-900 dark:text-red-200 flex items-start gap-3 shadow-sm">
+                          <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-black text-red-700 dark:text-red-400 block text-xs">Farmer Cancellation Reason:</span>
+                            <p className="mt-0.5 text-red-800 dark:text-red-200 font-semibold">{order.cancellationReason || "Stock depleted or harvest affected by unseasonal weather."}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {order.status === "Cancelled by Buyer" && (
+                        <div className="bg-amber-50 dark:bg-amber-950/40 p-4 rounded-2xl border-2 border-amber-500/50 text-xs font-bold text-amber-900 dark:text-amber-200 flex items-start gap-3 shadow-sm">
+                          <XCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-black text-amber-700 dark:text-amber-400 block text-xs">Buyer Cancellation Note:</span>
+                            <p className="mt-0.5 text-amber-800 dark:text-amber-200 font-semibold">{order.cancellationReason || "Order cancelled manually by customer."}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SECTION 2: ITEMIZED ORDER DATA GRID */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200 dark:border-white/10 text-xs font-semibold">
                         <div>
-                          <span>Buyer Cancellation Reason: </span>
-                          <span className="font-normal">{order.cancellationReason || "Cancelled manually by customer."}</span>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Quantity Purchased</span>
+                          <div className="text-sm font-black text-gray-900 dark:text-white mt-0.5">{order.quantityQuintals} Quintals</div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Mandi Rate / Quintal</span>
+                          <div className="text-sm font-black text-gray-900 dark:text-white mt-0.5">₹{order.pricePerQuintal.toLocaleString("en-IN")}</div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Freight Delivery Fee</span>
+                          <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">₹{order.deliveryFee}</div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase">Payment Method</span>
+                          <div className="text-sm font-black text-gray-900 dark:text-white mt-0.5">{order.paymentMethod || "COD / Direct Bank"}</div>
                         </div>
                       </div>
-                    )}
 
-                    {/* Order Details Grid & Buyer Cancel Action */}
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5 text-xs items-center">
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">Quantity</span>
-                        <div className="font-extrabold text-gray-900 dark:text-white mt-0.5">{order.quantityQuintals} Quintals</div>
-                      </div>
+                      {/* SECTION 3: DELIVERY ADDRESS & CANCEL ACTION BAR */}
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-2">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 w-full md:w-auto">
+                          <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Delivery Address: <strong>{order.buyerAddress}</strong> (PIN: {order.buyerPincode})</span>
+                        </div>
 
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">Rate / Quintal</span>
-                        <div className="font-extrabold text-gray-900 dark:text-white mt-0.5">₹{order.pricePerQuintal.toLocaleString("en-IN")}</div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">Total Amount</span>
-                        <div className="font-black text-green-700 dark:text-green-400 mt-0.5">₹{order.totalPrice.toLocaleString("en-IN")}</div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">Delivery Address</span>
-                        <div className="font-semibold text-gray-700 dark:text-gray-300 mt-0.5 line-clamp-1">{order.buyerAddress}</div>
-                      </div>
-
-                      {/* BUYER CANCEL ORDER BUTTON */}
-                      <div className="flex justify-end">
-                        {!order.status.includes("Cancelled") && order.status !== "Completed" ? (
+                        {/* BUYER CANCEL ORDER ACTION */}
+                        {!order.status.includes("Cancelled") && order.status !== "Completed" && (
                           <button
                             onClick={() => {
                               const reason = prompt("Optional: Enter your reason for cancelling this order:") || "Cancelled manually by buyer";
@@ -1115,20 +1157,19 @@ export default function CustomerMarketplacePage() {
                               setOrders(updated);
                               localStorage.setItem("agropulse_farmer_orders", JSON.stringify(updated));
                             }}
-                            className="w-full md:w-auto bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 font-extrabold px-3 py-2 rounded-xl text-xs border border-red-200 dark:border-red-900 transition-all flex items-center justify-center gap-1 shadow-sm"
+                            className="w-full md:w-auto px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-extrabold rounded-xl text-xs border border-red-200 dark:border-red-900/60 transition-all flex items-center justify-center gap-1.5 shadow-sm shrink-0"
                           >
-                            <XCircle className="w-3.5 h-3.5 text-red-600" /> Cancel Order
+                            <XCircle className="w-4 h-4 text-red-600" /> Cancel This Order
                           </button>
-                        ) : (
-                          <span className="text-[10px] font-bold text-gray-400 uppercase">Order Archived</span>
                         )}
                       </div>
+
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -1150,9 +1191,9 @@ export default function CustomerMarketplacePage() {
               </button>
 
               <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
-                <span className="text-3xl p-2 bg-green-50 dark:bg-green-950/40 rounded-xl">{buyingListing.iconEmoji}</span>
+                <span className="text-3xl p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl">{buyingListing.iconEmoji}</span>
                 <div>
-                  <span className="text-[10px] font-black text-green-700 uppercase">3-Step Checkout</span>
+                  <span className="text-[10px] font-black text-emerald-700 uppercase">3-Step Checkout</span>
                   <h3 className="text-lg font-black text-gray-900 dark:text-white">Buy {buyingListing.cropName}</h3>
                 </div>
               </div>
@@ -1164,7 +1205,7 @@ export default function CustomerMarketplacePage() {
                       <label className="block text-xs font-bold text-gray-600 dark:text-gray-300">
                         Type or Select Quantity (Quintals):
                       </label>
-                      <span className="text-[11px] font-extrabold text-green-600 dark:text-green-400">
+                      <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
                         Max Stock: {buyingListing.availableQuantityQuintals} Quintals
                       </span>
                     </div>
@@ -1205,7 +1246,7 @@ export default function CustomerMarketplacePage() {
                             setQuantityInput(String(buyingListing.availableQuantityQuintals));
                           }
                         }}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-base text-center text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-base text-center text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                         placeholder="Type quantity manually..."
                       />
 
@@ -1283,14 +1324,14 @@ export default function CustomerMarketplacePage() {
                         placeholder="e.g. 411037"
                         value={buyerPincode}
                         onChange={(e) => setBuyerPincode(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold text-green-600"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold text-emerald-600"
                       />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-extrabold rounded-xl text-xs shadow-md mt-4"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md mt-4"
                   >
                     Proceed to Order Summary & Confirmation →
                   </button>
@@ -1309,7 +1350,7 @@ export default function CustomerMarketplacePage() {
                       <span className="text-gray-500">Freight Transport Charge:</span>
                       <span className="font-bold">₹{checkoutCalculations.deliveryFee}</span>
                     </div>
-                    <div className="flex justify-between pt-2 border-t font-black text-sm text-green-700 dark:text-green-400">
+                    <div className="flex justify-between pt-2 border-t font-black text-sm text-emerald-700 dark:text-emerald-400">
                       <span>Total Amount Payable:</span>
                       <span>₹{checkoutCalculations.grandTotal.toLocaleString("en-IN")}</span>
                     </div>
@@ -1324,7 +1365,7 @@ export default function CustomerMarketplacePage() {
                     </button>
                     <button
                       onClick={handleFinalOrderSubmit}
-                      className="flex-1 py-3 bg-green-600 text-white font-extrabold rounded-xl text-xs shadow-md"
+                      className="flex-1 py-3 bg-emerald-600 text-white font-extrabold rounded-xl text-xs shadow-md"
                     >
                       Confirm & Place Purchase Order
                     </button>
@@ -1334,7 +1375,7 @@ export default function CustomerMarketplacePage() {
 
               {checkoutStep === 3 && (
                 <div className="text-center space-y-4 py-4">
-                  <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto" />
+                  <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto" />
                   <h3 className="text-xl font-black text-gray-900 dark:text-white">Order Confirmed Successfully!</h3>
                   <p className="text-xs text-gray-500 font-medium">Your purchase order for {orderQuantity} quintals of {buyingListing.cropName} has been transmitted directly to the farmer.</p>
                   
@@ -1343,7 +1384,7 @@ export default function CustomerMarketplacePage() {
                       setBuyingListing(null);
                       setActiveTab("my_orders");
                     }}
-                    className="bg-green-600 text-white font-extrabold px-6 py-3 rounded-xl text-xs shadow-md"
+                    className="bg-emerald-600 text-white font-extrabold px-6 py-3 rounded-xl text-xs shadow-md"
                   >
                     View Order in My Orders
                   </button>
@@ -1375,20 +1416,20 @@ export default function CustomerMarketplacePage() {
               <div className="flex items-start gap-4">
                 <img src={inspectingCrop.imageUrl} alt={inspectingCrop.cropName} className="w-24 h-24 rounded-2xl object-cover border" />
                 <div>
-                  <span className="text-xs font-black text-green-700 bg-green-100 px-2.5 py-0.5 rounded-md">{inspectingCrop.category}</span>
+                  <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-md">{inspectingCrop.category}</span>
                   <h2 className="text-xl font-black text-gray-900 dark:text-white mt-1">{inspectingCrop.cropName}</h2>
                   <p className="text-xs text-gray-500 font-semibold">{inspectingCrop.village}, {inspectingCrop.district}, {inspectingCrop.state}</p>
                 </div>
               </div>
 
-              <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-2xl flex justify-between items-center text-xs">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-2xl flex justify-between items-center text-xs">
                 <div>
                   <span className="text-gray-400 font-bold uppercase text-[10px]">Price Rate</span>
-                  <div className="text-xl font-black text-green-700">₹{inspectingCrop.pricePerQuintal.toLocaleString("en-IN")}/quintal</div>
+                  <div className="text-xl font-black text-emerald-700">₹{inspectingCrop.pricePerQuintal.toLocaleString("en-IN")}/quintal</div>
                 </div>
                 <button
                   onClick={() => startCheckout(inspectingCrop)}
-                  className="bg-green-600 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-md text-xs"
+                  className="bg-emerald-600 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-md text-xs"
                 >
                   Buy This Crop Now
                 </button>

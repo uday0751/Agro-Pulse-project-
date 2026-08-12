@@ -8,7 +8,8 @@ import {
   MapPin, Info, ArrowRight, CheckSquare, Square, Download, Share2, 
   IndianRupee, Zap, Leaf, Filter, Sun, CloudRain, ShieldCheck, RefreshCw, X,
   Layers, ListFilter, CalendarDays, BarChart3, AlertCircle, Sparkle, Tag,
-  Lightbulb, AlertTriangle, TrendingUp, Thermometer, Compass, ChevronRight as ChevronIcon
+  Lightbulb, AlertTriangle, TrendingUp, Thermometer, Compass, ChevronRight as ChevronIcon,
+  Activity, Star, Check
 } from "lucide-react";
 import Link from "next/link";
 import { ALL_INDIAN_STATES_AND_UTS } from "@/app/marketplace/page";
@@ -56,7 +57,7 @@ export interface CalendarTask {
 }
 
 export default function AICropPlannerCalendarPage() {
-  // View Mode Switcher: Calendar Sheet vs Stage Timeline Roadmap vs Daily Checklist
+  // View Mode Switcher: Month Grid vs Timeline Roadmap vs Checklist
   const [viewMode, setViewMode] = useState<"calendar" | "timeline" | "checklist">("calendar");
 
   // Input Form State
@@ -74,9 +75,10 @@ export default function AICropPlannerCalendarPage() {
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("all");
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<CalendarTask | null>(null);
 
-  // Calendar View State
+  // Calendar View State & Month Animation Direction (-1 or 1)
   const [currentMonthDate, setCurrentMonthDate] = useState<Date>(new Date());
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
+  const [monthSlideDirection, setMonthSlideDirection] = useState<number>(1);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(new Date().toISOString().split("T")[0]);
   const [showAddCustomModal, setShowAddCustomModal] = useState<boolean>(false);
   
   // Custom Task Modal Input
@@ -141,7 +143,7 @@ export default function AICropPlannerCalendarPage() {
       type: "soil",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Tip: Deep plowing 7-10 days prior to sowing exposes soil-borne pests to sunlight and increases soil aeration by 35% in ${selectedState}.`,
+      aiProTip: `💡 AI Pro Tip: Deep plowing 7-10 days prior to sowing exposes soil-borne pests to sunlight and increases soil aeration by 35% in ${selectedState}.`,
       exactDosage: "FYM Compost: 5 Tonnes/Acre + Trichoderma 2.5 kg/acre",
       weatherAdvisory: "☀️ Ideal dry sunny weather for soil solarization."
     });
@@ -159,7 +161,7 @@ export default function AICropPlannerCalendarPage() {
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Tip: Mixing Neem Cake with NPK reduces Nitrogen leaching loss by 40% and protects against root nematodes.`,
+      aiProTip: `💡 AI Pro Tip: Mixing Neem Cake with NPK reduces Nitrogen leaching loss by 40% and protects against root-knot nematodes.`,
       exactDosage: "NPK (10:26:26): 50 kg/Acre | Neem Cake: 100 kg/Acre",
       weatherAdvisory: "🌤️ Mild soil moisture recommended for fertilizer absorption."
     });
@@ -177,7 +179,7 @@ export default function AICropPlannerCalendarPage() {
       type: "sowing",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Tip: Sow in late afternoon (after 3 PM) to prevent seedling transplant shock caused by high afternoon solar radiation.`,
+      aiProTip: `💡 AI Pro Tip: Sow in late afternoon (after 3 PM) to prevent seedling transplant shock caused by high afternoon solar radiation.`,
       exactDosage: "Trichoderma Seed Treatment: 10g / kg seeds",
       weatherAdvisory: "💧 Provide immediate 1.5-hour light drip irrigation after transplanting."
     });
@@ -195,7 +197,7 @@ export default function AICropPlannerCalendarPage() {
       type: "water",
       isCompleted: false,
       priority: "Medium",
-      aiProTip: `💡 AI Tip: Root system develops 80% of its anchorage during Week 1. Avoid over-flooding to prevent root asphyxiation.`,
+      aiProTip: `💡 AI Pro Tip: Root system develops 80% of its anchorage during Week 1. Avoid over-flooding to prevent root asphyxiation.`,
       exactDosage: "Humic Acid 98%: 1 kg/Acre via Drip Fertigation",
       weatherAdvisory: "☀️ Clear sunny conditions."
     });
@@ -213,7 +215,7 @@ export default function AICropPlannerCalendarPage() {
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Tip: Apply 19:19:19 in early morning hours when plant stomata are open for maximum 92% leaf absorption efficiency.`,
+      aiProTip: `💡 AI Pro Tip: Apply 19:19:19 in early morning hours when plant stomata are open for maximum 92% leaf absorption efficiency.`,
       exactDosage: "Urea: 25 kg/Acre (or NPK 19:19:19: 5 kg/Acre via drip)",
       weatherAdvisory: "🌤️ Apply after morning dew evaporates."
     });
@@ -231,7 +233,7 @@ export default function AICropPlannerCalendarPage() {
       type: "pest",
       isCompleted: false,
       priority: "Medium",
-      aiProTip: `💡 AI Tip: Sticky yellow traps catch 70% of flying adult pests before they lay eggs, reducing chemical spray costs by ₹1,800/acre.`,
+      aiProTip: `💡 AI Pro Tip: Sticky yellow traps catch 70% of flying adult pests before they lay eggs, reducing chemical spray costs by ₹1,800/acre.`,
       exactDosage: "Neem Oil 10,000 PPM: 5 ml / Liter water + Yellow Traps 10/Acre",
       weatherAdvisory: "🌬️ Avoid spraying if wind speeds exceed 15 km/h."
     });
@@ -249,7 +251,7 @@ export default function AICropPlannerCalendarPage() {
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Tip: Boron deficiency causes 30% flower drop in ${cropName}. Spraying Boron at early flowering boosts fruit set by 24%.`,
+      aiProTip: `💡 AI Pro Tip: Boron deficiency causes 30% flower drop in ${cropName}. Spraying Boron at early flowering boosts fruit set by 24%.`,
       exactDosage: "Boron 20%: 1g / Liter + NPK 13:0:45: 5g / Liter water",
       weatherAdvisory: "☀️ Spray during calm morning or late evening."
     });
@@ -267,7 +269,7 @@ export default function AICropPlannerCalendarPage() {
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Tip: Potassium improves fruit skin shine, firmness, shelf-life, and weight by 18%, fetching Grade-A Mandi prices!`,
+      aiProTip: `💡 AI Pro Tip: Potassium improves fruit skin shine, firmness, shelf-life, and weight by 18%, fetching Grade-A Mandi prices!`,
       exactDosage: "Potash (0:0:50): 5 kg / Acre via Drip Fertigation",
       weatherAdvisory: "💧 Maintain uniform drip soil moisture to prevent fruit cracking."
     });
@@ -285,7 +287,7 @@ export default function AICropPlannerCalendarPage() {
       type: "water",
       isCompleted: false,
       priority: "Medium",
-      aiProTip: `💡 AI Tip: Stopping irrigation 7-10 days before harvest increases fruit Brix sweetness and prevents post-harvest rot.`,
+      aiProTip: `💡 AI Pro Tip: Stopping irrigation 7-10 days before harvest increases fruit Brix sweetness and prevents post-harvest rot.`,
       exactDosage: "Reduce drip irrigation run time by 50%",
       weatherAdvisory: "☀️ High sunshine accelerates natural ripening."
     });
@@ -352,6 +354,12 @@ export default function AICropPlannerCalendarPage() {
     if (selectedTaskDetail?.id === taskId) setSelectedTaskDetail(null);
   };
 
+  // TASKS FOR THE SELECTED CALENDAR DATE IN INTERACTIVE PANEL
+  const tasksForSelectedDate = useMemo(() => {
+    if (!selectedCalendarDate) return [];
+    return tasks.filter(t => t.dateStr === selectedCalendarDate);
+  }, [tasks, selectedCalendarDate]);
+
   // TODAY'S SCHEDULED TASKS (IF ANY)
   const todayDateStr = useMemo(() => new Date().toISOString().split("T")[0], []);
   const todayTasks = useMemo(() => tasks.filter(t => t.dateStr === todayDateStr), [tasks, todayDateStr]);
@@ -391,10 +399,12 @@ export default function AICropPlannerCalendarPage() {
   }, [currentMonthDate, tasks]);
 
   const nextMonth = () => {
+    setMonthSlideDirection(1);
     setCurrentMonthDate(new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 1));
   };
 
   const prevMonth = () => {
+    setMonthSlideDirection(-1);
     setCurrentMonthDate(new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - 1, 1));
   };
 
@@ -407,37 +417,37 @@ export default function AICropPlannerCalendarPage() {
     switch (type) {
       case "soil": 
         return { 
-          bg: "bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-800", 
+          bg: "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-950 dark:text-amber-200 border-amber-500/40 shadow-sm", 
           badgeBg: "bg-amber-600 text-white",
-          label: "🪴 Soil & Prep" 
+          label: "pt Soil & Prep" 
         };
       case "sowing": 
         return { 
-          bg: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-emerald-300 dark:border-emerald-800", 
+          bg: "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-950 dark:text-emerald-200 border-emerald-500/40 shadow-sm", 
           badgeBg: "bg-emerald-600 text-white",
           label: "🌱 Sowing" 
         };
       case "water": 
         return { 
-          bg: "bg-sky-100 dark:bg-sky-950/80 text-sky-950 dark:text-sky-200 border-sky-300 dark:border-sky-800", 
+          bg: "bg-gradient-to-r from-sky-500/20 to-cyan-500/20 text-sky-950 dark:text-sky-200 border-sky-500/40 shadow-sm", 
           badgeBg: "bg-sky-600 text-white",
           label: "💧 Irrigation" 
         };
       case "fertilizer": 
         return { 
-          bg: "bg-purple-100 dark:bg-purple-950/80 text-purple-950 dark:text-purple-200 border-purple-300 dark:border-purple-800", 
+          bg: "bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-950 dark:text-purple-200 border-purple-500/40 shadow-sm", 
           badgeBg: "bg-purple-600 text-white",
           label: "🧪 Fertilizer" 
         };
       case "pest": 
         return { 
-          bg: "bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 border-rose-300 dark:border-rose-800", 
+          bg: "bg-gradient-to-r from-rose-500/20 to-pink-500/20 text-rose-950 dark:text-rose-200 border-rose-500/40 shadow-sm", 
           badgeBg: "bg-rose-600 text-white",
           label: "🛡️ Pest Control" 
         };
       case "harvest": 
         return { 
-          bg: "bg-yellow-100 dark:bg-yellow-950/80 text-yellow-950 dark:text-yellow-200 border-yellow-400 dark:border-yellow-800", 
+          bg: "bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-950 dark:text-yellow-200 border-yellow-500/40 shadow-sm", 
           badgeBg: "bg-yellow-600 text-white",
           label: "🌾 Harvest & Mandi" 
         };
@@ -456,16 +466,29 @@ export default function AICropPlannerCalendarPage() {
   return (
     <div className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 pt-[84px] font-sans">
       
-      {/* FUTURISTIC HEADER BANNER WITH GLASSMORPHIC GLOW */}
-      <header className="mb-8 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-700 text-white p-6 md:p-8 rounded-3xl shadow-2xl border-2 border-emerald-400/50 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      {/* FUTURISTIC ANIMATED GLASSMORPHIC HEADER BANNER */}
+      <header className="mb-8 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 text-white p-6 md:p-8 rounded-3xl shadow-2xl border-2 border-emerald-400/50 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        
+        {/* Glow Background Elements */}
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -right-20 w-80 h-80 bg-teal-400/30 rounded-full blur-3xl pointer-events-none" 
+        />
+        <motion.div 
+          animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-20 -left-20 w-80 h-80 bg-emerald-400/30 rounded-full blur-3xl pointer-events-none" 
+        />
+
         <div className="relative z-10 space-y-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase px-3 py-1 rounded-lg border border-white/30 flex items-center gap-1 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-yellow-300" /> AI Kisan Agronomist Engine Active
+              <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-spin" /> AI Kisan Agronomist Engine Active
             </span>
-            <span className="text-xs text-emerald-100 font-bold">• Day-by-Day Interactive Schedule & Pro Tips</span>
+            <span className="text-xs text-emerald-100 font-bold">• Dynamic Animated Calendar & Pro Tips</span>
           </div>
-          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3 drop-shadow-md">
             <CalendarDays className="w-9 h-9 text-yellow-300 shrink-0" />
             AI Interactive Crop Growth & Calendar Planner
           </h1>
@@ -475,18 +498,24 @@ export default function AICropPlannerCalendarPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0 relative z-10">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => window.print()}
-            className="px-4 py-2.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-2xl font-black text-xs shadow-lg transition-all flex items-center gap-1.5"
+            className="px-4 py-2.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-2xl font-black text-xs shadow-xl transition-all flex items-center gap-1.5"
           >
             <Printer className="w-4 h-4 text-emerald-600" /> Print AI Crop Calendar
-          </button>
+          </motion.button>
         </div>
       </header>
 
       {/* TODAY'S MANDATORY FARMER DUTIES BANNER (IF ANY TASK IS TODAY) */}
       {todayTasks.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white p-5 md:p-6 rounded-3xl shadow-xl border-2 border-amber-300 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white p-5 md:p-6 rounded-3xl shadow-xl border-2 border-amber-300 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+        >
           <div className="flex items-start gap-3">
             <div className="p-3 bg-white/20 rounded-2xl shrink-0">
               <Zap className="w-6 h-6 text-yellow-200 animate-bounce" />
@@ -504,7 +533,9 @@ export default function AICropPlannerCalendarPage() {
             </div>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => toggleTaskCompletion(todayTasks[0].id)}
             className={`px-5 py-3 rounded-2xl font-black text-xs shadow-md shrink-0 flex items-center gap-1.5 transition-all ${
               todayTasks[0].isCompleted ? "bg-white text-gray-800" : "bg-emerald-950 text-white hover:bg-black"
@@ -512,8 +543,8 @@ export default function AICropPlannerCalendarPage() {
           >
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             {todayTasks[0].isCompleted ? "Marked Completed ✅" : "Complete Today's Duty"}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       {/* INPUT FORM & AI HARVEST FORECAST DASHBOARD */}
@@ -655,12 +686,14 @@ export default function AICropPlannerCalendarPage() {
             </div>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={generateAICropSchedule}
             className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 mt-2"
           >
             <RefreshCw className="w-4 h-4" /> Recalculate AI Schedule & Calendar Tasks
-          </button>
+          </motion.button>
         </div>
 
         {/* AI FINANCIAL & HARVEST FORECAST CARD */}
@@ -668,7 +701,7 @@ export default function AICropPlannerCalendarPage() {
           <div>
             <div className="flex justify-between items-center border-b border-white/20 pb-3">
               <span className="text-[10px] font-black uppercase text-emerald-300 tracking-wider">AI Yield & Profit Forecast</span>
-              <span className="text-3xl">{activeCropMaster.emoji}</span>
+              <span className="text-3xl animate-pulse">{activeCropMaster.emoji}</span>
             </div>
 
             <div className="space-y-4 mt-4">
@@ -756,9 +789,10 @@ export default function AICropPlannerCalendarPage() {
 
         {/* PROGRESS BAR */}
         <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-3.5 overflow-hidden p-0.5 border border-gray-200 dark:border-white/10">
-          <div 
+          <motion.div 
             className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-400 h-full rounded-full transition-all duration-500 shadow-md"
-            style={{ width: `${progressPercent}%` }}
+            initial={{ width: "0%" }}
+            animate={{ width: `${progressPercent}%` }}
           />
         </div>
 
@@ -781,7 +815,7 @@ export default function AICropPlannerCalendarPage() {
               activeCategoryFilter === "soil" ? "bg-amber-600 text-white shadow-md" : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300"
             }`}
           >
-            🪴 Soil & Prep
+            pt Soil & Prep
           </button>
           <button
             onClick={() => setActiveCategoryFilter("water")}
@@ -818,114 +852,238 @@ export default function AICropPlannerCalendarPage() {
         </div>
       </div>
 
-      {/* VIEW MODE 1: RESTRUCTURED PREMIUM MONTHLY CALENDAR GRID */}
+      {/* VIEW MODE 1: ULTRA-PREMIUM ANIMATED INTERACTIVE MONTH GRID + SIDE PANEL */}
       {viewMode === "calendar" && (
-        <div className="bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-2xl space-y-6 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
           
-          {/* MONTH NAVIGATION BAR */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-white/10 pb-4">
-            <div>
-              <span className="text-[10px] font-black uppercase text-emerald-700">Interactive Month Calendar Sheet</span>
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2.5">
-                <CalendarDays className="w-6 h-6 text-emerald-600" />
-                {currentMonthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={prevMonth}
-                className="p-2.5 bg-gray-100 dark:bg-white/10 hover:bg-emerald-100 dark:hover:bg-emerald-950 rounded-xl text-gray-800 dark:text-gray-200 font-bold transition-all border"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 px-4 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-300 dark:border-emerald-800">
-                {currentMonthDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
-              </span>
-
-              <button
-                onClick={nextMonth}
-                className="p-2.5 bg-gray-100 dark:bg-white/10 hover:bg-emerald-100 dark:hover:bg-emerald-950 rounded-xl text-gray-800 dark:text-gray-200 font-bold transition-all border"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* CALENDAR DAYS OF WEEK HEADER */}
-          <div className="grid grid-cols-7 gap-2.5 text-center text-xs font-black text-emerald-900 dark:text-emerald-300 uppercase">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-              <div key={day} className="py-2.5 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-                {day}
+          {/* 7-COLUMN ANIMATED MONTH GRID SHEET */}
+          <div className="lg:col-span-2 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-2xl space-y-6 overflow-hidden">
+            
+            {/* MONTH NAVIGATION BAR WITH SLIDE CONTROLS */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase text-emerald-700">Interactive Month Calendar Sheet</span>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2.5">
+                  <CalendarDays className="w-6 h-6 text-emerald-600" />
+                  {currentMonthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                </h3>
               </div>
-            ))}
-          </div>
 
-          {/* SPACIOUS 7-COLUMN MONTH GRID */}
-          <div className="grid grid-cols-7 gap-2.5">
-            {calendarDaysMatrix.map((cell, idx) => {
-              if (!cell) {
-                return <div key={`empty-${idx}`} className="h-28 sm:h-36 bg-gray-50/30 dark:bg-white/5 rounded-2xl border border-dashed border-gray-100 dark:border-white/5" />;
-              }
-
-              const visibleTasks = activeCategoryFilter === "all" ? cell.dayTasks : cell.dayTasks.filter(t => t.type === activeCategoryFilter);
-              const hasTasks = visibleTasks.length > 0;
-              const isToday = cell.dateStr === new Date().toISOString().split("T")[0];
-
-              return (
-                <div
-                  key={cell.dateStr}
-                  onClick={() => {
-                    setSelectedCalendarDate(cell.dateStr);
-                    setShowAddCustomModal(true);
-                  }}
-                  className={`h-28 sm:h-36 p-2.5 rounded-2xl border-2 transition-all flex flex-col justify-between cursor-pointer hover:border-emerald-500 hover:shadow-lg ${
-                    isToday 
-                      ? "bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md" 
-                      : "bg-white dark:bg-[#16171f] border-gray-200/80 dark:border-white/10"
-                  }`}
+              <div className="flex items-center gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={prevMonth}
+                  className="p-2.5 bg-gray-100 dark:bg-white/10 hover:bg-emerald-100 dark:hover:bg-emerald-950 rounded-xl text-gray-800 dark:text-gray-200 font-bold transition-all border shadow-sm"
                 >
-                  <div className="flex justify-between items-center">
-                    <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${isToday ? "bg-emerald-600 text-white shadow-sm" : "text-gray-800 dark:text-gray-200"}`}>
-                      {cell.dayNumber}
-                    </span>
+                  <ChevronLeft className="w-5 h-5" />
+                </motion.button>
 
-                    {hasTasks && (
-                      <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black px-1.5 py-0.5 rounded-md border border-emerald-300">
-                        {visibleTasks.length} Task
-                      </span>
-                    )}
-                  </div>
+                <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 px-4 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-inner">
+                  {currentMonthDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+                </span>
 
-                  {/* HIGH CONTRAST EVENT TASK PILLS */}
-                  <div className="space-y-1 overflow-y-auto max-h-20 text-[9px] font-extrabold pr-0.5">
-                    {visibleTasks.map(t => {
-                      const style = getTypeStyle(t.type);
-                      return (
-                        <div
-                          key={t.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTaskDetail(t);
-                          }}
-                          className={`p-1 rounded-lg border shadow-sm transition-transform hover:scale-105 flex items-center justify-between gap-1 ${style.bg} ${t.isCompleted ? "opacity-50 line-through" : ""}`}
-                          title={t.title}
-                        >
-                          <span className="truncate">{t.title}</span>
-                          {t.isCompleted ? <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /> : <Clock className="w-3 h-3 shrink-0" />}
-                        </div>
-                      );
-                    })}
-                  </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={nextMonth}
+                  className="p-2.5 bg-gray-100 dark:bg-white/10 hover:bg-emerald-100 dark:hover:bg-emerald-950 rounded-xl text-gray-800 dark:text-gray-200 font-bold transition-all border shadow-sm"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </motion.button>
+              </div>
+            </div>
 
-                  <div className="text-[9px] text-gray-400 font-bold text-right hover:text-emerald-600 flex items-center justify-end gap-0.5">
-                    <Sparkles className="w-2.5 h-2.5 text-yellow-400" /> + Note
-                  </div>
+            {/* CALENDAR DAYS OF WEEK HEADER */}
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-black text-emerald-900 dark:text-emerald-300 uppercase">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+                <div key={day} className="py-2.5 bg-emerald-50/80 dark:bg-emerald-950/50 rounded-xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
+                  {day}
                 </div>
-              );
-            })}
+              ))}
+            </div>
+
+            {/* ANIMATED MONTH GRID WITH SLIDE TRANSITIONS */}
+            <AnimatePresence mode="wait" custom={monthSlideDirection}>
+              <motion.div
+                key={currentMonthDate.toISOString()}
+                initial={{ opacity: 0, x: monthSlideDirection > 0 ? 30 : -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: monthSlideDirection > 0 ? -30 : 30 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="grid grid-cols-7 gap-2"
+              >
+                {calendarDaysMatrix.map((cell, idx) => {
+                  if (!cell) {
+                    return <div key={`empty-${idx}`} className="h-24 sm:h-32 bg-gray-50/30 dark:bg-white/5 rounded-2xl border border-dashed border-gray-100 dark:border-white/5" />;
+                  }
+
+                  const visibleTasks = activeCategoryFilter === "all" ? cell.dayTasks : cell.dayTasks.filter(t => t.type === activeCategoryFilter);
+                  const hasTasks = visibleTasks.length > 0;
+                  const isSelected = selectedCalendarDate === cell.dateStr;
+                  const isToday = cell.dateStr === todayDateStr;
+
+                  return (
+                    <motion.div
+                      key={cell.dateStr}
+                      whileHover={{ scale: 1.05, y: -4, transition: { type: "spring", stiffness: 400 } }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedCalendarDate(cell.dateStr)}
+                      className={`h-24 sm:h-32 p-2 rounded-2xl border-2 transition-all flex flex-col justify-between cursor-pointer relative overflow-hidden ${
+                        isSelected 
+                          ? "bg-emerald-600 text-white border-emerald-300 shadow-[0_10px_25px_rgba(16,185,129,0.4)] scale-[1.04] z-10 ring-4 ring-emerald-500/30"
+                          : isToday 
+                          ? "bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md" 
+                          : "bg-white dark:bg-[#16171f] border-gray-200/80 dark:border-white/10 hover:border-emerald-500"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center z-10">
+                        <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${
+                          isSelected 
+                            ? "bg-white text-emerald-900 shadow-sm" 
+                            : isToday 
+                            ? "bg-emerald-600 text-white shadow-sm" 
+                            : "text-gray-800 dark:text-gray-200"
+                        }`}>
+                          {cell.dayNumber}
+                        </span>
+
+                        {hasTasks && (
+                          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border ${
+                            isSelected ? "bg-white/20 text-white border-white/30" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300"
+                          }`}>
+                            {visibleTasks.length}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* HIGH CONTRAST EVENT TASK PILLS */}
+                      <div className="space-y-1 overflow-y-auto max-h-16 text-[9px] font-extrabold pr-0.5 z-10">
+                        {visibleTasks.map(t => {
+                          const style = getTypeStyle(t.type);
+                          return (
+                            <motion.div
+                              key={t.id}
+                              whileHover={{ scale: 1.05 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTaskDetail(t);
+                              }}
+                              className={`p-1 rounded-lg border shadow-sm transition-transform flex items-center justify-between gap-1 ${
+                                isSelected ? "bg-white/20 text-white border-white/30" : style.bg
+                              } ${t.isCompleted ? "opacity-50 line-through" : ""}`}
+                              title={t.title}
+                            >
+                              <span className="truncate">{t.title}</span>
+                              {t.isCompleted ? <CheckCircle2 className="w-3 h-3 text-emerald-300 shrink-0" /> : <Clock className="w-3 h-3 shrink-0" />}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+
+                      <div className={`text-[9px] font-bold text-right ${isSelected ? "text-emerald-100" : "text-gray-400"} flex items-center justify-end gap-0.5 z-10`}>
+                        <Sparkles className="w-2.5 h-2.5 text-yellow-300" /> Inspect
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
           </div>
+
+          {/* DYNAMIC ANIMATED SIDE PANEL: SELECTED DAY COMMAND CENTER */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-gradient-to-b from-white to-gray-50 dark:from-[#1a1b23] dark:to-[#16171f] p-6 rounded-3xl border-2 border-emerald-500/40 shadow-2xl flex flex-col justify-between space-y-6"
+          >
+            <div>
+              <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-4">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-emerald-700">Selected Day Command Desk</span>
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 mt-0.5">
+                    <Calendar className="w-5 h-5 text-emerald-600" />
+                    {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Click a Date"}
+                  </h3>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowAddCustomModal(true)}
+                  className="p-2 bg-emerald-600 text-white rounded-xl text-xs font-black shadow-md hover:bg-emerald-700"
+                  title="Add Note to this Date"
+                >
+                  <Plus className="w-4 h-4" />
+                </motion.button>
+              </div>
+
+              {/* LIST OF TASKS FOR SELECTED DATE */}
+              <div className="space-y-3 mt-4">
+                {tasksForSelectedDate.length === 0 ? (
+                  <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-dashed border-emerald-200 dark:border-emerald-800 p-6 rounded-2xl text-center space-y-2">
+                    <Calendar className="w-8 h-8 text-emerald-600 mx-auto opacity-70" />
+                    <h4 className="text-xs font-black text-gray-800 dark:text-gray-200">No scheduled tasks for this date</h4>
+                    <p className="text-[11px] text-gray-500 font-medium">Click + to add custom fertilizer, irrigation, or harvest notes.</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowAddCustomModal(true)}
+                      className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 shadow-sm inline-flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Task Note
+                    </motion.button>
+                  </div>
+                ) : (
+                  tasksForSelectedDate.map(t => {
+                    const style = getTypeStyle(t.type);
+                    return (
+                      <motion.div
+                        key={t.id}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        onClick={() => setSelectedTaskDetail(t)}
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-2 shadow-sm hover:shadow-md ${style.bg} ${t.isCompleted ? "opacity-60" : ""}`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${style.badgeBg}`}>
+                            {style.label}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-500">Day {t.dayOffset}</span>
+                        </div>
+
+                        <h4 className={`text-sm font-extrabold ${t.isCompleted ? "line-through" : ""}`}>{t.title}</h4>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 font-medium line-clamp-2">{t.description}</p>
+
+                        {t.aiProTip && (
+                          <div className="bg-white/80 dark:bg-black/40 p-2 rounded-xl text-[10px] font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                            <Lightbulb className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                            <span className="truncate">{t.aiProTip}</span>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* AI AGRONOMIST QUICK SUMMARY FOOTER */}
+            <div className="bg-emerald-900 text-white p-4 rounded-2xl space-y-2 shadow-lg border border-emerald-400">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-extrabold text-emerald-200 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-yellow-300 animate-spin" /> AI Agronomist Status
+                </span>
+                <span className="text-[10px] bg-emerald-800 px-2 py-0.5 rounded font-black text-emerald-100">
+                  {selectedState} Region
+                </span>
+              </div>
+              <p className="text-[11px] text-emerald-100 font-medium">
+                Crop schedule is calculated specifically for <strong>{activeCropMaster.name}</strong> under <strong>{farmingType}</strong> conditions.
+              </p>
+            </div>
+
+          </motion.div>
+
         </div>
       )}
 
@@ -948,8 +1106,9 @@ export default function AICropPlannerCalendarPage() {
                 {group.phaseTasks.map((task) => {
                   const style = getTypeStyle(task.type);
                   return (
-                    <div 
+                    <motion.div 
                       key={task.id}
+                      whileHover={{ scale: 1.03 }}
                       onClick={() => setSelectedTaskDetail(task)}
                       className={`p-5 rounded-2xl border-2 transition-all cursor-pointer hover:shadow-lg ${style.bg} ${task.isCompleted ? "opacity-60" : ""}`}
                     >
@@ -962,7 +1121,7 @@ export default function AICropPlannerCalendarPage() {
 
                       <h4 className={`text-sm font-black ${task.isCompleted ? "line-through" : ""}`}>{task.title}</h4>
                       <p className="text-xs mt-1 opacity-90 line-clamp-2">{task.description}</p>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -983,7 +1142,9 @@ export default function AICropPlannerCalendarPage() {
               </h3>
             </div>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setSelectedCalendarDate(new Date().toISOString().split("T")[0]);
                 setShowAddCustomModal(true);
@@ -991,7 +1152,7 @@ export default function AICropPlannerCalendarPage() {
               className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 shadow-md flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> Add Custom Task Note
-            </button>
+            </motion.button>
           </div>
 
           <div className="space-y-4">
@@ -1009,7 +1170,8 @@ export default function AICropPlannerCalendarPage() {
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 1.2 }}
                       onClick={() => toggleTaskCompletion(task.id)}
                       className="mt-1 p-1 text-emerald-600 hover:text-emerald-700 transition-transform active:scale-95"
                     >
@@ -1018,7 +1180,7 @@ export default function AICropPlannerCalendarPage() {
                       ) : (
                         <Square className="w-6 h-6 text-gray-400" />
                       )}
-                    </button>
+                    </motion.button>
 
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -1077,9 +1239,9 @@ export default function AICropPlannerCalendarPage() {
         {selectedTaskDetail && (
           <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative space-y-5 font-sans"
             >
               <button 
@@ -1144,7 +1306,9 @@ export default function AICropPlannerCalendarPage() {
                 )}
 
                 <div className="flex gap-2 pt-2">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       toggleTaskCompletion(selectedTaskDetail.id);
                       setSelectedTaskDetail(null);
@@ -1154,7 +1318,7 @@ export default function AICropPlannerCalendarPage() {
                     }`}
                   >
                     <CheckCircle2 className="w-4 h-4" /> {selectedTaskDetail.isCompleted ? "Mark Task Pending" : "Mark Task Completed"}
-                  </button>
+                  </motion.button>
 
                   <button
                     onClick={() => handleDeleteTask(selectedTaskDetail.id)}
@@ -1174,9 +1338,9 @@ export default function AICropPlannerCalendarPage() {
         {showAddCustomModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500 rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-4 font-sans"
             >
               <button 
@@ -1218,7 +1382,7 @@ export default function AICropPlannerCalendarPage() {
                     <option value="water">💧 Irrigation & Water</option>
                     <option value="fertilizer">🧪 Fertilizer & Nutrients</option>
                     <option value="pest">🛡️ Pest & Fungicide Spray</option>
-                    <option value="soil">🪴 Soil Health & Weeding</option>
+                    <option value="soil">pt Soil Health & Weeding</option>
                     <option value="sowing">🌱 Sowing & Seedling</option>
                     <option value="harvest">🌾 Harvesting & APMC Sales</option>
                   </select>
@@ -1247,12 +1411,14 @@ export default function AICropPlannerCalendarPage() {
                   />
                 </div>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
                   className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" /> Save Task Note to Calendar
-                </button>
+                </motion.button>
               </form>
             </motion.div>
           </div>

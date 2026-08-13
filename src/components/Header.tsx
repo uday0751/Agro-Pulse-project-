@@ -28,8 +28,10 @@ export function Header() {
   const { darkMode, toggleDarkMode } = useTheme();
   const [user, setUser] = useState<any>(null);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     { id: "n1", type: "price", title: "Price Drop Alert", desc: "Cotton prices in Rajkot dropped by 3.1% below MSP.", time: "10 mins ago", unread: true, icon: BadgePercent, color: "text-red-600 bg-red-50 dark:bg-red-900/30" },
@@ -56,16 +58,19 @@ export function Header() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u || { displayName: "Rajesh Kumar", photoURL: "" });
+      setUser(u || { displayName: "Rajesh Kumar", photoURL: "", email: "rajesh.farmer@agropulse.in" });
     });
     return () => unsubscribe();
   }, []);
 
-  // Close notifications modal when clicking outside
+  // Close notifications & profile dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setNotifOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -104,7 +109,7 @@ export function Header() {
         <h1 className="text-sm font-extrabold text-gray-900 dark:text-white mt-0.5">AgroPulse Hub</h1>
       </div>
 
-      {/* Controls: Dark Mode, i18n, Notifs, Profile, Logout */}
+      {/* Controls: Dark Mode, i18n, Notifs, Profile Dropdown */}
       <div className="flex items-center gap-3">
         {/* Dark Mode Toggle Button */}
         <button
@@ -182,26 +187,56 @@ export function Header() {
           )}
         </div>
 
-        {/* Profile Link */}
-        <Link
-          href="/profile"
-          className="flex items-center gap-2 p-1 pr-3 bg-gray-50 dark:bg-white/10 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-100 dark:hover:border-green-800 border border-gray-100 dark:border-white/10 rounded-xl transition-all"
-        >
-          <div className="w-8 h-8 rounded-lg bg-green-600 text-white flex items-center justify-center text-sm font-bold">
-            {user?.displayName?.charAt(0) || "R"}
-          </div>
-          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 hidden sm:inline">{user?.displayName || "Rajesh"}</span>
-        </Link>
+        {/* Profile Dropdown Menu */}
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+            className="flex items-center gap-2 p-1 pr-3 bg-gray-50 dark:bg-white/10 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-200 dark:hover:border-green-800 border border-gray-200 dark:border-white/10 rounded-xl transition-all cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-lg bg-green-600 text-white flex items-center justify-center text-sm font-black shadow-sm">
+              {user?.displayName?.charAt(0) || "R"}
+            </div>
+            <span className="text-xs font-bold text-gray-800 dark:text-gray-200 hidden sm:inline">
+              {user?.displayName || "Rajesh"}
+            </span>
+          </button>
 
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className="p-2.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm"
-          title="Logout from AgroPulse"
-        >
-          <LogOut className="w-4 h-4" />
-          <span className="hidden md:inline">Logout</span>
-        </button>
+          {/* DROPDOWN MENU */}
+          {profileDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#1a1b23] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 animate-fade-in">
+              <div className="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 space-y-0.5">
+                <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                  {user?.displayName || "Rajesh Kumar"}
+                </p>
+                <p className="text-[10px] text-gray-400 truncate">
+                  {user?.email || "rajesh.farmer@agropulse.in"}
+                </p>
+              </div>
+
+              <div className="py-1">
+                <Link
+                  href="/profile"
+                  onClick={() => setProfileDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-950/40 hover:text-green-600 transition-colors"
+                >
+                  <User className="w-4 h-4 text-emerald-600" /> View Profile
+                </Link>
+              </div>
+
+              <div className="border-t border-gray-100 dark:border-white/5 pt-1">
+                <button
+                  onClick={() => {
+                    setProfileDropdownOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-xs font-black text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Mobile Navigation Drawer */}

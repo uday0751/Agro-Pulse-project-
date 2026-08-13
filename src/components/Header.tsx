@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Bell, User, Menu, X, Landmark, CloudRain, ShieldAlert, BadgePercent, MessageSquare, Sun, Moon } from "lucide-react";
+import { Bell, User, Menu, X, Landmark, CloudRain, ShieldAlert, BadgePercent, MessageSquare, Sun, Moon, LogOut } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { Logo } from "./Logo";
 import { useTheme } from "./ThemeProvider";
 
@@ -23,6 +23,7 @@ interface NotificationItem {
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { t, i18n } = useTranslation();
   const { darkMode, toggleDarkMode } = useTheme();
   const [user, setUser] = useState<any>(null);
@@ -39,6 +40,18 @@ export function Header() {
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (auth) {
+        await signOut(auth);
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+    localStorage.removeItem("user");
+    router.push("/auth");
   };
 
   useEffect(() => {
@@ -91,7 +104,7 @@ export function Header() {
         <h1 className="text-sm font-extrabold text-gray-900 dark:text-white mt-0.5">AgroPulse Hub</h1>
       </div>
 
-      {/* Controls: Dark Mode, i18n, Notifs, Profile */}
+      {/* Controls: Dark Mode, i18n, Notifs, Profile, Logout */}
       <div className="flex items-center gap-3">
         {/* Dark Mode Toggle Button */}
         <button
@@ -179,6 +192,16 @@ export function Header() {
           </div>
           <span className="text-xs font-bold text-gray-700 dark:text-gray-300 hidden sm:inline">{user?.displayName || "Rajesh"}</span>
         </Link>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="p-2.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm"
+          title="Logout from AgroPulse"
+        >
+          <LogOut className="w-4 h-4" />
+          <span className="hidden md:inline">Logout</span>
+        </button>
       </div>
 
       {/* Mobile Navigation Drawer */}

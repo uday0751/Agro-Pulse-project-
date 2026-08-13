@@ -3,23 +3,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Bell, User, Menu, X, Landmark, CloudRain, ShieldAlert, BadgePercent, MessageSquare, Sun, Moon, LogOut } from "lucide-react";
+import { Bell, User, Menu, X, CloudRain, Landmark, ShieldAlert, BadgePercent, LogOut, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { Logo } from "./Logo";
 import { useTheme } from "./ThemeProvider";
-
-interface NotificationItem {
-  id: string;
-  type: "price" | "weather" | "scheme" | "expert" | "community";
-  title: string;
-  desc: string;
-  time: string;
-  unread: boolean;
-  icon: any;
-  color: string;
-}
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Header() {
   const pathname = usePathname();
@@ -28,262 +18,187 @@ export function Header() {
   const { darkMode, toggleDarkMode } = useTheme();
   const [user, setUser] = useState<any>(null);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    { id: "n1", type: "price", title: "Price Drop Alert", desc: "Cotton prices in Rajkot dropped by 3.1% below MSP.", time: "10 mins ago", unread: true, icon: BadgePercent, color: "text-red-600 bg-red-50 dark:bg-red-900/30" },
-    { id: "n2", type: "weather", title: "Rain Prediction", desc: "Heavy rain forecasted in Pune tomorrow. Postpone spraying.", time: "1 hour ago", unread: true, icon: CloudRain, color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30" },
-    { id: "n3", type: "expert", title: "Expert Advice Received", desc: "Dr. Ramesh Patel replied to your pest control ticket.", time: "3 hours ago", unread: false, icon: ShieldAlert, color: "text-green-600 bg-green-50 dark:bg-green-900/30" },
-    { id: "n4", type: "scheme", title: "New Subsidy Available", desc: "PM-Kisan 15th installment applications are now open.", time: "1 day ago", unread: false, icon: Landmark, color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30" },
-  ]);
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
+  const notifs = [
+    { id:"n1", dot:"bg-red-400",    title:"Cotton Price Drop",  desc:"Rajkot cotton fell 3.1% below MSP."              },
+    { id:"n2", dot:"bg-sky-400",    title:"Rain Alert — Pune",  desc:"Heavy rain tomorrow. Hold spraying."             },
+    { id:"n3", dot:"bg-green-500",  title:"Expert Reply",       desc:"Dr. Ramesh replied to your pest ticket."         },
+    { id:"n4", dot:"bg-amber-400",  title:"PM-Kisan Open",      desc:"15th installment applications now open."         },
+  ];
 
   const handleLogout = async () => {
-    try {
-      if (auth) {
-        await signOut(auth);
-      }
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
+    try { if (auth) await signOut(auth); } catch {}
     localStorage.removeItem("user");
     router.push("/auth");
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u || { displayName: "Rajesh Kumar", photoURL: "", email: "rajesh.farmer@agropulse.in" });
-    });
-    return () => unsubscribe();
+    const u = onAuthStateChanged(auth, u => setUser(u || { displayName:"Rajesh Kumar", email:"rajesh@agropulse.in" }));
+    return () => u();
   }, []);
 
-  // Close notifications & profile dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
-        setNotifOpen(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setProfileDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const fn = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
   }, []);
 
-  if (pathname === "/auth" || pathname === "/auth/signup" || pathname === "/profile-setup") {
-    return null;
-  }
+  if (["/auth", "/auth/signup", "/profile-setup"].includes(pathname)) return null;
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const pageLabel = pathname === "/" ? "Dashboard" : pathname.replace("/","").replace(/-/g," ");
 
-  const markAllRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
+  const dropStyle = {
+    background: "#FDFAF5",
+    border: "1px solid rgba(26,61,43,0.12)",
+    borderRadius: 18,
+    boxShadow: "0 20px 60px rgba(26,61,43,0.15)",
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#12131c]/90 backdrop-blur-xl border-b border-emerald-500/20 dark:border-white/10 px-6 py-4 flex items-center justify-between shadow-lg">
-      {/* Mobile Menu Trigger & Logo */}
+    <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-3"
+      style={{ background: "rgba(245,240,232,0.88)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"1px solid rgba(26,61,43,0.09)" }}>
+
+      {/* Mobile: logo + hamburger */}
       <div className="flex items-center gap-3 md:hidden">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-xl hover:bg-black/5 transition-colors" style={{ color:"#1A3D2B" }}>
+          {mobileOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5"/>}
         </button>
-        <Link href="/" className="flex items-center gap-2">
-          <Logo className="w-8 h-8" />
-          <span className="font-extrabold text-green-700 dark:text-green-400 text-lg">AgroPulse</span>
-        </Link>
+        <span className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',Georgia,serif", color:"#1A3D2B" }}>AgroPulse</span>
       </div>
 
-      {/* Screen Title (Desktop only) */}
-      <div className="hidden md:block">
-        <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Workspace</span>
-        <h1 className="text-sm font-extrabold text-gray-900 dark:text-white mt-0.5">AgroPulse Hub</h1>
+      {/* Desktop: breadcrumb */}
+      <div className="hidden md:flex items-center gap-2 text-xs">
+        <span style={{ color:"rgba(26,61,43,0.3)" }}>AgroPulse</span>
+        <span style={{ color:"rgba(26,61,43,0.18)" }}>/</span>
+        <span className="font-semibold capitalize" style={{ color:"#1A3D2B" }}>{pageLabel}</span>
       </div>
 
-      {/* Controls: Dark Mode, i18n, Notifs, Profile Dropdown */}
-      <div className="flex items-center gap-3">
-        {/* Dark Mode Toggle Button */}
-        <button
-          onClick={toggleDarkMode}
-          className="p-2.5 bg-gray-50 dark:bg-white/10 border border-gray-100 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 rounded-xl transition-all"
-          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
-          {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
+      {/* Right controls */}
+      <div className="flex items-center gap-1.5">
 
-        {/* Language selector */}
-        <div className="flex items-center gap-1.5 border border-gray-100 dark:border-white/10 rounded-lg px-2.5 py-1.5 bg-gray-50 dark:bg-white/10">
-          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider hidden sm:inline">{t("select_language") || "Lang"}:</span>
-          <select
-            onChange={(e) => changeLanguage(e.target.value)}
-            value={i18n.language}
-            className="text-xs font-extrabold text-green-700 dark:text-green-400 bg-transparent border-none focus:outline-none focus:ring-0 cursor-pointer"
-          >
-            <option value="en">English</option>
-            <option value="hi">हिंदी</option>
-            <option value="mr">मराठी</option>
-            <option value="pa">ਪੰਜਾਬੀ</option>
-            <option value="ta">தமிழ்</option>
-            <option value="te">తెలుగు</option>
-            <option value="bn">বাংলা</option>
-            <option value="gu">ગુજરાતી</option>
-          </select>
-        </div>
+        {/* Language */}
+        <select onChange={e => i18n.changeLanguage(e.target.value)} value={i18n.language}
+          className="text-xs font-semibold rounded-xl px-2.5 py-2 cursor-pointer focus:outline-none"
+          style={{ background:"rgba(26,61,43,0.07)", color:"#2D6A4F", border:"1px solid rgba(26,61,43,0.1)" }}>
+          {[["en","EN"],["hi","हि"],["mr","MR"],["pa","PA"],["ta","TA"],["te","TE"]].map(([v,l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+        </select>
 
-        {/* Notifications Icon & Popover */}
+        {/* Notifications */}
         <div className="relative" ref={notifRef}>
-          <button
-            onClick={() => setNotifOpen(!notifOpen)}
-            className="p-2.5 bg-gray-50 dark:bg-white/10 border border-gray-100 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 rounded-xl relative transition-all"
-          >
-            <Bell className="w-4 h-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-extrabold w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#16171f]">
-                {unreadCount}
-              </span>
-            )}
+          <button onClick={() => setNotifOpen(o=>!o)}
+            className="relative p-2.5 rounded-xl hover:bg-black/5 transition-colors" style={{ color:"#2D6A4F" }}>
+            <Bell className="w-4 h-4"/>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2" style={{ background:"#6FCF97", borderColor:"#F5F0E8" }}/>
           </button>
-
-          {/* Notifications Dropdown */}
-          {notifOpen && (
-            <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#1a1b23] border border-gray-100 dark:border-white/10 rounded-2xl shadow-xl py-2 z-50 animate-fade-in">
-              <div className="px-4 py-2 border-b border-gray-50 dark:border-white/5 flex justify-between items-center">
-                <span className="text-xs font-extrabold text-gray-900 dark:text-white">Notifications</span>
-                {unreadCount > 0 && (
-                  <button onClick={markAllRead} className="text-[10px] font-bold text-green-600 dark:text-green-400 hover:text-green-700">
-                    Mark all read
-                  </button>
-                )}
-              </div>
-              <div className="max-h-72 overflow-y-auto divide-y divide-gray-50 dark:divide-white/5">
-                {notifications.map((notif) => {
-                  const Icon = notif.icon;
-                  return (
-                    <div key={notif.id} className={`p-3.5 flex gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${notif.unread ? "bg-green-50/20 dark:bg-green-900/10" : ""}`}>
-                      <div className={`p-2.5 rounded-xl ${notif.color} h-10 w-10 flex items-center justify-center shrink-0`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <h4 className="text-xs font-bold text-gray-900 dark:text-white truncate pr-2">{notif.title}</h4>
-                          <span className="text-[9px] text-gray-400 dark:text-gray-500 whitespace-nowrap font-medium">{notif.time}</span>
-                        </div>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium leading-relaxed mt-0.5">{notif.desc}</p>
-                      </div>
+          <AnimatePresence>
+            {notifOpen && (
+              <motion.div initial={{ opacity:0, y:8, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:6, scale:0.97 }}
+                transition={{ duration:0.15 }}
+                className="absolute right-0 mt-2 w-[296px] overflow-hidden z-50" style={dropStyle}>
+                <div className="px-4 py-3 flex justify-between items-center" style={{ borderBottom:"1px solid rgba(26,61,43,0.07)" }}>
+                  <span className="text-xs font-bold" style={{ color:"#1A3D2B" }}>Notifications</span>
+                  <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background:"rgba(111,207,151,0.2)", color:"#2D6A4F" }}>4 new</span>
+                </div>
+                {notifs.map(n => (
+                  <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-black/[0.03] cursor-pointer transition-colors" style={{ borderBottom:"1px solid rgba(26,61,43,0.04)" }}>
+                    <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.dot}`}/>
+                    <div>
+                      <p className="text-xs font-semibold" style={{ color:"#1A3D2B" }}>{n.title}</p>
+                      <p className="text-[10px] mt-0.5 leading-relaxed" style={{ color:"rgba(26,61,43,0.45)" }}>{n.desc}</p>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Profile Dropdown Menu */}
+        {/* Profile */}
         <div className="relative" ref={profileRef}>
-          <button
-            onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="flex items-center gap-2 p-1 pr-3 bg-gray-50 dark:bg-white/10 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-200 dark:hover:border-green-800 border border-gray-200 dark:border-white/10 rounded-xl transition-all cursor-pointer"
-          >
-            <div className="w-8 h-8 rounded-lg bg-green-600 text-white flex items-center justify-center text-sm font-black shadow-sm">
-              {user?.displayName?.charAt(0) || "R"}
+          <button onClick={() => setProfileOpen(o=>!o)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-colors hover:bg-black/5"
+            style={{ border:"1px solid rgba(26,61,43,0.12)" }}>
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black text-white"
+              style={{ background:"linear-gradient(135deg,#2D6A4F,#1A3D2B)" }}>
+              {user?.displayName?.charAt(0)||"R"}
             </div>
-            <span className="text-xs font-bold text-gray-800 dark:text-gray-200 hidden sm:inline">
-              {user?.displayName || "Rajesh"}
+            <span className="text-xs font-semibold hidden sm:inline" style={{ color:"#1A3D2B" }}>
+              {user?.displayName?.split(" ")[0]||"Rajesh"}
             </span>
+            <ChevronDown className="w-3 h-3 hidden sm:inline" style={{ color:"rgba(26,61,43,0.3)" }}/>
           </button>
+          <AnimatePresence>
+            {profileOpen && (
+              <motion.div initial={{ opacity:0, y:8, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:6, scale:0.97 }}
+                transition={{ duration:0.15 }}
+                className="absolute right-0 mt-2 w-52 overflow-hidden z-50" style={dropStyle}>
+                <div className="px-4 py-3" style={{ borderBottom:"1px solid rgba(26,61,43,0.07)" }}>
+                  <p className="text-xs font-bold" style={{ color:"#1A3D2B" }}>{user?.displayName||"Rajesh Kumar"}</p>
+                  <p className="text-[10px] mt-0.5 truncate" style={{ color:"rgba(26,61,43,0.45)" }}>{user?.email}</p>
+                </div>
+                <div className="p-1.5">
+                  <Link href="/profile" onClick={()=>setProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium hover:bg-black/[0.04] transition-colors"
+                    style={{ color:"#2D6A4F" }}>
+                    <User className="w-3.5 h-3.5"/> View Profile
+                  </Link>
+                  <div className="my-1 mx-3" style={{ height:1, background:"rgba(26,61,43,0.07)" }}/>
+                  <button onClick={()=>{ setProfileOpen(false); handleLogout(); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors text-red-500">
+                    <LogOut className="w-3.5 h-3.5"/> Sign Out
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
 
-          {/* DROPDOWN MENU */}
-          {profileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#1a1b23] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 animate-fade-in">
-              <div className="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 space-y-0.5">
-                <p className="text-xs font-black text-gray-900 dark:text-white truncate">
-                  {user?.displayName || "Rajesh Kumar"}
-                </p>
-                <p className="text-[10px] text-gray-400 truncate">
-                  {user?.email || "rajesh.farmer@agropulse.in"}
-                </p>
-              </div>
-
-              <div className="py-1">
-                <Link
-                  href="/profile"
-                  onClick={() => setProfileDropdownOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-950/40 hover:text-green-600 transition-colors"
-                >
-                  <User className="w-4 h-4 text-emerald-600" /> View Profile
-                </Link>
-              </div>
-
-              <div className="border-t border-gray-100 dark:border-white/5 pt-1">
-                <button
-                  onClick={() => {
-                    setProfileDropdownOpen(false);
-                    handleLogout();
-                  }}
-                  className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-xs font-black text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" /> Logout
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} className="fixed inset-0 z-50 md:hidden">
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={()=>setMobileOpen(false)}/>
+            <motion.div initial={{ x:-280 }} animate={{ x:0 }} exit={{ x:-280 }} transition={{ type:"spring", stiffness:300, damping:32 }}
+              className="absolute left-0 top-0 bottom-0 w-72 flex flex-col overflow-y-auto"
+              style={{ background:"#1A3D2B" }}>
+              <div className="flex items-center justify-between p-5" style={{ borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+                <span className="font-display font-bold text-white text-base" style={{ fontFamily:"'Playfair Display',Georgia,serif" }}>AgroPulse</span>
+                <button onClick={()=>setMobileOpen(false)} className="p-1.5 rounded-xl hover:bg-white/10" style={{ color:"rgba(255,255,255,0.4)" }}>
+                  <X className="w-4 h-4"/>
                 </button>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 md:hidden flex justify-start">
-          <div className="w-64 bg-white dark:bg-[#16171f] h-full p-6 flex flex-col justify-between shadow-2xl relative">
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="space-y-6 mt-8">
-              <Link href="/" className="text-2xl font-extrabold text-green-700 dark:text-green-400 flex items-center gap-2.5" onClick={() => setMobileMenuOpen(false)}>
-                <Logo className="w-9 h-9" />
-                <span>AgroPulse</span>
-              </Link>
-              <nav className="space-y-2">
+              <nav className="flex-1 px-3 py-4 space-y-1">
                 {[
-                  { href: "/", label: t("dashboard") || "Dashboard" },
-                  { href: "/marketplace", label: "Buy Crops (Customer)" },
-                  { href: "/seller", label: "Sell Crops (Farmer Desk)" },
-                  { href: "/market", label: t("market_prices") || "Market Prices" },
-                  { href: "/mandi-finder", label: t("mandi_finder") || "Mandi Finder" },
-                  { href: "/weather", label: t("weather") || "Weather" },
-                  { href: "/community", label: t("community") || "Community" },
-                  { href: "/experts", label: t("expert_consultation") || "Experts" },
-                  { href: "/planner", label: t("planner") || "Crop Planner" },
-                  { href: "/compare", label: t("compare") || "Compare Crops" },
-                  { href: "/schemes", label: t("govt_schemes") || "Govt Schemes" },
-                ].map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`block px-4 py-2.5 rounded-lg text-xs font-bold ${
-                      pathname === link.href ? "bg-green-600 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                  "/","marketplace","seller","market","mandi-finder",
+                  "weather","planner","compare","experts",
+                  "community","schemes","feedback"
+                ].map(p => {
+                  const href = p==="/" ? "/" : `/${p}`;
+                  const label = p==="/" ? "Dashboard" : p.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+                  const active = pathname===href;
+                  return (
+                    <Link key={href} href={href} onClick={()=>setMobileOpen(false)}
+                      className="block px-3 py-2.5 rounded-xl text-xs font-medium transition-colors capitalize"
+                      style={{ color:active?"#6FCF97":"rgba(255,255,255,0.45)", background:active?"rgba(111,207,151,0.1)":"transparent" }}>
+                      {label}
+                    </Link>
+                  );
+                })}
               </nav>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

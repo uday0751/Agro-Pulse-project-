@@ -2,83 +2,191 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── TYPOGRAPHY ─────────────────────────────────────────────────
+   Playfair Display → editorial serif headlines
+   DM Sans         → clean modern body
+──────────────────────────────────────────────────────────────────*/
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+/* ─── DESIGN TOKENS ───────────────────────────────────────────── */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --cream:         #F5F0E8;
+  --cream-dark:    #EAE3D6;
+  --off-white:     #FDFAF5;
+  --deep-green:    #1A3D2B;
+  --forest:        #2D6A4F;
+  --sage:          #74B49B;
+  --lime:          #6FCF97;
+  --clay:          #C9714B;
+  --clay-light:    #F0C5AE;
+  --amber:         #E8A838;
+  --amber-light:   #FBE8B8;
+  --soil:          #3D2314;
+  --border:        rgba(26,61,43,0.12);
+  --border-cream:  rgba(26,61,43,0.08);
 }
 
-.dark {
-  --background: #090a10;
-  --foreground: #f8fafc;
-}
-
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  text-size-adjust: 100%;
-  -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
-}
+/* ─── RESET + BASE ───────────────────────────────────────────── */
+html, body { max-width:100vw; overflow-x:hidden; scroll-behavior:smooth; }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--cream);
+  color: var(--deep-green);
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
-  min-height: 100dvh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fluid Media & Input Auto-Scaling */
-img, svg, video, iframe, canvas {
-  max-width: 100%;
-  height: auto;
+/* ─── DISPLAY FONT ─────────────────────────────────────────── */
+.font-display { font-family: 'Playfair Display', Georgia, serif !important; }
+
+/* ─── KEYFRAMES ───────────────────────────────────────────── */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes floatY {
+  0%,100% { transform: translateY(0px);    }
+  50%      { transform: translateY(-12px); }
+}
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes fadeSlideUp {
+  from { opacity:0; transform:translateY(32px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+@keyframes fadeSlideLeft {
+  from { opacity:0; transform:translateX(32px); }
+  to   { opacity:1; transform:translateX(0);    }
+}
+@keyframes scaleIn {
+  from { opacity:0; transform:scale(0.92); }
+  to   { opacity:1; transform:scale(1);    }
+}
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0   rgba(111,207,151,0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(111,207,151,0);  }
+  100% { box-shadow: 0 0 0 0   rgba(111,207,151,0);   }
 }
 
-input, select, textarea, button {
-  max-width: 100%;
-}
-
-/* HIGH-END DESIGN SYSTEM UTILITIES */
+/* ─── UTILITY CLASSES ────────────────────────────────────── */
 @layer utilities {
-  .glass-card {
-    @apply bg-white/90 dark:bg-[#12141f]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.5)];
+
+  /* Ticker */
+  .ticker-track {
+    display: flex;
+    animation: ticker 34s linear infinite;
+    width: max-content;
   }
-  
-  .glass-card-interactive {
-    @apply glass-card hover:border-emerald-500/50 hover:shadow-[0_15px_40px_-10px_rgba(16,185,129,0.15)] transition-all duration-300;
+  .ticker-track:hover { animation-play-state: paused; }
+
+  /* Card with 3D tilt (JS handles the actual tilt, CSS provides the base) */
+  .tilt-card {
+    transform-style: preserve-3d;
+    transition: transform 0.4s cubic-bezier(.23,1,.32,1), box-shadow 0.4s ease;
+    will-change: transform;
   }
 
-  .glow-mesh {
-    background-image: 
-      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
-      radial-gradient(circle at 85% 85%, rgba(14, 165, 233, 0.1) 0%, transparent 45%);
+  /* Earthy card */
+  .card-earthy {
+    background: var(--off-white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 2px 0 rgba(26,61,43,0.06), 0 4px 16px rgba(26,61,43,0.04);
+    transition: transform .3s cubic-bezier(.23,1,.32,1), box-shadow .3s ease;
+  }
+  .card-earthy:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(26,61,43,0.13);
   }
 
-  .glow-mesh-dark {
-    background-image: 
-      radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+  /* Diagonal section clip */
+  .clip-bottom-right { clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%); }
+  .clip-top-right    { clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 100%); }
+
+  /* Label / eyebrow */
+  .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--forest);
+    font-family: 'DM Sans', sans-serif;
   }
+
+  /* Amber button */
+  .btn-amber {
+    display: inline-flex; align-items:center; gap:8px;
+    padding: 14px 28px;
+    background: var(--amber);
+    color: var(--soil);
+    font-weight: 700;
+    font-size: 13.5px;
+    border-radius: 14px;
+    transition: transform .22s ease, box-shadow .22s ease;
+    box-shadow: 0 4px 18px rgba(232,168,56,0.35);
+  }
+  .btn-amber:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(232,168,56,0.5);
+  }
+
+  /* Green button */
+  .btn-green {
+    display: inline-flex; align-items:center; gap:8px;
+    padding: 14px 28px;
+    background: var(--deep-green);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13.5px;
+    border-radius: 14px;
+    transition: transform .22s ease, box-shadow .22s ease;
+    box-shadow: 0 4px 18px rgba(26,61,43,0.3);
+  }
+  .btn-green:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(26,61,43,0.45);
+    background: var(--forest);
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    display: inline-flex; align-items:center; gap:8px;
+    padding: 14px 24px;
+    color: var(--forest);
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    transition: all .22s ease;
+  }
+  .btn-ghost:hover {
+    background: rgba(26,61,43,0.06);
+    border-color: var(--forest);
+  }
+
+  /* Floating animation */
+  .float { animation: floatY 4s ease-in-out infinite; }
+  .float-delay-1 { animation-delay: 0.8s; }
+  .float-delay-2 { animation-delay: 1.6s; }
 }
 
-/* Custom Sleek Scrollbar */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.4);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.7);
-}
+/* ─── SCROLLBAR ───────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--sage); border-radius:99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--forest); }
 
-/* Smooth dark mode transitions */
-*, *::before, *::after {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
-}
+::selection { background: var(--lime); color: var(--deep-green); }
+
+/* ─── PRESERVE TRANSITIONS ONLY WHERE NEEDED ───────────────── */
+a, button { transition: color .15s ease, background-color .15s ease, transform .25s ease, box-shadow .25s ease, border-color .15s ease; }
+img, svg, canvas { max-width:100%; height:auto; }

@@ -1,674 +1,754 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Cloud, LineChart, Users, Calendar, Landmark, Stethoscope, ShoppingBag, Sprout, MapPin, BarChart, 
-  ArrowRight, Sparkles, TrendingUp, Sun, Droplets, Wind, ArrowUpRight, ShieldCheck, ChevronRight, Navigation, Loader2,
-  MessageSquare, Star, Send, ThumbsUp, CheckCircle2, User, Mail, Zap, Play, Radio, Compass, ShieldAlert, Cpu, ArrowDownRight
+import { useEffect, useRef, useState, useCallback } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import {
+  Cloud, LineChart, Users, Calendar, Landmark, Stethoscope,
+  ShoppingBag, Sprout, MapPin, BarChart, ArrowRight, TrendingUp,
+  TrendingDown, Droplets, Wind, Navigation, Loader2, MessageSquare,
+  Star, Send, CheckCircle2, Leaf, Cpu, ShieldCheck, Zap, ChevronRight
 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import Link from "next/link";
 
+// ─────────────────────────────────────────────────────────────
+//  INTERACTIVE 3D ICOSAHEDRON — pure canvas, no dependencies
+//  Earthy agri-tech: deep green front / clay back wireframe
+// ─────────────────────────────────────────────────────────────
+function AgroOrb() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+  const rot = useRef({ x: 0.4, y: 0 });
+  const target = useRef({ x: 0.4, y: 0 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      const p = canvas.parentElement;
+      canvas.width = p ? p.offsetWidth : 460;
+      canvas.height = p ? p.offsetHeight : 460;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // Mouse track on parent container
+    const parent = canvas.parentElement;
+    const onMove = (e: MouseEvent) => {
+      if (!parent) return;
+      const r = parent.getBoundingClientRect();
+      mouse.current = {
+        x: (e.clientX - r.left - r.width / 2) / r.width,
+        y: (e.clientY - r.top - r.height / 2) / r.height,
+      };
+    };
+    parent?.addEventListener("mousemove", onMove);
+    const onLeave = () => { mouse.current = { x: 0, y: 0 }; };
+    parent?.addEventListener("mouseleave", onLeave);
+
+    // ── Icosahedron geometry ──────────────────────────────
+    const φ = (1 + Math.sqrt(5)) / 2;
+    const rawV: [number, number, number][] = [
+      [0, 1, φ], [0, -1, φ], [0, 1, -φ], [0, -1, -φ],
+      [1, φ, 0], [-1, φ, 0], [1, -φ, 0], [-1, -φ, 0],
+      [φ, 0, 1], [-φ, 0, 1], [φ, 0, -1], [-φ, 0, -1],
+    ];
+    const VERTS = rawV.map(([x, y, z]) => {
+      const l = Math.sqrt(x * x + y * y + z * z);
+      return [x / l, y / l, z / l] as [number, number, number];
+    });
+    const EDGES: [number, number][] = [
+      [0,1],[0,4],[0,5],[0,8],[0,9],
+      [1,6],[1,7],[1,8],[1,9],
+      [2,3],[2,4],[2,5],[2,10],[2,11],
+      [3,6],[3,7],[3,10],[3,11],
+      [4,5],[4,8],[4,10],
+      [5,9],[5,11],
+      [6,7],[6,8],[6,10],
+      [7,9],[7,11],
+      [8,10],[9,11],
+    ];
+    // Extra subdivided sphere dots for texture
+    const DOTS: [number, number, number][] = Array.from({ length: 60 }, () => {
+      const u = Math.random() * Math.PI * 2;
+      const v = Math.acos(2 * Math.random() - 1);
+      return [Math.sin(v) * Math.cos(u), Math.sin(v) * Math.sin(u), Math.cos(v)];
+    });
+
+    // ── Math helpers ──────────────────────────────────────
+    const rx = (v: [number,number,number], a: number): [number,number,number] =>
+      [v[0], v[1]*Math.cos(a)-v[2]*Math.sin(a), v[1]*Math.sin(a)+v[2]*Math.cos(a)];
+    const ry = (v: [number,number,number], a: number): [number,number,number] =>
+      [v[0]*Math.cos(a)+v[2]*Math.sin(a), v[1], -v[0]*Math.sin(a)+v[2]*Math.cos(a)];
+    const project = (v: [number,number,number], w: number, h: number) => {
+      const FOV = 2.8;
+      const pz = v[2] + FOV;
+      const s = Math.min(w, h) * 0.36 * FOV;
+      return { x: (v[0] / pz) * s + w / 2, y: (v[1] / pz) * s + h / 2, z: v[2] };
+    };
+
+    // ── Animated floating particles in background ─────────
+    const particles = Array.from({ length: 18 }, () => ({
+      x: Math.random(), y: Math.random(),
+      vx: (Math.random() - 0.5) * 0.0008,
+      vy: (Math.random() - 0.5) * 0.0008,
+      r: Math.random() * 2.5 + 1,
+      col: ["#2D6A4F","#6FCF97","#C9714B","#E8A838"][Math.floor(Math.random()*4)],
+    }));
+
+    let raf: number;
+    let t = 0;
+
+    const draw = () => {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      t += 0.01;
+
+      // Smooth rotation lerp
+      target.current.y = mouse.current.x * 1.1 + t * 0.18;
+      target.current.x = mouse.current.y * 0.7 + 0.4;
+      rot.current.x += (target.current.x - rot.current.x) * 0.06;
+      rot.current.y += (target.current.y - rot.current.y) * 0.06;
+
+      // Background radial glow
+      const g = ctx.createRadialGradient(w*.5, h*.5, 0, w*.5, h*.5, h*.5);
+      g.addColorStop(0, "rgba(111,207,151,0.12)");
+      g.addColorStop(0.6, "rgba(45,106,79,0.05)");
+      g.addColorStop(1, "transparent");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+
+      // Floating background particles
+      particles.forEach(p => {
+        p.x = (p.x + p.vx + 1) % 1;
+        p.y = (p.y + p.vy + 1) % 1;
+        ctx.beginPath();
+        ctx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.col + "55";
+        ctx.fill();
+      });
+
+      // Transform all vertices
+      const tf = (v: [number,number,number]) => ry(rx(v, rot.current.x), rot.current.y);
+      const projV = VERTS.map(v => project(tf(v), w, h));
+      const projD = DOTS.map(v => project(tf(v), w, h));
+
+      // ── Draw subtle sphere ring ─────────────────────────
+      const scale = Math.min(w, h) * 0.36;
+      ctx.beginPath();
+      ctx.arc(w/2, h/2, scale, 0, Math.PI*2);
+      ctx.strokeStyle = "rgba(45,106,79,0.06)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // ── Draw edges ──────────────────────────────────────
+      EDGES.forEach(([a, b]) => {
+        const pa = projV[a], pb = projV[b];
+        const depth = (pa.z + pb.z) / 2; // -1 to 1
+        const norm = (depth + 1) / 2;     // 0 to 1
+
+        ctx.beginPath();
+        ctx.moveTo(pa.x, pa.y);
+        ctx.lineTo(pb.x, pb.y);
+
+        if (norm > 0.45) {
+          // Front faces — deep green
+          ctx.strokeStyle = `rgba(26,61,43,${0.2 + norm * 0.55})`;
+          ctx.lineWidth = 0.8 + norm;
+        } else {
+          // Back faces — clay, subtle
+          ctx.strokeStyle = `rgba(201,113,75,${0.08 + (1-norm)*0.2})`;
+          ctx.lineWidth = 0.5;
+        }
+        ctx.stroke();
+      });
+
+      // ── Draw vertex dots ─────────────────────────────────
+      projV.forEach((p) => {
+        const norm = (p.z + 1) / 2;
+        const size = 2 + norm * 4;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fillStyle = norm > 0.45
+          ? `rgba(45,106,79,${0.5 + norm * 0.5})`
+          : `rgba(201,113,75,${0.15 + (1-norm)*0.3})`;
+        ctx.shadowBlur = norm > 0.6 ? 6 : 0;
+        ctx.shadowColor = "#2D6A4F";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // ── Subdivision dots (fine texture) ──────────────────
+      projD.forEach((p) => {
+        const norm = (p.z + 1) / 2;
+        if (norm < 0.3) return;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(111,207,151,${norm * 0.35})`;
+        ctx.fill();
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      parent?.removeEventListener("mousemove", onMove);
+      parent?.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  return (
+    <canvas ref={canvasRef}
+      className="w-full h-full"
+      style={{ cursor: "crosshair" }}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+//  3D TILT CARD — mouse-position-based perspective tilt
+// ─────────────────────────────────────────────────────────────
+function TiltCard({ children, className = "", style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    el.style.transform = `perspective(600px) rotateY(${dx * 7}deg) rotateX(${-dy * 5}deg) translateY(-4px)`;
+    el.style.boxShadow = `${-dx * 8}px ${dy * 8 + 12}px 40px rgba(26,61,43,0.14)`;
+  }, []);
+  const handleLeave = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = "perspective(600px) rotateY(0deg) rotateX(0deg) translateY(0px)";
+    el.style.boxShadow = "0 2px 8px rgba(26,61,43,0.06)";
+  }, []);
+  return (
+    <div ref={ref} onMouseMove={handleMove} onMouseLeave={handleLeave}
+      className={className}
+      style={{ transition: "transform 0.3s cubic-bezier(.23,1,.32,1), box-shadow 0.3s ease", transformStyle: "preserve-3d", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+//  TOOL CARD
+// ─────────────────────────────────────────────────────────────
+const COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  green:  { bg: "#EAF5EE", text: "#1A5C36", border: "#B8DEC8" },
+  clay:   { bg: "#F7EDE8", text: "#7A3B26", border: "#E8C4B4" },
+  sky:    { bg: "#E8F4FA", text: "#14527A", border: "#B4D9EE" },
+  amber:  { bg: "#FBF3E0", text: "#7A5014", border: "#F0D898" },
+  purple: { bg: "#F0EBF8", text: "#4A2080", border: "#D0B8EC" },
+  teal:   { bg: "#E5F5F2", text: "#0D6B5B", border: "#A8DDD5" },
+  rose:   { bg: "#FAE8EB", text: "#7A1C2E", border: "#F0B8C4" },
+  indigo: { bg: "#EAECf8", text: "#2C2C8A", border: "#B8BCEC" },
+};
+
+function ToolCard({ title, desc, icon: Icon, href, badge, color = "green" }: { title: string; desc: string; icon: any; href: string; badge: string; color?: string }) {
+  const c = COLORS[color] || COLORS.green;
+  return (
+    <Link href={href} className="block group h-full">
+      <TiltCard
+        className="h-full p-5 rounded-2xl flex flex-col gap-4 cursor-pointer"
+        style={{ background: "#FDFAF5", border: `1px solid rgba(26,61,43,0.1)`, boxShadow: "0 2px 8px rgba(26,61,43,0.06)" }}
+      >
+        <div className="flex items-start justify-between">
+          <div className="p-2.5 rounded-xl" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+            <Icon className="w-5 h-5" style={{ color: c.text }} />
+          </div>
+          <span className="text-[9px] font-bold px-2.5 py-1 rounded-full"
+            style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}>
+            {badge}
+          </span>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold mb-1.5 group-hover:text-green-700 transition-colors" style={{ color: "#1A3D2B" }}>{title}</h3>
+          <p className="text-[11px] leading-relaxed" style={{ color: "rgba(26,61,43,0.5)" }}>{desc}</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: c.text }}>
+          Open <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </TiltCard>
+    </Link>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SCROLL-REVEAL WRAPPER
+// ─────────────────────────────────────────────────────────────
+function Reveal({ children, delay = 0, direction = "up" }: { children: React.ReactNode; delay?: number; direction?: "up" | "left" | "right" }) {
+  const offsets = { up: { y: 40, x: 0 }, left: { y: 0, x: 40 }, right: { y: 0, x: -40 } };
+  const off = offsets[direction];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: off.y, x: off.x }}
+      whileInView={{ opacity: 1, y: 0, x: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.65, delay, ease: [0.23, 1, 0.32, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+//  MAIN DASHBOARD
+// ─────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const { t } = useTranslation();
-  const [greeting, setGreeting] = useState("Welcome to AgroPulse OS");
-  const [activeBentoTab, setActiveBentoTab] = useState<"all" | "trade" | "tools">("all");
-
-  // Real-time Live Weather State
-  const [weatherData, setWeatherData] = useState<{
-    cityName: string;
-    temp: number;
-    condition: string;
-    humidity: number;
-    windSpeed: number;
-    loading: boolean;
-  }>({
-    cityName: "Detecting GPS...",
-    temp: 28,
-    condition: "Clear Sky ☀️",
-    humidity: 50,
-    windSpeed: 10,
-    loading: true
-  });
-
-  // User Review Feedbacks
-  const [fbName, setFbName] = useState("");
-  const [fbComments, setFbComments] = useState("");
-  const [fbRating, setFbRating] = useState(5);
-  const [fbSuccess, setFbSuccess] = useState(false);
-  const [dashboardFeedbacks, setDashboardFeedbacks] = useState([
-    { id: "1", name: "Rameshwar Patil", rating: 5, comments: "Mandi Finder & AI Crop Planner are game-changing! Sold 45 Quintals Wheat directly.", role: "Verified Farmer (Pune)", createdAt: "Today" },
-    { id: "2", name: "Gurpreet Singh", rating: 5, comments: "Direct crop buyer matching saved us over ₹35,000 in middleman fees.", role: "Farmer (Punjab)", createdAt: "Yesterday" }
+  const [greeting, setGreeting] = useState("Good morning");
+  const [weather, setWeather] = useState({ city:"Detecting…", temp:28, cond:"Clear ☀️", hum:52, wind:12, loading:true });
+  const [fbName, setFbName] = useState(""); const [fbMsg, setFbMsg] = useState("");
+  const [fbRating, setFbRating] = useState(5); const [fbDone, setFbDone] = useState(false);
+  const [reviews, setReviews] = useState([
+    { id:"1", name:"Rameshwar Patil", rating:5, msg:"Sold 45q Lokwan wheat directly to a Pune bulk buyer — saved ₹18,000 in agent commission. Life-changing platform.", role:"Farmer · Baramati, MH", ts:"2h ago" },
+    { id:"2", name:"Gurpreet Singh",  rating:5, msg:"The direct buyer matching is unreal. Our whole village switched to AgroPulse. Not one grain goes through a middleman now.", role:"Farmer · Ludhiana, PB", ts:"Yesterday" },
+    { id:"3", name:"Kavitha Reddy",   rating:5, msg:"The 60-day forecast saved my cotton crop from an unseasonal rain. Agronomist consultation was spot-on and affordable.", role:"Farmer · Warangal, TG", ts:"3 days ago" },
   ]);
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good Morning, Kisan 🌅");
-    else if (hour < 17) setGreeting("Good Afternoon, Kisan ☀️");
-    else setGreeting("Good Evening, Kisan 🌾");
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening");
   }, []);
 
-  // Live Location Weather
-  const fetchDashboardWeather = async (lat: number, lng: number, fallbackName?: string) => {
+  const fetchWx = async (lat: number, lng: number, fb = "Your location") => {
     try {
-      const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,rain,weather_code,wind_speed_10m`
-      );
-      const data = await res.json();
-      const current = data?.current || {};
-
-      const weatherCodeMap: Record<number, string> = {
-        0: "Clear Sky ☀️", 1: "Mainly Clear 🌤️", 2: "Partly Cloudy ⛅", 3: "Overcast ☁️",
-        45: "Foggy 🌫️", 51: "Light Drizzle 🌧️", 61: "Slight Rain 🌧️", 63: "Moderate Rain 🌧️",
-        65: "Heavy Rain 🌧️", 80: "Rain Showers 🌦️", 95: "Thunderstorm 🌩️"
-      };
-
-      const cond = weatherCodeMap[current.weather_code] || "Clear Sky ☀️";
-      let locationLabel = fallbackName || "Live Location";
-
-      try {
-        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-        const geoData = await geoRes.json();
-        const address = geoData?.address;
-        if (address) {
-          const city = address.city || address.town || address.village || address.district;
-          const state = address.state;
-          if (city) locationLabel = state ? `${city}, ${state.substring(0, 2).toUpperCase()}` : city;
-        }
-      } catch (e) { console.error(e); }
-
-      setWeatherData({
-        cityName: locationLabel,
-        temp: Math.round(current.temperature_2m ?? 28),
-        condition: cond,
-        humidity: Math.round(current.relative_humidity_2m ?? 50),
-        windSpeed: Math.round(current.wind_speed_10m ?? 12),
-        loading: false
-      });
-    } catch (err) {
-      setWeatherData({
-        cityName: fallbackName || "Current Location",
-        temp: 29,
-        condition: "Clear Sky ☀️",
-        humidity: 48,
-        windSpeed: 11,
-        loading: false
-      });
-    }
+      const d = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`)).json();
+      const c = d.current || {};
+      const cm: Record<number, string> = { 0:"Clear ☀️", 1:"Mainly Clear 🌤️", 2:"Partly Cloudy ⛅", 3:"Overcast ☁️", 61:"Light Rain 🌧️", 95:"Storm ⛈️" };
+      let city = fb;
+      try { const gd = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)).json(); city = gd?.address?.city || gd?.address?.town || gd?.address?.village || fb; } catch {}
+      setWeather({ city, temp: Math.round(c.temperature_2m ?? 28), cond: cm[c.weather_code] ?? "Clear ☀️", hum: Math.round(c.relative_humidity_2m ?? 52), wind: Math.round(c.wind_speed_10m ?? 12), loading: false });
+    } catch { setWeather(w => ({ ...w, city: fb, loading: false })); }
   };
-
-  const detectLocation = () => {
-    setWeatherData((prev) => ({ ...prev, loading: true }));
-    if (typeof window !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => fetchDashboardWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchDashboardWeather(23.2599, 77.4126, "Bhopal, MP"),
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-      );
-    } else {
-      fetchDashboardWeather(23.2599, 77.4126, "Bhopal, MP");
-    }
+  const detect = () => {
+    setWeather(w => ({ ...w, loading: true }));
+    navigator.geolocation?.getCurrentPosition(p => fetchWx(p.coords.latitude, p.coords.longitude), () => fetchWx(23.26, 77.41, "Bhopal"), { timeout: 8000 });
   };
+  useEffect(() => { detect(); }, []);
 
-  useEffect(() => { detectLocation(); }, []);
-
-  const handleQuickFeedbackSubmit = (e: React.FormEvent) => {
+  const submitReview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fbName.trim() || !fbComments.trim()) return;
-    setDashboardFeedbacks([
-      { id: Date.now().toString(), name: fbName.trim(), rating: fbRating, comments: fbComments.trim(), role: "Verified User", createdAt: "Just now" },
-      ...dashboardFeedbacks
-    ]);
-    setFbName("");
-    setFbComments("");
-    setFbSuccess(true);
-    setTimeout(() => setFbSuccess(false), 4000);
+    if (!fbName.trim() || !fbMsg.trim()) return;
+    setReviews(r => [{ id: Date.now().toString(), name: fbName, rating: fbRating, msg: fbMsg, role: "Verified User", ts: "Just now" }, ...r]);
+    setFbName(""); setFbMsg(""); setFbDone(true);
+    setTimeout(() => setFbDone(false), 4000);
   };
 
-  // Live APMC Mandi Tickers
-  const mandiTickers = [
-    { crop: "Wheat (Sharbati)", mandi: "Indore APMC", price: "₹2,850/q", change: "+4.2%", isUp: true },
-    { crop: "Paddy (Basmati 1121)", mandi: "Karnal APMC", price: "₹4,620/q", change: "+2.8%", isUp: true },
-    { crop: "Cotton (Bt Long Staple)", mandi: "Rajkot APMC", price: "₹7,150/q", change: "-1.5%", isUp: false },
-    { crop: "Soyabean (Yellow)", mandi: "Ujjain APMC", price: "₹4,480/q", change: "+1.9%", isUp: true },
-    { crop: "Mustard (Yellow)", mandi: "Jaipur APMC", price: "₹5,350/q", change: "+3.1%", isUp: true },
-    { crop: "Onion (Nashik Red)", mandi: "Lasalgaon APMC", price: "₹1,920/q", change: "-2.4%", isUp: false }
+  const tickers = [
+    { crop:"Wheat (Sharbati)",       mandi:"Indore APMC",    price:"₹2,850/q", d:"+4.2%", up:true  },
+    { crop:"Paddy (Basmati 1121)",    mandi:"Karnal APMC",    price:"₹4,620/q", d:"+2.8%", up:true  },
+    { crop:"Cotton (Bt Staple)",      mandi:"Rajkot APMC",    price:"₹7,150/q", d:"−1.5%", up:false },
+    { crop:"Soyabean (Yellow)",       mandi:"Ujjain APMC",    price:"₹4,480/q", d:"+1.9%", up:true  },
+    { crop:"Mustard (Yellow)",        mandi:"Jaipur APMC",    price:"₹5,350/q", d:"+3.1%", up:true  },
+    { crop:"Onion (Nashik Red)",      mandi:"Lasalgaon APMC", price:"₹1,920/q", d:"−2.4%", up:false },
+    { crop:"Tomato (Desi)",           mandi:"Pune APMC",      price:"₹2,100/q", d:"+6.8%", up:true  },
+    { crop:"Chickpea (Desi)",         mandi:"Akola APMC",     price:"₹5,850/q", d:"+0.9%", up:true  },
   ];
 
+  const tools = [
+    { title:"Market Prices",        desc:"Live MSP vs APMC rates for 70+ crops with trend analysis.", icon:LineChart,   href:"/market",        badge:"70+ Crops", color:"green"  },
+    { title:"GPS Mandi Finder",     desc:"26+ APMC mandis on an interactive map with GPS navigation.", icon:MapPin,      href:"/mandi-finder",  badge:"GPS",       color:"sky"    },
+    { title:"Weather Forecast",     desc:"60-day hyper-local rain, humidity & soil moisture forecast.", icon:Cloud,       href:"/weather",       badge:"60-Day",    color:"sky"    },
+    { title:"Farmer Community",     desc:"Verified e-Farmer groups for yields, prices & advice.",     icon:Users,       href:"/community",     badge:"Verified",  color:"green"  },
+    { title:"Agronomist Consult",   desc:"1-on-1 certified crop disease diagnosis & treatment plans.",  icon:Stethoscope, href:"/experts",       badge:"1-on-1",    color:"clay"   },
+    { title:"AI Crop Planner",      desc:"Enter crop & date → get a full sowing-to-harvest plan.",    icon:Calendar,    href:"/planner",       badge:"AI",        color:"amber"  },
+    { title:"Compare Crops",        desc:"Profit margins, soil fit & water needs side-by-side.",      icon:BarChart,    href:"/compare",       badge:"Analytics", color:"teal"   },
+    { title:"Govt Schemes",         desc:"PM-Kisan, Fasal Bima, subsidies & agri loan details.",      icon:Landmark,    href:"/schemes",       badge:"Free",      color:"indigo" },
+  ];
+
+  /* ─── RENDER ────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen p-4 sm:p-6 md:p-8 space-y-10 max-w-7xl mx-auto font-sans">
-      
-      {/* 1. FUTURISTIC CYBER HERO HEADER BANNER */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 p-6 md:p-10 border-2 border-emerald-500/40 shadow-2xl text-white space-y-8"
-      >
-        {/* Glow Mesh Shaders */}
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl pointer-events-none" />
+    <div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black uppercase px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <Cpu className="w-3.5 h-3.5 text-cyan-300" /> AgroPulse OS 4.0 Active
-              </span>
-              <span className="text-xs text-gray-300 font-bold">• {greeting}</span>
+      {/* ════════════════════════════════════════════════════
+          §1  ASYMMETRIC HERO — left text, right 3D canvas
+      ════════════════════════════════════════════════════ */}
+      <section style={{ background: "#F5F0E8", overflow: "hidden" }}>
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_480px] min-h-[90vh] items-center px-8 md:px-12 gap-0">
+
+          {/* LEFT — editorial text block, left-aligned */}
+          <div className="py-20 pr-0 lg:pr-16 space-y-8">
+
+            {/* Eyebrow — pill badge, left-aligned (not centered) */}
+            <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.55 }}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+                style={{ background:"rgba(45,106,79,0.1)", border:"1px solid rgba(45,106,79,0.2)" }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs font-semibold" style={{ color:"#2D6A4F" }}>{greeting} — AgroPulse is live</span>
+              </div>
+            </motion.div>
+
+            {/* DISPLAY HEADLINE — Playfair, left-anchored, intentionally asymmetric */}
+            <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.08 }}>
+              <h1 className="font-display leading-[1.04] tracking-tight"
+                style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:"clamp(44px, 5.5vw, 78px)", color:"#1A3D2B" }}>
+                From Seed
+                <br />
+                <em style={{ color:"#C9714B" }}>to Sale.</em>
+                <br />
+                No Middlemen.
+              </h1>
+            </motion.div>
+
+            <motion.p initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.16 }}
+              className="text-base md:text-lg leading-relaxed max-w-md"
+              style={{ color:"rgba(26,61,43,0.6)", fontFamily:"'DM Sans', sans-serif" }}>
+              India's direct agri-market platform. Buy, sell, and trade farm produce across 36 States & UTs
+              with live APMC data, AI planning, and zero commission.
+            </motion.p>
+
+            {/* CTAs — left-aligned stack of buttons */}
+            <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.22 }}
+              className="flex flex-wrap gap-3">
+              <Link href="/marketplace" className="btn-green">
+                <ShoppingBag className="w-4 h-4" /> Browse Marketplace
+              </Link>
+              <Link href="/seller" className="btn-amber">
+                <Sprout className="w-4 h-4" /> Sell Harvest
+              </Link>
+              <Link href="/planner" className="btn-ghost flex items-center gap-2">
+                AI Planner <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+
+            {/* Inline stats — typography-only, no cards */}
+            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.65, delay:0.32 }}
+              className="flex flex-wrap items-center gap-6 pt-2">
+              {[
+                { v:"₹14.8Cr+", l:"Direct Trade Volume" },
+                { v:"50,000+",   l:"Verified Farmers"    },
+                { v:"0%",        l:"Middleman Commission" },
+              ].map(s => (
+                <div key={s.l}>
+                  <p className="font-display text-2xl font-bold" style={{ fontFamily:"'Playfair Display',serif", color:"#1A3D2B" }}>{s.v}</p>
+                  <p className="text-[10px] font-medium mt-0.5" style={{ color:"rgba(26,61,43,0.45)" }}>{s.l}</p>
+                </div>
+              ))}
+              <div style={{ width:1, height:36, background:"rgba(26,61,43,0.1)" }} className="hidden sm:block" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold"
+                style={{ background:"rgba(232,168,56,0.15)", color:"#7A5014", border:"1px solid rgba(232,168,56,0.3)" }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                26+ APMC Mandis · Live Feed
+              </div>
+            </motion.div>
+          </div>
+
+          {/* RIGHT — interactive 3D scene, NOT centered in page */}
+          <motion.div
+            initial={{ opacity:0, x:40 }} animate={{ opacity:1, x:0 }}
+            transition={{ duration:0.8, delay:0.2, ease:[0.23,1,0.32,1] }}
+            className="relative hidden lg:flex items-center justify-center h-full"
+            style={{ minHeight: 480 }}
+          >
+            {/* 3D canvas container */}
+            <div className="w-full h-[460px] relative">
+              <AgroOrb />
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">
-              India's #1 Direct Farm-to-Buyer <br className="hidden sm:inline" />
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-                Agricultural Trading Ecosystem
-              </span>
-            </h1>
-
-            <p className="text-xs md:text-sm text-gray-300 font-medium max-w-2xl leading-relaxed">
-              Eliminate middlemen commission. Buy and sell fresh harvest across 36 States & UTs with live APMC Mandi rates, satellite weather forecasts, and AI crop planning.
-            </p>
-          </div>
-
-          {/* DYNAMIC ACTION DOCK */}
-          <div className="flex flex-wrap lg:flex-col items-stretch gap-3 shrink-0 relative z-10 w-full sm:w-auto">
-            <Link
-              href="/marketplace"
-              className="px-6 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-xs rounded-2xl shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2 group"
-            >
-              <ShoppingBag className="w-4.5 h-4.5 text-yellow-300 group-hover:scale-110 transition-transform" />
-              <span>Buy Crops (Customer Hub)</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-
-            <Link
-              href="/seller"
-              className="px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-2xl shadow-[0_0_25px_rgba(245,158,11,0.3)] transition-all flex items-center justify-center gap-2 group"
-            >
-              <Sprout className="w-4.5 h-4.5 group-hover:scale-110 transition-transform" />
-              <span>Sell Harvest (Farmer Desk)</span>
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-
-        {/* METRIC STATS ROW */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 relative z-10 border-t border-white/10 pt-6">
-          <div className="bg-white/5 backdrop-blur-xl p-4 rounded-2xl border border-white/10 space-y-1">
-            <span className="text-[10px] font-black uppercase text-emerald-400">Total Mandi Volume</span>
-            <strong className="text-xl md:text-2xl font-black text-white block">₹14.8 Crore+</strong>
-            <span className="text-[9px] text-gray-400 font-bold">Direct Buyer Volume</span>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-xl p-4 rounded-2xl border border-white/10 space-y-1">
-            <span className="text-[10px] font-black uppercase text-cyan-400">Verified Farmers</span>
-            <strong className="text-xl md:text-2xl font-black text-white block">50,000+ Active</strong>
-            <span className="text-[9px] text-gray-400 font-bold">Across 36 States & UTs</span>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-xl p-4 rounded-2xl border border-white/10 space-y-1">
-            <span className="text-[10px] font-black uppercase text-amber-400">APMC Mandis Covered</span>
-            <strong className="text-xl md:text-2xl font-black text-white block">26+ APMCs</strong>
-            <span className="text-[9px] text-gray-400 font-bold">Real-time Daily Feed</span>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-xl p-4 rounded-2xl border border-white/10 space-y-1">
-            <span className="text-[10px] font-black uppercase text-purple-400">Middleman Savings</span>
-            <strong className="text-xl md:text-2xl font-black text-yellow-300 block">0% Commission</strong>
-            <span className="text-[9px] text-gray-400 font-bold">100% Farmer Profit</span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* 2. REAL-TIME TICKER & LIVE SATELLITE WEATHER HUB */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* MANDI PRICE TICKER (2 COLS) */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#12141f] p-6 rounded-3xl border-2 border-emerald-500/30 shadow-xl space-y-4">
-          <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">
-                Live APMC Mandi Prices
-              </h3>
+            {/* Floating data callouts — positioned absolutely */}
+            <div className="absolute top-[18%] left-[-20px] float">
+              <div className="px-3.5 py-2.5 rounded-2xl shadow-lg"
+                style={{ background:"#FDFAF5", border:"1px solid rgba(26,61,43,0.12)", boxShadow:"0 8px 24px rgba(26,61,43,0.1)" }}>
+                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"rgba(26,61,43,0.4)" }}>Wheat · Indore</p>
+                <p className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',serif", color:"#1A3D2B" }}>₹2,850 <span className="text-green-600 text-xs">↑4.2%</span></p>
+              </div>
             </div>
-            <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-3 py-1 rounded-full border border-emerald-300">
-              Agmarknet Verified
+            <div className="absolute bottom-[20%] right-[-10px] float float-delay-1">
+              <div className="px-3.5 py-2.5 rounded-2xl shadow-lg"
+                style={{ background:"#FDFAF5", border:"1px solid rgba(201,113,75,0.2)", boxShadow:"0 8px 24px rgba(201,113,75,0.12)" }}>
+                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"rgba(26,61,43,0.4)" }}>Farmers Online</p>
+                <p className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',serif", color:"#C9714B" }}>2,841 <span style={{ color:"rgba(26,61,43,0.4)", fontSize:10 }}>right now</span></p>
+              </div>
+            </div>
+            <div className="absolute top-[52%] left-[-30px] float float-delay-2">
+              <div className="px-3 py-2 rounded-xl" style={{ background:"rgba(111,207,151,0.2)", border:"1px solid rgba(111,207,151,0.4)" }}>
+                <p className="text-[9px] font-bold" style={{ color:"#1A5C36" }}>0% Commission · Today</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+          §2  LIVE APMC TICKER — deep green band
+      ════════════════════════════════════════════════════ */}
+      <section className="overflow-hidden py-4" style={{ background:"#1A3D2B" }}>
+        <div className="flex items-center">
+          <div className="shrink-0 flex items-center gap-2.5 px-6 pr-7"
+            style={{ borderRight:"1px solid rgba(255,255,255,0.12)" }}>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background:"#6FCF97" }} />
+            <span className="text-[10px] font-bold tracking-[.12em] uppercase" style={{ color:"#6FCF97" }}>
+              Live APMC Rates
             </span>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {mandiTickers.map((t, idx) => (
-              <motion.div
-                key={idx}
-                whileHover={{ scale: 1.03, y: -3 }}
-                className="p-3.5 rounded-2xl border bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 space-y-1 shadow-sm"
-              >
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] font-extrabold text-gray-900 dark:text-white truncate">{t.crop}</span>
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${t.isUp ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"}`}>
-                    {t.change}
+          <div className="flex-1 overflow-hidden">
+            <div className="ticker-track">
+              {[...tickers, ...tickers].map((t, i) => (
+                <div key={i} className="inline-flex items-center gap-3 px-7 shrink-0">
+                  <span className="text-xs font-medium" style={{ color:"rgba(255,255,255,0.55)" }}>{t.crop}</span>
+                  <span className="text-sm font-bold text-white">{t.price}</span>
+                  <span className={`flex items-center gap-0.5 text-[11px] font-bold ${t.up ? "text-green-400" : "text-red-400"}`}>
+                    {t.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {t.d}
                   </span>
+                  <span className="text-[10px]" style={{ color:"rgba(255,255,255,0.25)" }}>{t.mandi}</span>
+                  <span style={{ color:"rgba(255,255,255,0.1)" }}>·</span>
                 </div>
-                <div className="flex justify-between items-baseline">
-                  <strong className="text-base font-black text-emerald-700 dark:text-emerald-400">{t.price}</strong>
-                  <span className="text-[9px] text-gray-400 font-bold">{t.mandi}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+          §3  PLATFORM INTRO — asymmetric, off-center
+      ════════════════════════════════════════════════════ */}
+      <section className="px-8 md:px-12 py-20" style={{ background:"#F5F0E8" }}>
+        <div className="max-w-[1400px] mx-auto">
+          {/* Off-center section: large decorative number left, heading slightly indented */}
+          <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr_420px] gap-8 items-start">
+
+            {/* Giant muted number — decorative, non-centered */}
+            <div className="hidden lg:block pt-2 select-none">
+              <span className="font-display font-bold" style={{ fontFamily:"'Playfair Display',serif", fontSize:120, lineHeight:1, color:"rgba(26,61,43,0.06)", letterSpacing:"-8px" }}>01</span>
+            </div>
+
+            {/* Heading + quick links */}
+            <div className="space-y-8">
+              <Reveal>
+                <p className="label">The Platform</p>
+                <h2 className="font-display mt-3 leading-tight"
+                  style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(34px, 4vw, 52px)", color:"#1A3D2B" }}>
+                  Everything a farmer needs,<br />
+                  <em style={{ color:"#2D6A4F" }}>intelligently connected.</em>
+                </h2>
+              </Reveal>
+
+              <Reveal delay={0.1}>
+                <p className="text-base leading-relaxed max-w-sm"
+                  style={{ color:"rgba(26,61,43,0.55)", fontFamily:"'DM Sans',sans-serif" }}>
+                  Built ground-up for Indian agriculture — from small-holders in Vidarbha to large-scale cotton growers in Gujarat.
+                </p>
+              </Reveal>
+
+              {/* Quick-access links — horizontal list, not a card grid */}
+              <Reveal delay={0.18}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-sm">
+                  {[
+                    { href:"/marketplace", icon:ShoppingBag, label:"Crop Marketplace",  sub:"50,000+ listings",   col:"#2D6A4F", bg:"#EAF5EE" },
+                    { href:"/seller",      icon:Sprout,      label:"Farmer Desk",       sub:"List & sell produce", col:"#C9714B", bg:"#F7EDE8" },
+                    { href:"/mandi-finder",icon:MapPin,      label:"GPS Mandi Finder",  sub:"26+ APMC mandis",     col:"#0369A1", bg:"#E8F4FA" },
+                    { href:"/planner",     icon:Calendar,    label:"AI Crop Planner",   sub:"Full growth schedule",col:"#7C3AED", bg:"#F0EBF8" },
+                  ].map(({ href,icon:Icon,label,sub,col,bg }) => (
+                    <Link key={href} href={href}
+                      className="group flex items-center gap-3.5 p-4 rounded-2xl transition-all hover:-translate-y-0.5"
+                      style={{ background:"#FDFAF5", border:"1px solid rgba(26,61,43,0.1)", boxShadow:"0 2px 8px rgba(26,61,43,0.05)" }}>
+                      <div className="p-2 rounded-xl shrink-0" style={{ background:bg }}>
+                        <Icon className="w-4 h-4" style={{ color:col }} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold group-hover:text-green-800 transition-colors" style={{ color:"#1A3D2B" }}>{label}</p>
+                        <p className="text-[10px]" style={{ color:"rgba(26,61,43,0.4)" }}>{sub}</p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-              </motion.div>
+              </Reveal>
+            </div>
+
+            {/* Weather widget — right column */}
+            <Reveal direction="left" delay={0.1}>
+              <TiltCard
+                className="rounded-3xl overflow-hidden"
+                style={{ background:"linear-gradient(150deg, #E8F4FA 0%, #D0E8F4 100%)", border:"1px solid #A8D8EE", boxShadow:"0 8px 32px rgba(2,106,170,0.1)" }}
+              >
+                <div className="p-7 space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="label" style={{ color:"#0369A1" }}>Live Weather Guard</p>
+                      <div className="mt-1.5">
+                        {weather.loading
+                          ? <Loader2 className="w-4 h-4 text-sky-500 animate-spin mt-1" />
+                          : <p className="text-xs font-medium flex items-center gap-1" style={{ color:"rgba(3,105,161,0.7)" }}>
+                              <MapPin className="w-3 h-3 text-red-400" />{weather.city}
+                            </p>}
+                      </div>
+                    </div>
+                    <button onClick={detect} className="p-2.5 rounded-2xl transition-colors" style={{ background:"rgba(3,105,161,0.12)", color:"#0369A1" }}>
+                      <Navigation className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {!weather.loading && (
+                    <>
+                      <div className="flex items-end gap-3">
+                        <span className="font-display font-bold leading-none" style={{ fontFamily:"'Playfair Display',serif", fontSize:72, color:"#0C4A6E" }}>{weather.temp}°</span>
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color:"#C9714B" }}>{weather.cond}</p>
+                          <p className="text-[10px] mt-1" style={{ color:"rgba(3,105,161,0.5)" }}>Farming conditions</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { icon:Droplets, l:"Humidity",   v:`${weather.hum}%` },
+                          { icon:Wind,     l:"Wind Speed", v:`${weather.wind} km/h` },
+                        ].map(({ icon:Icon, l, v }) => (
+                          <div key={l} className="p-3.5 rounded-2xl flex items-center gap-2.5" style={{ background:"rgba(255,255,255,0.55)", backdropFilter:"blur(8px)" }}>
+                            <Icon className="w-4 h-4 shrink-0 text-sky-600" />
+                            <div>
+                              <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"rgba(3,105,161,0.5)" }}>{l}</p>
+                              <p className="text-sm font-bold" style={{ color:"#0C4A6E" }}>{v}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <Link href="/weather" className="flex items-center justify-between text-xs font-semibold pt-3"
+                    style={{ borderTop:"1px solid rgba(3,105,161,0.15)", color:"#0369A1" }}>
+                    60-Day Weather Hub <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </TiltCard>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+          §4  TOOLS GRID — earthy warm section
+      ════════════════════════════════════════════════════ */}
+      <section className="px-8 md:px-12 py-20" style={{ background:"#EAE3D6" }}>
+        <div className="max-w-[1400px] mx-auto space-y-10">
+
+          {/* Off-center heading */}
+          <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 items-end">
+            <div className="hidden lg:block select-none">
+              <span className="font-display font-bold" style={{ fontFamily:"'Playfair Display',serif", fontSize:100, lineHeight:1, color:"rgba(26,61,43,0.07)", letterSpacing:"-6px" }}>02</span>
+            </div>
+            <div>
+              <Reveal>
+                <p className="label">Integrated Farm Tools</p>
+                <h2 className="font-display mt-2" style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px, 3.5vw, 46px)", color:"#1A3D2B" }}>
+                  10 services, one platform.
+                </h2>
+              </Reveal>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {tools.map((t, i) => (
+              <Reveal key={t.href} delay={i * 0.05}>
+                <ToolCard {...t} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+          §5  REVIEWS — deep green background, cream cards
+      ════════════════════════════════════════════════════ */}
+      <section className="px-8 md:px-12 py-20" style={{ background:"#1A3D2B" }}>
+        <div className="max-w-[1400px] mx-auto space-y-12">
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
+            <Reveal>
+              <p className="label" style={{ color:"rgba(111,207,151,0.7)" }}>Verified Farmer Reviews</p>
+              <h2 className="font-display mt-2" style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(28px,3.5vw,44px)", color:"#FDFAF5" }}>
+                Heard from the fields.
+              </h2>
+            </Reveal>
+            <Link href="/feedback" className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full transition-colors"
+              style={{ background:"rgba(111,207,151,0.15)", color:"#6FCF97", border:"1px solid rgba(111,207,151,0.25)" }}>
+              <MessageSquare className="w-3.5 h-3.5" /> All Reviews
+            </Link>
+          </div>
+
+          {/* Review cards — cream on dark green, slight overlap effect */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {reviews.map((r, i) => (
+              <Reveal key={r.id} delay={i * 0.1}>
+                <TiltCard
+                  className="p-6 rounded-2xl flex flex-col gap-4 h-full"
+                  style={{ background:"#FDFAF5", border:"1px solid rgba(26,61,43,0.1)", boxShadow:"0 4px 24px rgba(0,0,0,0.2)" }}
+                >
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: r.rating }).map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <blockquote className="font-display text-base font-medium leading-relaxed flex-1"
+                    style={{ fontFamily:"'Playfair Display',serif", color:"#1A3D2B" }}>
+                    "{r.msg}"
+                  </blockquote>
+                  <div className="flex items-center gap-3 pt-4" style={{ borderTop:"1px solid rgba(26,61,43,0.07)" }}>
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white"
+                      style={{ background:"linear-gradient(135deg,#2D6A4F,#1A3D2B)" }}>
+                      {r.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold" style={{ color:"#1A3D2B" }}>{r.name}</p>
+                      <p className="text-[10px]" style={{ color:"rgba(26,61,43,0.45)" }}>{r.role}</p>
+                    </div>
+                    <span className="text-[10px]" style={{ color:"rgba(26,61,43,0.28)" }}>{r.ts}</span>
+                  </div>
+                </TiltCard>
+              </Reveal>
             ))}
           </div>
 
-          <div className="flex justify-between items-center text-xs font-black pt-2 border-t border-gray-100 dark:border-white/10">
-            <span className="text-gray-500">Updated every 15 mins across 26+ APMCs</span>
-            <Link href="/market" className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
-              Explore All 70+ World Crops <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-
-        {/* GPS LIVE WEATHER GUARD (1 COL) */}
-        <div className="bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-950 text-white p-6 rounded-3xl border-2 border-sky-400/40 shadow-xl flex flex-col justify-between space-y-4">
-          <div className="flex justify-between items-center border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Sun className="w-5 h-5 text-yellow-300 animate-spin" />
-              <h3 className="text-sm font-black uppercase tracking-wider text-white">Live Weather Radar</h3>
-            </div>
-            <button
-              onClick={detectLocation}
-              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-sky-200"
-              title="Refresh Location Weather"
-            >
-              <Navigation className="w-4 h-4" />
-            </button>
-          </div>
-
-          {weatherData.loading ? (
-            <div className="py-8 text-center space-y-2">
-              <Loader2 className="w-8 h-8 text-sky-300 animate-spin mx-auto" />
-              <p className="text-xs font-bold text-sky-200">Locating Satellite GPS...</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <div>
-                  <span className="text-xs font-extrabold text-sky-200 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-red-400" /> {weatherData.cityName}
-                  </span>
-                  <strong className="text-4xl font-black text-white block mt-1">{weatherData.temp}°C</strong>
+          {/* Review form */}
+          <Reveal delay={0.15}>
+            <div className="rounded-3xl p-8" style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)" }}>
+              <h3 className="font-display font-bold text-xl mb-6" style={{ fontFamily:"'Playfair Display',serif", color:"#FDFAF5" }}>
+                Share your story
+              </h3>
+              <form onSubmit={submitReview} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <input type="text" required placeholder="Your name & city" value={fbName} onChange={e=>setFbName(e.target.value)}
+                    className="px-4 py-3.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-400/30"
+                    style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"#FDFAF5", caretColor:"#6FCF97" }}
+                    onFocus={e=>(e.target.style.background="rgba(255,255,255,0.12)")}
+                    onBlur={e=>(e.target.style.background="rgba(255,255,255,0.08)")} />
+                  <select value={fbRating} onChange={e=>setFbRating(Number(e.target.value))}
+                    className="px-4 py-3.5 rounded-xl text-sm font-semibold focus:outline-none"
+                    style={{ background:"rgba(232,168,56,0.15)", border:"1px solid rgba(232,168,56,0.3)", color:"#E8A838" }}>
+                    <option value={5} style={{ background:"#1A3D2B" }}>⭐⭐⭐⭐⭐  Excellent</option>
+                    <option value={4} style={{ background:"#1A3D2B" }}>⭐⭐⭐⭐  Very Good</option>
+                    <option value={3} style={{ background:"#1A3D2B" }}>⭐⭐⭐  Good</option>
+                  </select>
                 </div>
-                <span className="text-xs font-black text-yellow-300 bg-black/40 px-3 py-1 rounded-xl border border-white/10">
-                  {weatherData.condition}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs bg-black/30 p-3.5 rounded-2xl border border-white/10 font-bold">
-                <div className="flex items-center gap-2">
-                  <Droplets className="w-4 h-4 text-sky-300" />
-                  <div>
-                    <span className="text-[9px] text-sky-200 block uppercase">Humidity</span>
-                    <span>{weatherData.humidity}%</span>
-                  </div>
+                <textarea rows={3} required placeholder="How did AgroPulse help your farm business…" value={fbMsg} onChange={e=>setFbMsg(e.target.value)}
+                  className="w-full px-4 py-3.5 rounded-xl text-sm font-medium resize-none focus:outline-none focus:ring-2 focus:ring-green-400/30"
+                  style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"#FDFAF5", caretColor:"#6FCF97" }} />
+                <div className="flex justify-between items-center">
+                  <AnimatePresence>
+                    {fbDone && (
+                      <motion.span initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0 }}
+                        className="flex items-center gap-1.5 text-sm font-semibold" style={{ color:"#6FCF97" }}>
+                        <CheckCircle2 className="w-4 h-4" /> Thank you! Review posted.
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  <button type="submit" className="btn-amber ml-auto">
+                    <Send className="w-3.5 h-3.5" /> Submit Review
+                  </button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Wind className="w-4 h-4 text-sky-300" />
-                  <div>
-                    <span className="text-[9px] text-sky-200 block uppercase">Wind Speed</span>
-                    <span>{weatherData.windSpeed} km/h</span>
-                  </div>
-                </div>
-              </div>
+              </form>
             </div>
-          )}
-
-          <div className="flex justify-between items-center text-xs font-bold pt-2 border-t border-white/10">
-            <span className="text-sky-200">60-Day Rain Forecast</span>
-            <Link href="/weather" className="text-yellow-300 hover:underline font-black">
-              Full Weather Hub →
-            </Link>
-          </div>
+          </Reveal>
         </div>
-
-      </div>
-
-      {/* 3. BENTO GRID ARCHITECTURE: ASYMMETRIC MODERN LAYOUT */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest">
-              Bento Grid Ecosystem
-            </span>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
-              AgroPulse Integrated Services
-            </h2>
-          </div>
-
-          <div className="flex items-center bg-gray-100 dark:bg-white/10 p-1.5 rounded-2xl border border-gray-200 dark:border-white/10 text-xs font-black">
-            <button
-              onClick={() => setActiveBentoTab("all")}
-              className={`px-4 py-2 rounded-xl transition-all ${activeBentoTab === "all" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"}`}
-            >
-              All Services
-            </button>
-            <button
-              onClick={() => setActiveBentoTab("trade")}
-              className={`px-4 py-2 rounded-xl transition-all ${activeBentoTab === "trade" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"}`}
-            >
-              Direct Trade
-            </button>
-            <button
-              onClick={() => setActiveBentoTab("tools")}
-              className={`px-4 py-2 rounded-xl transition-all ${activeBentoTab === "tools" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-300"}`}
-            >
-              AI Farm Tools
-            </button>
-          </div>
-        </div>
-
-        {/* ASYMMETRIC BENTO CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          
-          {/* BENTO CARD 1: MARKETPLACE (2 COLS LARGE FEATURE) */}
-          <motion.div
-            whileHover={{ scale: 1.02, y: -4 }}
-            className="md:col-span-2 bg-gradient-to-br from-emerald-600 via-teal-600 to-green-700 text-white p-6 md:p-8 rounded-3xl shadow-2xl border-2 border-emerald-400/50 flex flex-col justify-between space-y-6 relative overflow-hidden group"
-          >
-            <div className="space-y-3 relative z-10">
-              <div className="flex justify-between items-center">
-                <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase px-3 py-1 rounded-xl border border-white/30">
-                  🛒 Customer Produce Marketplace
-                </span>
-                <span className="text-xs font-black bg-yellow-400 text-gray-900 px-3 py-1 rounded-xl">0% Middleman Commission</span>
-              </div>
-
-              <h3 className="text-2xl md:text-3xl font-black text-white group-hover:text-yellow-300 transition-colors">
-                Buy Fresh Crops Direct From Farmers Across India
-              </h3>
-
-              <p className="text-xs md:text-sm text-emerald-100 font-medium leading-relaxed max-w-xl">
-                Browse verified farm listings from Maharashtra, Punjab, UP, MP, Gujarat & 36 States. Doorstep delivery or Mandi transport pickup.
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-white/20 flex items-center justify-between relative z-10">
-              <span className="text-xs font-bold text-emerald-100">Live Crop Listings Available Now</span>
-              <Link
-                href="/marketplace"
-                className="px-5 py-3 bg-white text-emerald-800 hover:bg-emerald-50 rounded-2xl font-black text-xs shadow-xl transition-all flex items-center gap-2 group-hover:scale-105"
-              >
-                <span>Browse Marketplace</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* BENTO CARD 2: SELLER DESK */}
-          <motion.div
-            whileHover={{ scale: 1.03, y: -4 }}
-            className="bg-white dark:bg-[#12141f] p-6 rounded-3xl border-2 border-amber-500/40 shadow-xl flex flex-col justify-between space-y-4 group"
-          >
-            <div className="space-y-3">
-              <div className="p-3 bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-2xl w-fit">
-                <Sprout className="w-6 h-6" />
-              </div>
-
-              <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                Sell Harvest (Farmer Desk)
-              </h3>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                List your produce directly. Receive & approve buyer purchase orders with instant Mandi payment receipts.
-              </p>
-            </div>
-
-            <Link
-              href="/seller"
-              className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs font-black text-amber-600 dark:text-amber-400"
-            >
-              <span>Open Farmer Desk</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-
-          {/* BENTO CARD 3: REAL-TIME MANDI FINDER (1 COL) */}
-          <motion.div
-            whileHover={{ scale: 1.03, y: -4 }}
-            className="bg-white dark:bg-[#12141f] p-6 rounded-3xl border-2 border-blue-500/40 shadow-xl flex flex-col justify-between space-y-4 group"
-          >
-            <div className="space-y-3">
-              <div className="p-3 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-2xl w-fit">
-                <MapPin className="w-6 h-6" />
-              </div>
-
-              <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                Real-Time Mandi Finder
-              </h3>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                Interactive GPS OpenStreetMap showing 26+ APMC Mandis, crop prices, and travel distance.
-              </p>
-            </div>
-
-            <Link
-              href="/mandi-finder"
-              className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs font-black text-blue-600 dark:text-blue-400"
-            >
-              <span>Launch Mandi Map</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-
-          {/* BENTO CARD 4: AI CROP PLANNER */}
-          <motion.div
-            whileHover={{ scale: 1.03, y: -4 }}
-            className="bg-white dark:bg-[#12141f] p-6 rounded-3xl border-2 border-orange-500/40 shadow-xl flex flex-col justify-between space-y-4 group"
-          >
-            <div className="space-y-3">
-              <div className="p-3 bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400 rounded-2xl w-fit">
-                <Calendar className="w-6 h-6" />
-              </div>
-
-              <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-orange-600 transition-colors">
-                AI Crop Care & Planner
-              </h3>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                Enter your crop produce and sowing date. Get a step-by-step 2-step growth plan, fertigation schedule & crop care guide.
-              </p>
-            </div>
-
-            <Link
-              href="/planner"
-              className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs font-black text-orange-600 dark:text-orange-400"
-            >
-              <span>Generate AI Plan</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-
-          {/* BENTO CARD 5: FARMER COMMUNITY & CHAT */}
-          <motion.div
-            whileHover={{ scale: 1.03, y: -4 }}
-            className="bg-white dark:bg-[#12141f] p-6 rounded-3xl border-2 border-purple-500/40 shadow-xl flex flex-col justify-between space-y-4 group"
-          >
-            <div className="space-y-3">
-              <div className="p-3 bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 rounded-2xl w-fit">
-                <Users className="w-6 h-6" />
-              </div>
-
-              <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-purple-600 transition-colors">
-                e-Farmer Community & Chat
-              </h3>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                Public discussion group with verified e-Farmer IDs for sharing crop yields, rates, and pest advice.
-              </p>
-            </div>
-
-            <Link
-              href="/community"
-              className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs font-black text-purple-600 dark:text-purple-400"
-            >
-              <span>Join Community</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-
-          {/* BENTO CARD 6: EXPERTS */}
-          <motion.div
-            whileHover={{ scale: 1.03, y: -4 }}
-            className="bg-white dark:bg-[#12141f] p-6 rounded-3xl border-2 border-indigo-500/40 shadow-xl flex flex-col justify-between space-y-4 group"
-          >
-            <div className="space-y-3">
-              <div className="p-3 bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-2xl w-fit">
-                <Stethoscope className="w-6 h-6" />
-              </div>
-
-              <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">
-                Agronomist Consultations
-              </h3>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                Consult certified session experts and agronomists for crop disease diagnostic advice.
-              </p>
-            </div>
-
-            <Link
-              href="/experts"
-              className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs font-black text-indigo-600 dark:text-indigo-400"
-            >
-              <span>Book Expert</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-
-          {/* BENTO CARD 7: CROP COMPARE */}
-          <motion.div
-            whileHover={{ scale: 1.03, y: -4 }}
-            className="bg-white dark:bg-[#12141f] p-6 rounded-3xl border-2 border-teal-500/40 shadow-xl flex flex-col justify-between space-y-4 group"
-          >
-            <div className="space-y-3">
-              <div className="p-3 bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 rounded-2xl w-fit">
-                <BarChart className="w-6 h-6" />
-              </div>
-
-              <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-teal-600 transition-colors">
-                Compare Crops Side-by-Side
-              </h3>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                Compare profit margins, soil suitability, and water requirements for up to 4 crops.
-              </p>
-            </div>
-
-            <Link
-              href="/compare"
-              className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs font-black text-teal-600 dark:text-teal-400"
-            >
-              <span>Compare Crops</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-
-        </div>
-      </div>
-
-      {/* 4. USER FEEDBACK & COMMUNITY TESTIMONIALS */}
-      <div className="bg-white dark:bg-[#12141f] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-white/10 pb-4">
-          <div>
-            <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">Verified Farmer Feedback</span>
-            <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 mt-0.5">
-              <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" />
-              Farmer Community Reviews
-            </h3>
-          </div>
-
-          <Link
-            href="/feedback"
-            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 shadow-md flex items-center gap-1.5"
-          >
-            <MessageSquare className="w-4 h-4" /> Full Feedback Page
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {dashboardFeedbacks.map((fb) => (
-            <div key={fb.id} className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
-                    {fb.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black text-gray-900 dark:text-white">{fb.name}</h4>
-                    <span className="text-[9px] text-gray-400 font-medium">{fb.role}</span>
-                  </div>
-                </div>
-
-                <div className="flex text-yellow-400">
-                  {Array.from({ length: fb.rating }).map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-yellow-400" />
-                  ))}
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium italic">"{fb.comments}"</p>
-            </div>
-          ))}
-        </div>
-
-        {/* QUICK SUBMIT FORM */}
-        <form onSubmit={handleQuickFeedbackSubmit} className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-3">
-          <span className="text-xs font-black text-gray-800 dark:text-gray-200 block">Leave a review for AgroPulse:</span>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input
-              type="text"
-              required
-              placeholder="Your Name / City"
-              value={fbName}
-              onChange={(e) => setFbName(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-bold"
-            />
-
-            <select
-              value={fbRating}
-              onChange={(e) => setFbRating(Number(e.target.value))}
-              className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-bold text-yellow-600 dark:text-yellow-400"
-            >
-              <option value={5}>⭐⭐⭐⭐⭐ (5 Stars)</option>
-              <option value={4}>⭐⭐⭐⭐ (4 Stars)</option>
-              <option value={3}>⭐⭐⭐ (3 Stars)</option>
-            </select>
-          </div>
-
-          <textarea
-            rows={2}
-            required
-            placeholder="Share your experience using AgroPulse..."
-            value={fbComments}
-            onChange={(e) => setFbComments(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-medium"
-          />
-
-          <div className="flex justify-between items-center">
-            {fbSuccess ? (
-              <span className="text-xs text-emerald-600 font-black flex items-center gap-1">
-                <CheckCircle2 className="w-4 h-4" /> Feedback submitted successfully!
-              </span>
-            ) : <span />}
-
-            <button
-              type="submit"
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-1.5"
-            >
-              <Send className="w-3.5 h-3.5" /> Submit Review
-            </button>
-          </div>
-        </form>
-      </div>
+      </section>
 
     </div>
   );

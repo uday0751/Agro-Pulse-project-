@@ -9,7 +9,7 @@ import {
   IndianRupee, Zap, Leaf, Filter, Sun, CloudRain, ShieldCheck, RefreshCw, X,
   Layers, ListFilter, CalendarDays, BarChart3, AlertCircle, Sparkle, Tag,
   Lightbulb, AlertTriangle, TrendingUp, Thermometer, Compass, ChevronRight as ChevronIcon,
-  Activity, Star, Check
+  Activity, Star, Check, BookOpen, Shield, HelpCircle, FileText, ArrowLeft
 } from "lucide-react";
 import Link from "next/link";
 import { ALL_INDIAN_STATES_AND_UTS } from "@/app/marketplace/page";
@@ -48,43 +48,39 @@ export interface CalendarTask {
   phase: "Land Prep" | "Sowing" | "Vegetative Growth" | "Flowering & Fruiting" | "Harvesting & Mandi";
   title: string;
   description: string;
+  howToDoInstructions: string; // Step-by-step how to execute
+  howToTakeCareTips: string; // How to care, prevent disease, nutrient advice
   type: "soil" | "sowing" | "water" | "fertilizer" | "pest" | "harvest";
   isCompleted: boolean;
   priority: "High" | "Medium" | "Normal";
-  aiProTip?: string; // AI Agronomist Tip
-  exactDosage?: string; // Recommended dosage per acre
-  weatherAdvisory?: string; // Weather advice
+  exactDosage?: string;
+  weatherAdvisory?: string;
 }
 
-export default function AICropPlannerCalendarPage() {
-  // View Mode Switcher: Compact Calendar vs Stage Roadmap vs Checklist
-  const [viewMode, setViewMode] = useState<"calendar" | "timeline" | "checklist">("calendar");
+export default function AICropPlannerPage() {
+  // Step 1: Input Form | Step 2: Generated AI Plan Dashboard
+  const [currentStep, setCurrentStep] = useState<"input" | "plan">("input");
 
-  // Input Form State
+  // Step 1 Input Form State
   const [selectedCropName, setSelectedCropName] = useState<string>("Tomato (Hybrid)");
   const [customCropName, setCustomCropName] = useState<string>("");
   const [sowingDate, setSowingDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [landSizeInput, setLandSizeInput] = useState<string>("3");
   const [landUnit, setLandUnit] = useState<"Acres" | "Hectares" | "Bigha" | "Guntha">("Acres");
   const [selectedState, setSelectedState] = useState<string>("Maharashtra");
+  const [soilType, setSoilType] = useState<string>("Black Cotton Soil");
   const [farmingType, setFarmingType] = useState<"Chemical/Traditional" | "Organic Certified" | "Drip & Fertigation">("Drip & Fertigation");
   const [irrigationSource, setIrrigationSource] = useState<string>("Borewell Drip Irrigation");
 
-  // Schedule & Filter State
-  const [tasks, setTasks] = useState<CalendarTask[]>([]);
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("all");
-  const [selectedTaskDetail, setSelectedTaskDetail] = useState<CalendarTask | null>(null);
+  // Plan Dashboard Navigation Tab: "calendar" | "care_guide" | "fertilizers" | "checklist"
+  const [planTab, setPlanTab] = useState<"calendar" | "care_guide" | "fertilizers" | "checklist">("calendar");
 
-  // Calendar View State & Month Animation Direction (-1 or 1)
+  // Generated Plan Tasks & State
+  const [tasks, setTasks] = useState<CalendarTask[]>([]);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(new Date().toISOString().split("T")[0]);
   const [currentMonthDate, setCurrentMonthDate] = useState<Date>(new Date());
   const [monthSlideDirection, setMonthSlideDirection] = useState<number>(1);
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(new Date().toISOString().split("T")[0]);
-  const [showAddCustomModal, setShowAddCustomModal] = useState<boolean>(false);
-  
-  // Custom Task Modal Input
-  const [newCustomTitle, setNewCustomTitle] = useState("");
-  const [newCustomDesc, setNewCustomDesc] = useState("");
-  const [newCustomType, setNewCustomType] = useState<CalendarTask["type"]>("water");
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState<CalendarTask | null>(null);
 
   // Normalized Acres for yield calculations
   const landAcres = useMemo(() => {
@@ -99,7 +95,7 @@ export default function AICropPlannerCalendarPage() {
     }
   }, [landSizeInput, landUnit]);
 
-  // Find active crop master info
+  // Active Crop Info
   const activeCropMaster = useMemo(() => {
     const found = PRESET_CROPS.find(c => c.name === selectedCropName);
     if (found) return found;
@@ -114,8 +110,9 @@ export default function AICropPlannerCalendarPage() {
     };
   }, [selectedCropName, customCropName]);
 
-  // AI AGRONOMIST ENGINE: Generates chronological CalendarTasks with AI Tips & Dosage
-  const generateAICropSchedule = () => {
+  // AI CROP PLAN GENERATOR ENGINE
+  const handleGeneratePlan = (e: React.FormEvent) => {
+    e.preventDefault();
     const startDate = new Date(sowingDate || new Date());
     const cropName = selectedCropName === "Other Custom Crop" ? customCropName || "Custom Crop" : selectedCropName;
     const duration = activeCropMaster.durationDays;
@@ -130,239 +127,204 @@ export default function AICropPlannerCalendarPage() {
 
     const newTasks: CalendarTask[] = [];
 
-    // Day -7: Land Preparation
+    // Day -7: Land Prep
     let d = addDays(startDate, -7);
     newTasks.push({
-      id: `task-1`,
+      id: "task-1",
       dayOffset: -7,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Land Prep",
-      title: "🚜 Deep Plowing & Farm Bed Preparation",
-      description: `Perform 2 rounds of deep plowing for your ${landSizeInput} ${landUnit} field. Mix 5 tonnes/acre of well-decomposed FYM organic compost.`,
+      title: "🚜 Step 1: Deep Plowing & FYM Compost Bed Preparation",
+      description: `Perform 2 rounds of deep plowing in your ${landSizeInput} ${landUnit} (${soilType}) field. Mix 5 tonnes/acre of well-decomposed FYM compost.`,
+      howToDoInstructions: "1. Plow field to a depth of 30cm to break hard soil pan.\n2. Spread 5 tonnes/acre organic FYM manure evenly.\n3. Make raised beds 90cm wide with 30cm irrigation channels.",
+      howToTakeCareTips: "💡 Soil Care Tip: Deep plowing 7 days before sowing solarizes soil and kills 85% of soil-borne fungi & nematodes in " + selectedState + ".",
       type: "soil",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Pro Tip: Deep plowing 7-10 days prior to sowing exposes soil-borne pests to sunlight and increases soil aeration by 35% in ${selectedState}.`,
-      exactDosage: "FYM Compost: 5 Tonnes/Acre + Trichoderma 2.5 kg/acre",
-      weatherAdvisory: "☀️ Ideal dry sunny weather for soil solarization."
+      exactDosage: "FYM Compost: 5 Tonnes / Acre + Trichoderma: 2.5 kg / Acre",
+      weatherAdvisory: "☀️ Perform on dry sunny days for best solarization."
     });
 
     // Day -2: Basal Dose
     d = addDays(startDate, -2);
     newTasks.push({
-      id: `task-2`,
+      id: "task-2",
       dayOffset: -2,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Land Prep",
-      title: "🪴 Basal NPK & Organic Neem Cake Dose",
-      description: `Apply NPK (10:26:26) 50 kg/acre + Neem cake 100 kg/acre as basal dose in soil beds before sowing ${cropName}.`,
+      title: "🪴 Step 2: Basal NPK & Neem Cake Soil Application",
+      description: `Apply NPK (10:26:26) 50 kg/acre + Neem cake 100 kg/acre as basal fertilizer dose before sowing ${cropName}.`,
+      howToDoInstructions: "1. Broadcast NPK 10:26:26 evenly over raised beds.\n2. Mix Neem cake to protect against root rot.\n3. Lightly irrigate beds to absorb nutrients.",
+      howToTakeCareTips: "💡 Plant Care Tip: Neem cake acts as a natural nitrification inhibitor, preventing Nitrogen leaching loss by 40%.",
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Pro Tip: Mixing Neem Cake with NPK reduces Nitrogen leaching loss by 40% and protects against root-knot nematodes.`,
-      exactDosage: "NPK (10:26:26): 50 kg/Acre | Neem Cake: 100 kg/Acre",
-      weatherAdvisory: "🌤️ Mild soil moisture recommended for fertilizer absorption."
+      exactDosage: "NPK (10:26:26): 50 kg / Acre | Neem Cake: 100 kg / Acre",
+      weatherAdvisory: "🌤️ Soil should have light moisture."
     });
 
-    // Day 0: Sowing / Transplanting
+    // Day 0: Sowing / Planting
     d = addDays(startDate, 0);
     newTasks.push({
-      id: `task-3`,
+      id: "task-3",
       dayOffset: 0,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Sowing",
-      title: `🌱 Seed Sowing / Nursery Transplanting of ${cropName}`,
-      description: `Treat seeds with Bio-fertilizer Trichoderma viride (10g/kg). Transplant maintaining 45cm x 30cm row spacing. Light irrigation immediately after.`,
+      title: `🌱 Step 3: Seed Treatment & Planting of ${cropName}`,
+      description: `Treat seeds with Trichoderma (10g/kg). Transplant seedlings maintaining 45cm x 30cm row spacing. Light drip irrigation immediately after.`,
+      howToDoInstructions: "1. Mix seeds with Trichoderma viride in 50ml water, shade dry for 30 mins.\n2. Plant seedlings at 45cm x 30cm spacing.\n3. Run drip irrigation for 1.5 hours.",
+      howToTakeCareTips: "💡 Crop Care Tip: Plant in late afternoon (after 3 PM) to prevent seedling transplant shock from harsh noon heat.",
       type: "sowing",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Pro Tip: Sow in late afternoon (after 3 PM) to prevent seedling transplant shock caused by high afternoon solar radiation.`,
       exactDosage: "Trichoderma Seed Treatment: 10g / kg seeds",
-      weatherAdvisory: "💧 Provide immediate 1.5-hour light drip irrigation after transplanting."
+      weatherAdvisory: "💧 Provide immediate 1.5-hour drip irrigation after planting."
     });
 
-    // Day 7: First Watering & Root Establishment
+    // Day 7: Root Establishment
     d = addDays(startDate, 7);
     newTasks.push({
-      id: `task-4`,
+      id: "task-4",
       dayOffset: 7,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Vegetative Growth",
-      title: "💧 First Drip Fertigation & Germination Check",
-      description: `Run drip irrigation for 2 hours. Inspect germination uniformity across beds. Gap fill any missing seedlings.`,
+      title: "💧 Step 4: First Drip Fertigation & Germination Check",
+      description: "Run drip irrigation for 2 hours. Inspect germination uniformity. Gap fill any missing seedlings.",
+      howToDoInstructions: "1. Run drip irrigation with Humic Acid 98% (1 kg/acre).\n2. Walk through beds to inspect seedling mortality.\n3. Replace dead seedlings immediately.",
+      howToTakeCareTips: "💡 Crop Care Tip: Humic Acid stimulates rapid root branching, increasing nutrient intake by 30% during Week 1.",
       type: "water",
       isCompleted: false,
       priority: "Medium",
-      aiProTip: `💡 AI Pro Tip: Root system develops 80% of its anchorage during Week 1. Avoid over-flooding to prevent root asphyxiation.`,
-      exactDosage: "Humic Acid 98%: 1 kg/Acre via Drip Fertigation",
+      exactDosage: "Humic Acid 98%: 1 kg / Acre via Drip",
       weatherAdvisory: "☀️ Clear sunny conditions."
     });
 
-    // Day 21: Weed Management & First Top-Dressing
+    // Day 21: Weed & Top-Dressing
     d = addDays(startDate, 21);
     newTasks.push({
-      id: `task-5`,
+      id: "task-5",
       dayOffset: 21,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Vegetative Growth",
-      title: "🧪 Weed Control & Urea Top-Dressing",
-      description: `Manual weeding or gentle inter-cultivation. Apply 25 kg/acre Urea (or 19:19:19 water soluble via drip) to boost shoot growth.`,
+      title: "🧪 Step 5: Weed Removal & NPK 19:19:19 Fertigation",
+      description: "Manual weeding. Apply 25 kg/acre Urea (or 19:19:19 water soluble via drip) to boost shoot & leaf growth.",
+      howToDoInstructions: "1. Remove weeds manually near plant roots.\n2. Dissolve 5 kg NPK 19:19:19 per acre in venturi tank.\n3. Run drip fertigation for 45 mins.",
+      howToTakeCareTips: "💡 Crop Care Tip: Keep 15cm radius around main stem clear of weeds to prevent competition for Nitrogen.",
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Pro Tip: Apply 19:19:19 in early morning hours when plant stomata are open for maximum 92% leaf absorption efficiency.`,
-      exactDosage: "Urea: 25 kg/Acre (or NPK 19:19:19: 5 kg/Acre via drip)",
-      weatherAdvisory: "🌤️ Apply after morning dew evaporates."
+      exactDosage: "NPK 19:19:19: 5 kg / Acre via Drip (or Urea 25 kg/acre)",
+      weatherAdvisory: "🌤️ Apply in morning after dew dries."
     });
 
-    // Day 35: Pest Surveillance & Preventive Spray
+    // Day 35: Pest Protection
     d = addDays(startDate, 35);
     newTasks.push({
-      id: `task-6`,
+      id: "task-6",
       dayOffset: 35,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Vegetative Growth",
-      title: "🛡️ Preventive Bio-Pesticide & Sticky Traps",
-      description: `Spray Neem Oil 10,000 PPM (5ml/liter water) or installation of Yellow Sticky Traps (10/acre) to control sucking pests (Thrips, Whiteflies).`,
+      title: "🛡️ Step 6: Preventive Neem Spray & Sticky Pest Traps",
+      description: "Spray Neem Oil 10,000 PPM (5ml/L water). Install 10 Yellow Sticky Traps/acre for sucking pests (Thrips, Whiteflies).",
+      howToDoInstructions: "1. Mix 5ml Neem oil + 1ml liquid soap per liter of water.\n2. Spray thoroughly under leaves.\n3. Install yellow sticky traps at canopy height.",
+      howToTakeCareTips: "💡 Crop Care Tip: Yellow traps capture adult whiteflies before egg laying, saving ₹1,800/acre in chemical sprays.",
       type: "pest",
       isCompleted: false,
       priority: "Medium",
-      aiProTip: `💡 AI Pro Tip: Sticky yellow traps catch 70% of flying adult pests before they lay eggs, reducing chemical spray costs by ₹1,800/acre.`,
       exactDosage: "Neem Oil 10,000 PPM: 5 ml / Liter water + Yellow Traps 10/Acre",
-      weatherAdvisory: "🌬️ Avoid spraying if wind speeds exceed 15 km/h."
+      weatherAdvisory: "🌬️ Spray during calm evening hours."
     });
 
-    // Day 50: Mid-Stage Micronutrients
+    // Day 50: Flowering Care
     d = addDays(startDate, 50);
     newTasks.push({
-      id: `task-7`,
+      id: "task-7",
       dayOffset: 50,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Flowering & Fruiting",
-      title: "🌸 Flowering Boost & Boron/Zinc Foliar Spray",
-      description: `Foliar spray of Boron 20% (1g/L) + Zinc EDTA + NPK 13:00:45 to prevent flower drop and encourage uniform fruit set.`,
+      title: "🌸 Step 7: Flowering Boost & Boron/Zinc Spray",
+      description: "Foliar spray of Boron 20% (1g/L) + Zinc EDTA + NPK 13:00:45 to prevent flower drop and boost fruit setting.",
+      howToDoInstructions: "1. Prepare spray tank with Boron (1g/L) + NPK 13:0:45 (5g/L).\n2. Spray during early flowering stage.\n3. Ensure uniform coverage on flower clusters.",
+      howToTakeCareTips: "💡 Crop Care Tip: Boron deficiency causes up to 30% flower drop. Boron spray increases fruit set efficiency by 24%.",
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Pro Tip: Boron deficiency causes 30% flower drop in ${cropName}. Spraying Boron at early flowering boosts fruit set by 24%.`,
       exactDosage: "Boron 20%: 1g / Liter + NPK 13:0:45: 5g / Liter water",
-      weatherAdvisory: "☀️ Spray during calm morning or late evening."
+      weatherAdvisory: "☀️ Spray during calm morning."
     });
 
-    // Day 70: Fruit/Grain Filling & Potash Fertigation
+    // Day 70: Fruit Filling
     d = addDays(startDate, 70);
     newTasks.push({
-      id: `task-8`,
+      id: "task-8",
       dayOffset: 70,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Flowering & Fruiting",
-      title: "🍊 Fruit / Pod Filling & Potash Application",
-      description: `Apply Sulphate of Potash (0:0:50) 5 kg/acre via drip. Check for fruit borer/caterpillars; install Pheromone traps.`,
+      title: "🍊 Step 8: Fruit Filling & Potash Fertigation",
+      description: "Apply Sulphate of Potash (0:0:50) 5 kg/acre via drip. Check for fruit borer/caterpillars; install Pheromone traps.",
+      howToDoInstructions: "1. Inject Potash (0:0:50) 5 kg/acre via drip system.\n2. Hang 5 Pheromone borer traps per acre.\n3. Inspect fruit surfaces for pest damage.",
+      howToTakeCareTips: "💡 Crop Care Tip: Potassium gives fruit glossy shine, firmness, and weight, fetching Grade-A Mandi prices!",
       type: "fertilizer",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Pro Tip: Potassium improves fruit skin shine, firmness, shelf-life, and weight by 18%, fetching Grade-A Mandi prices!`,
-      exactDosage: "Potash (0:0:50): 5 kg / Acre via Drip Fertigation",
-      weatherAdvisory: "💧 Maintain uniform drip soil moisture to prevent fruit cracking."
+      exactDosage: "Potash (0:0:50): 5 kg / Acre via Drip",
+      weatherAdvisory: "💧 Maintain constant moisture to avoid fruit cracking."
     });
 
-    // Day (Duration - 15): Stop Heavy Water
+    // Day Duration-15: Irrigation Tapering
     d = addDays(startDate, Math.max(duration - 15, 80));
     newTasks.push({
-      id: `task-9`,
+      id: "task-9",
       dayOffset: Math.max(duration - 15, 80),
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Harvesting & Mandi",
-      title: "☀️ Tapering Irrigation & Pre-Harvest Readiness",
-      description: `Reduce watering frequency to allow natural crop ripening and maximize total soluble sugar/dry matter content.`,
+      title: "☀️ Step 9: Tapering Water & Pre-Harvest Ripening",
+      description: "Reduce drip watering by 50% to allow natural fruit/grain sugar buildup and prepare for harvest.",
+      howToDoInstructions: "1. Cut drip runtime from 2 hours to 45 minutes.\n2. Inspect fruit color maturity (75% red/ripe stage).\n3. Arrange harvest crates & labor.",
+      howToTakeCareTips: "💡 Crop Care Tip: Tapering water 10 days before harvest increases Brix sugar content and prevents fruit rotting in transport.",
       type: "water",
       isCompleted: false,
       priority: "Medium",
-      aiProTip: `💡 AI Pro Tip: Stopping irrigation 7-10 days before harvest increases fruit Brix sweetness and prevents post-harvest rot.`,
-      exactDosage: "Reduce drip irrigation run time by 50%",
-      weatherAdvisory: "☀️ High sunshine accelerates natural ripening."
+      exactDosage: "Reduce drip runtime by 50%",
+      weatherAdvisory: "☀️ High sunshine speeds ripening."
     });
 
-    // Day Duration: Final Harvest & Mandi Sale
+    // Day Duration: Final Harvest
     d = addDays(startDate, duration);
     newTasks.push({
-      id: `task-10`,
+      id: "task-10",
       dayOffset: duration,
       dateStr: d.iso,
       formattedDate: d.formatted,
       phase: "Harvesting & Mandi",
-      title: `🌾 Bumper Harvest & AgroPulse APMC Sale`,
-      description: `Harvest ${cropName} early morning. Grade into Grade A/B categories. Post listing on AgroPulse APMC Marketplace for top buyer rates!`,
+      title: `🌾 Step 10: Harvest & AgroPulse Mandi Procurement`,
+      description: `Harvest ${cropName} early morning. Grade into Grade A/B crates. Post listing on AgroPulse Marketplace for top Mandi rates!`,
+      howToDoInstructions: "1. Harvest early morning (6 AM - 9 AM).\n2. Grade into Grade A (unblemished, large) and Grade B.\n3. Post direct buyer listing on AgroPulse Marketplace.",
+      howToTakeCareTips: "💡 Mandi Care Tip: Morning harvesting retains 95% moisture freshness during Mandi transport.",
       type: "harvest",
       isCompleted: false,
       priority: "High",
-      aiProTip: `💡 AI Mandi Insight: Harvesting early morning (6 AM - 9 AM) preserves 95% crop freshness during Mandi transport.`,
-      exactDosage: "Harvest & Sort into Grade A Premium Crates",
-      weatherAdvisory: "☀️ Early morning harvest recommended before noon heat."
+      exactDosage: "Harvest & Sort into Grade A Crates",
+      weatherAdvisory: "☀️ Harvest early before noon heat."
     });
 
     setTasks(newTasks);
     setCurrentMonthDate(new Date(sowingDate));
+    setCurrentStep("plan");
   };
-
-  useEffect(() => {
-    generateAICropSchedule();
-  }, []);
 
   const toggleTaskCompletion = (taskId: string) => {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t));
   };
-
-  const handleAddCustomTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCalendarDate || !newCustomTitle.trim()) return;
-
-    const dateObj = new Date(selectedCalendarDate);
-    const formatted = dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-
-    const newTask: CalendarTask = {
-      id: `custom-${Date.now()}`,
-      dayOffset: 0,
-      dateStr: selectedCalendarDate,
-      formattedDate: formatted,
-      phase: "Vegetative Growth",
-      title: newCustomTitle.trim(),
-      description: newCustomDesc.trim() || "Farmer custom reminder note.",
-      type: newCustomType,
-      isCompleted: false,
-      priority: "Normal",
-      aiProTip: "💡 Farmer Custom Reminder Note added to AgroPulse Crop Calendar."
-    };
-
-    setTasks(prev => [...prev, newTask].sort((a, b) => a.dateStr.localeCompare(b.dateStr)));
-    setShowAddCustomModal(false);
-    setNewCustomTitle("");
-    setNewCustomDesc("");
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-    if (selectedTaskDetail?.id === taskId) setSelectedTaskDetail(null);
-  };
-
-  // TASKS FOR THE SELECTED CALENDAR DATE IN INTERACTIVE PANEL
-  const tasksForSelectedDate = useMemo(() => {
-    if (!selectedCalendarDate) return [];
-    return tasks.filter(t => t.dateStr === selectedCalendarDate);
-  }, [tasks, selectedCalendarDate]);
-
-  // TODAY'S SCHEDULED TASKS (IF ANY)
-  const todayDateStr = useMemo(() => new Date().toISOString().split("T")[0], []);
-  const todayTasks = useMemo(() => tasks.filter(t => t.dateStr === todayDateStr), [tasks, todayDateStr]);
 
   // CALCULATE PROGRESS & FINANCIAL ESTIMATES
   const completedCount = useMemo(() => tasks.filter(t => t.isCompleted).length, [tasks]);
@@ -373,28 +335,21 @@ export default function AICropPlannerCalendarPage() {
   const totalRevenueEstimate = useMemo(() => Math.round(activeCropMaster.avgRevenuePerAcre * landAcres), [activeCropMaster, landAcres]);
   const totalProfitEstimate = useMemo(() => totalRevenueEstimate - totalCostEstimate, [totalRevenueEstimate, totalCostEstimate]);
 
-  // MONTHLY INTERACTIVE CALENDAR MATRIX GENERATION
+  // MONTHLY CALENDAR MATRIX
   const calendarDaysMatrix = useMemo(() => {
     const year = currentMonthDate.getFullYear();
     const month = currentMonthDate.getMonth();
 
-    const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 = Sun
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     const days = [];
-
-    // Empty lead cells for previous month padding
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(null);
-    }
-
-    // Actual month days
+    for (let i = 0; i < firstDayOfMonth; i++) days.push(null);
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const dayTasks = tasks.filter(t => t.dateStr === dateStr);
       days.push({ dayNumber: d, dateStr, dayTasks });
     }
-
     return days;
   }, [currentMonthDate, tasks]);
 
@@ -408,611 +363,561 @@ export default function AICropPlannerCalendarPage() {
     setCurrentMonthDate(new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - 1, 1));
   };
 
-  const filteredTasks = useMemo(() => {
-    if (activeCategoryFilter === "all") return tasks;
-    return tasks.filter(t => t.type === activeCategoryFilter);
-  }, [tasks, activeCategoryFilter]);
+  const tasksForSelectedDate = useMemo(() => {
+    if (!selectedCalendarDate) return [];
+    return tasks.filter(t => t.dateStr === selectedCalendarDate);
+  }, [tasks, selectedCalendarDate]);
 
   const getTypeStyle = (type: CalendarTask["type"]) => {
     switch (type) {
-      case "soil": 
-        return { 
-          bg: "bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 shadow-sm", 
-          badgeBg: "bg-amber-600 text-white",
-          dotColor: "bg-amber-500",
-          label: "🪴 Soil & Prep" 
-        };
-      case "sowing": 
-        return { 
-          bg: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700/60 shadow-sm", 
-          badgeBg: "bg-emerald-600 text-white",
-          dotColor: "bg-emerald-500",
-          label: "🌱 Sowing" 
-        };
-      case "water": 
-        return { 
-          bg: "bg-sky-100 dark:bg-sky-950/80 text-sky-950 dark:text-sky-200 border-sky-300 dark:border-sky-700/60 shadow-sm", 
-          badgeBg: "bg-sky-600 text-white",
-          dotColor: "bg-sky-500",
-          label: "💧 Irrigation" 
-        };
-      case "fertilizer": 
-        return { 
-          bg: "bg-purple-100 dark:bg-purple-950/80 text-purple-950 dark:text-purple-200 border-purple-300 dark:border-purple-700/60 shadow-sm", 
-          badgeBg: "bg-purple-600 text-white",
-          dotColor: "bg-purple-500",
-          label: "🧪 Fertilizer" 
-        };
-      case "pest": 
-        return { 
-          bg: "bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 border-rose-300 dark:border-rose-700/60 shadow-sm", 
-          badgeBg: "bg-rose-600 text-white",
-          dotColor: "bg-rose-500",
-          label: "🛡️ Pest Control" 
-        };
-      case "harvest": 
-        return { 
-          bg: "bg-yellow-100 dark:bg-yellow-950/80 text-yellow-950 dark:text-yellow-200 border-yellow-400 dark:border-yellow-700/60 shadow-sm", 
-          badgeBg: "bg-yellow-600 text-white",
-          dotColor: "bg-yellow-500",
-          label: "🌾 Harvest & Mandi" 
-        };
+      case "soil": return { bg: "bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-700", badgeBg: "bg-amber-600 text-white", dotColor: "bg-amber-500", label: "🪴 Soil & Prep" };
+      case "sowing": return { bg: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700", badgeBg: "bg-emerald-600 text-white", dotColor: "bg-emerald-500", label: "🌱 Sowing" };
+      case "water": return { bg: "bg-sky-100 dark:bg-sky-950/80 text-sky-950 dark:text-sky-200 border-sky-300 dark:border-sky-700", badgeBg: "bg-sky-600 text-white", dotColor: "bg-sky-500", label: "💧 Irrigation" };
+      case "fertilizer": return { bg: "bg-purple-100 dark:bg-purple-950/80 text-purple-950 dark:text-purple-200 border-purple-300 dark:border-purple-700", badgeBg: "bg-purple-600 text-white", dotColor: "bg-purple-500", label: "🧪 Fertilizer" };
+      case "pest": return { bg: "bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 border-rose-300 dark:border-rose-700", badgeBg: "bg-rose-600 text-white", dotColor: "bg-rose-500", label: "🛡️ Pest Control" };
+      case "harvest": return { bg: "bg-yellow-100 dark:bg-yellow-950/80 text-yellow-950 dark:text-yellow-200 border-yellow-400 dark:border-yellow-700", badgeBg: "bg-yellow-600 text-white", dotColor: "bg-yellow-500", label: "🌾 Harvest & Mandi" };
     }
   };
-
-  // Group tasks by phase for Gantt Timeline view
-  const tasksByPhase = useMemo(() => {
-    const phases = ["Land Prep", "Sowing", "Vegetative Growth", "Flowering & Fruiting", "Harvesting & Mandi"] as const;
-    return phases.map(phase => ({
-      phase,
-      phaseTasks: tasks.filter(t => t.phase === phase)
-    }));
-  }, [tasks]);
 
   return (
     <div className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 pt-[84px] font-sans max-w-7xl mx-auto space-y-8">
       
-      {/* COMPACT & SLEEK HEADER BANNER */}
-      <header className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 text-white p-6 rounded-3xl shadow-xl border border-emerald-400/50 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      {/* HEADER BANNER */}
+      <header className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 text-white p-6 md:p-8 rounded-3xl shadow-2xl border-2 border-emerald-400/50 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="relative z-10 space-y-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-spin" /> AI Kisan Agronomist Engine
+            <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase px-3 py-1 rounded-lg border border-white/30 flex items-center gap-1 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-spin" /> AI Agronomist & Care Planner
             </span>
-            <span className="text-xs text-emerald-100 font-bold">• Compact Interactive Schedule</span>
+            <span className="text-xs text-emerald-100 font-bold">• Simple 2-Step Custom Crop Guide</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
-            <CalendarDays className="w-7 h-7 text-yellow-300 shrink-0" />
-            AI Interactive Crop Growth & Calendar Planner
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3 drop-shadow-md">
+            <Sprout className="w-9 h-9 text-yellow-300 shrink-0" />
+            AI Crop Growth & Care Planner
           </h1>
+          <p className="text-xs md:text-sm text-emerald-100 font-bold max-w-2xl">
+            {currentStep === "input" 
+              ? "Enter your crop produce & land details below. The AI will generate a complete calendar plan, step-by-step instructions, and crop care tips!" 
+              : `Custom AI Growth Plan generated for ${activeCropMaster.name} (${landSizeInput} ${landUnit} in ${selectedState}).`}
+          </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 relative z-10">
-          <button
-            onClick={() => window.print()}
-            className="px-4 py-2 bg-white text-emerald-800 hover:bg-emerald-50 rounded-xl font-black text-xs shadow-md transition-all flex items-center gap-1.5"
-          >
-            <Printer className="w-4 h-4 text-emerald-600" /> Print Calendar
-          </button>
-        </div>
+        {currentStep === "plan" && (
+          <div className="flex items-center gap-3 shrink-0 relative z-10">
+            <button
+              onClick={() => setCurrentStep("input")}
+              className="px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-2xl font-black text-xs shadow-md transition-all flex items-center gap-1.5 border border-white/30"
+            >
+              <ArrowLeft className="w-4 h-4" /> Change Crop Details
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-2xl font-black text-xs shadow-xl transition-all flex items-center gap-1.5"
+            >
+              <Printer className="w-4 h-4 text-emerald-600" /> Print Care Plan
+            </button>
+          </div>
+        )}
       </header>
 
-      {/* TODAY'S ACTION ITEM BANNER */}
-      {todayTasks.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white p-5 rounded-2xl shadow-md border border-amber-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/20 rounded-xl shrink-0">
-              <Zap className="w-5 h-5 text-yellow-200 animate-bounce" />
+      {/* STEP 1: ENTER CROP DETAILS FORM */}
+      {currentStep === "input" && (
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-3xl mx-auto bg-white dark:bg-[#1a1b23] p-6 md:p-10 rounded-3xl border-2 border-emerald-500/40 shadow-2xl space-y-6"
+        >
+          <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
+            <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl">
+              <Sprout className="w-7 h-7" />
             </div>
             <div>
-              <span className="bg-black/30 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">
-                ⚡ TODAY'S ACTION ITEM ({todayDateStr})
-              </span>
-              <h3 className="text-base font-black text-white mt-0.5">{todayTasks[0].title}</h3>
+              <span className="text-[10px] font-black uppercase text-emerald-700">Step 1 of 2</span>
+              <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">Enter Your Crop & Farm Details</h2>
             </div>
           </div>
 
-          <button
-            onClick={() => toggleTaskCompletion(todayTasks[0].id)}
-            className="px-4 py-2 rounded-xl font-black text-xs shadow-sm bg-emerald-950 text-white hover:bg-black shrink-0 flex items-center gap-1"
-          >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Mark Today Done
-          </button>
-        </div>
-      )}
-
-      {/* 2-COLUMN BALANCED DASHBOARD: LEFT (INPUTS & COMPACT CALENDAR WIDGET) | RIGHT (TODAY & SELECTED DAY TASK INSPECTOR) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* LEFT COLUMN: COMPACT CONFIGURATION & COMPACT SLEEK CALENDAR WIDGET (5 COLS) */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* STEP 1: FARM INPUT CONFIG CARD */}
-          <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-emerald-500/30 shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-2.5">
-              <h2 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <Sprout className="w-4 h-4 text-emerald-600" /> Produce & Planting Config
-              </h2>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Step 1</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold">
+          <form onSubmit={handleGeneratePlan} className="space-y-5 text-xs font-bold">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-600 dark:text-gray-300 mb-1">Crop Produce:</label>
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">Select Crop Produce:</label>
                 <select
                   value={selectedCropName}
-                  onChange={(e) => {
-                    setSelectedCropName(e.target.value);
-                    setTimeout(generateAICropSchedule, 100);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-700 dark:text-emerald-400"
+                  onChange={(e) => setSelectedCropName(e.target.value)}
+                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-700 dark:text-emerald-400 text-sm"
                 >
                   {PRESET_CROPS.map(c => (
-                    <option key={c.name} value={c.name}>{c.emoji} {c.name}</option>
+                    <option key={c.name} value={c.name}>{c.emoji} {c.name} ({c.durationDays} Days)</option>
                   ))}
+                  <option value="Other Custom Crop">➕ Other Custom Crop Produce</option>
+                </select>
+              </div>
+
+              {selectedCropName === "Other Custom Crop" && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-200 mb-1">Custom Crop Name:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Garlic / Turmeric"
+                    value={customCropName}
+                    onChange={(e) => setCustomCropName(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold text-sm"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">Sowing / Planting Date:</label>
+                <input
+                  type="date"
+                  required
+                  value={sowingDate}
+                  onChange={(e) => setSowingDate(e.target.value)}
+                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-600 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* FLUID LAND SIZE ENTRY + UNIT SELECTOR */}
+            <div className="space-y-1">
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Total Land Size & Unit:</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  required
+                  placeholder="e.g. 5"
+                  value={landSizeInput}
+                  onChange={(e) => setLandSizeInput(e.target.value)}
+                  className="w-2/3 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-gray-900 dark:text-white text-sm"
+                />
+                <select
+                  value={landUnit}
+                  onChange={(e) => setLandUnit(e.target.value as any)}
+                  className="w-1/3 px-3 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-700 dark:text-emerald-400 text-xs"
+                >
+                  <option value="Acres">Acres (एकड़)</option>
+                  <option value="Hectares">Hectares</option>
+                  <option value="Bigha">Bigha (बीघा)</option>
+                  <option value="Guntha">Guntha</option>
+                </select>
+              </div>
+
+              {/* QUICK PRESET CHIPS */}
+              <div className="flex items-center gap-2 pt-1.5 flex-wrap">
+                <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                {["1", "2", "3", "5", "10", "20"].map(size => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setLandSizeInput(size)}
+                    className={`px-3 py-1 rounded-lg text-[11px] font-black transition-all ${
+                      landSizeInput === size ? "bg-emerald-600 text-white shadow-sm" : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-emerald-50"
+                    }`}
+                  >
+                    {size} {landUnit}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">State / Location:</label>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                >
+                  {ALL_INDIAN_STATES_AND_UTS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-gray-300 mb-1">Sowing Date:</label>
-                <input
-                  type="date"
-                  value={sowingDate}
-                  onChange={(e) => {
-                    setSowingDate(e.target.value);
-                    setTimeout(generateAICropSchedule, 100);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-600"
-                />
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">Soil Type:</label>
+                <select
+                  value={soilType}
+                  onChange={(e) => setSoilType(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                >
+                  <option value="Black Cotton Soil">Black Cotton Soil</option>
+                  <option value="Loamy / Alluvial Soil">Loamy / Alluvial Soil</option>
+                  <option value="Red / Clay Soil">Red / Clay Soil</option>
+                  <option value="Sandy Soil">Sandy Soil</option>
+                </select>
               </div>
 
-              {/* COMPACT LAND SIZE + UNIT INPUT */}
-              <div className="sm:col-span-2">
-                <label className="block text-gray-600 dark:text-gray-300 mb-1">Land Size & Unit:</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    min="0.1"
-                    step="0.1"
-                    value={landSizeInput}
-                    onChange={(e) => setLandSizeInput(e.target.value)}
-                    className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-gray-900 dark:text-white"
-                  />
-                  <select
-                    value={landUnit}
-                    onChange={(e) => setLandUnit(e.target.value as any)}
-                    className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-700 dark:text-emerald-400 text-xs"
-                  >
-                    <option value="Acres">Acres (एकड़)</option>
-                    <option value="Hectares">Hectares</option>
-                    <option value="Bigha">Bigha (बीघा)</option>
-                    <option value="Guntha">Guntha</option>
-                  </select>
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">Farming Style:</label>
+                <select
+                  value={farmingType}
+                  onChange={(e) => setFarmingType(e.target.value as any)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
+                >
+                  <option value="Drip & Fertigation">Drip Irrigation & Fertigation</option>
+                  <option value="Chemical/Traditional">Traditional Canal / Borewell</option>
+                  <option value="Organic Certified">100% Organic Certified</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 mt-4"
+            >
+              <Sparkles className="w-5 h-5 text-yellow-300" /> Generate AI Crop Care & Action Plan (Step 2)
+            </button>
+          </form>
+        </motion.div>
+      )}
+
+      {/* STEP 2: GENERATED AI CROP CARE & ACTION PLAN DASHBOARD */}
+      {currentStep === "plan" && (
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-8"
+        >
+          {/* TOP SUMMARY & FINANCIAL FORECAST DASHBOARD */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* CROP DETAILS BADGE */}
+            <div className="bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-emerald-500/30 shadow-md flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Active Plan Summary</span>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-1 flex items-center gap-2">
+                  <span>{activeCropMaster.emoji}</span> {activeCropMaster.name}
+                </h3>
+                <p className="text-xs text-gray-500 font-bold mt-1">
+                  Sowing: <strong>{sowingDate}</strong> • Duration: <strong>{activeCropMaster.durationDays} Days</strong>
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+                  <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-md">
+                    {landSizeInput} {landUnit} ({landAcres.toFixed(1)} Acres)
+                  </span>
+                  <span className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-md">
+                    {selectedState}
+                  </span>
+                  <span className="bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-md">
+                    {soilType}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-between items-center text-xs">
+                <span className="font-extrabold text-gray-600 dark:text-gray-300">Overall Care Progress:</span>
+                <span className="font-black text-emerald-600">{progressPercent}% Completed</span>
+              </div>
+            </div>
+
+            {/* FINANCIAL PROFIT FORECAST */}
+            <div className="lg:col-span-2 bg-gradient-to-br from-emerald-900 via-green-900 to-teal-950 text-white p-6 rounded-3xl border-2 border-emerald-400 shadow-xl flex flex-col justify-between space-y-4">
+              <div className="flex justify-between items-center border-b border-white/20 pb-3">
+                <span className="text-[10px] font-black uppercase text-emerald-300 tracking-wider">AI Yield & Mandi Profit Blueprint</span>
+                <span className="text-xs font-bold text-yellow-300">APMC Mandi Verified</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="bg-black/30 p-3.5 rounded-2xl border border-white/10">
+                  <span className="text-[10px] text-emerald-200 font-bold uppercase block">Est. Yield</span>
+                  <strong className="text-lg text-yellow-300 font-black">{estimatedYieldQuintals} Qtl</strong>
+                </div>
+                <div className="bg-black/30 p-3.5 rounded-2xl border border-white/10">
+                  <span className="text-[10px] text-emerald-200 font-bold uppercase block">Est. Expense</span>
+                  <strong className="text-base text-white font-black">₹{totalCostEstimate.toLocaleString("en-IN")}</strong>
+                </div>
+                <div className="bg-black/30 p-3.5 rounded-2xl border border-white/10">
+                  <span className="text-[10px] text-emerald-200 font-bold uppercase block">Est. Revenue</span>
+                  <strong className="text-base text-white font-black">₹{totalRevenueEstimate.toLocaleString("en-IN")}</strong>
+                </div>
+                <div className="bg-black/30 p-3.5 rounded-2xl border border-white/10">
+                  <span className="text-[10px] text-emerald-200 font-bold uppercase block">Est. Net Profit</span>
+                  <strong className="text-lg text-emerald-300 font-black">₹{totalProfitEstimate.toLocaleString("en-IN")}</strong>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-emerald-100 flex items-center justify-between">
+                <span>Calculated for {landSizeInput} {landUnit} under {farmingType} conditions in {selectedState}.</span>
+                <button onClick={() => setCurrentStep("input")} className="text-yellow-300 font-extrabold hover:underline">Edit Inputs</button>
+              </div>
+            </div>
+
+          </div>
+
+          {/* PLAN NAVIGATION TABS */}
+          <div className="flex bg-white dark:bg-[#1a1b23] p-2 rounded-2xl border-2 border-emerald-500/30 shadow-sm gap-2 overflow-x-auto text-xs font-black">
+            <button
+              onClick={() => setPlanTab("calendar")}
+              className={`px-5 py-3 rounded-xl transition-all flex items-center gap-2 ${
+                planTab === "calendar" ? "bg-emerald-600 text-white shadow-md" : "text-gray-700 dark:text-gray-300 hover:bg-emerald-50"
+              }`}
+            >
+              <Calendar className="w-4 h-4" /> 1. Interactive Calendar Schedule
+            </button>
+
+            <button
+              onClick={() => setPlanTab("care_guide")}
+              className={`px-5 py-3 rounded-xl transition-all flex items-center gap-2 ${
+                planTab === "care_guide" ? "bg-emerald-600 text-white shadow-md" : "text-gray-700 dark:text-gray-300 hover:bg-emerald-50"
+              }`}
+            >
+              <BookOpen className="w-4 h-4" /> 2. Step-by-Step "How To Do" Guide
+            </button>
+
+            <button
+              onClick={() => setPlanTab("fertilizers")}
+              className={`px-5 py-3 rounded-xl transition-all flex items-center gap-2 ${
+                planTab === "fertilizers" ? "bg-emerald-600 text-white shadow-md" : "text-gray-700 dark:text-gray-300 hover:bg-emerald-50"
+              }`}
+            >
+              <Shield className="w-4 h-4" /> 3. Crop Care & Pest Defense
+            </button>
+
+            <button
+              onClick={() => setPlanTab("checklist")}
+              className={`px-5 py-3 rounded-xl transition-all flex items-center gap-2 ${
+                planTab === "checklist" ? "bg-emerald-600 text-white shadow-md" : "text-gray-700 dark:text-gray-300 hover:bg-emerald-50"
+              }`}
+            >
+              <CheckSquare className="w-4 h-4" /> 4. Full Action Checklist ({tasks.length})
+            </button>
+          </div>
+
+          {/* TAB 1: INTERACTIVE COMPACT CALENDAR SCHEDULER */}
+          {planTab === "calendar" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              {/* COMPACT MONTH WIDGET */}
+              <div className="lg:col-span-5 bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-emerald-600" />
+                    <h3 className="text-base font-black text-gray-900 dark:text-white">
+                      {currentMonthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={prevMonth} className="p-1.5 bg-gray-100 dark:bg-white/10 rounded-lg"><ChevronLeft className="w-4 h-4" /></button>
+                    <button onClick={nextMonth} className="p-1.5 bg-gray-100 dark:bg-white/10 rounded-lg"><ChevronRight className="w-4 h-4" /></button>
+                  </div>
                 </div>
 
-                {/* PRESET CHIPS */}
-                <div className="flex items-center gap-1.5 pt-1.5 flex-wrap">
-                  <span className="text-[10px] text-gray-400 font-bold">Quick:</span>
-                  {["1", "2", "3", "5", "10"].map(size => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setLandSizeInput(size)}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-black transition-all ${
-                        landSizeInput === size ? "bg-emerald-600 text-white" : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300"
-                      }`}
-                    >
-                      {size} {landUnit}
-                    </button>
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase">
+                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(day => (
+                    <div key={day} className="py-1 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-800/40">
+                      {day}
+                    </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* ELEGANT COMPACT CALENDAR SHEET WIDGET (DOES NOT TAKE FULL PAGE!) */}
-          <div className="bg-white dark:bg-[#1a1b23] p-5 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-4">
-            
-            {/* MONTH HEADER */}
-            <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-black text-gray-900 dark:text-white">
-                  {currentMonthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
-                </h3>
-              </div>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {calendarDaysMatrix.map((cell, idx) => {
+                    if (!cell) return <div key={`empty-${idx}`} className="h-10 sm:h-12 bg-gray-50/20 dark:bg-white/5 rounded-xl border border-dashed border-gray-100" />;
+                    const hasTasks = cell.dayTasks.length > 0;
+                    const isSelected = selectedCalendarDate === cell.dateStr;
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={prevMonth}
-                  className="p-1.5 bg-gray-100 dark:bg-white/10 hover:bg-emerald-100 rounded-lg text-gray-800 dark:text-gray-200"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={nextMonth}
-                  className="p-1.5 bg-gray-100 dark:bg-white/10 hover:bg-emerald-100 rounded-lg text-gray-800 dark:text-gray-200"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* WEEKDAY HEADERS */}
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase">
-              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(day => (
-                <div key={day} className="py-1 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-800/40">
-                  {day}
+                    return (
+                      <button
+                        key={cell.dateStr}
+                        onClick={() => setSelectedCalendarDate(cell.dateStr)}
+                        className={`h-10 sm:h-12 w-full rounded-xl border-2 transition-all flex flex-col items-center justify-between p-1 ${
+                          isSelected 
+                            ? "bg-emerald-600 text-white border-emerald-400 shadow-md font-black" 
+                            : "bg-white dark:bg-[#16171f] border-gray-200 dark:border-white/10 hover:border-emerald-400"
+                        }`}
+                      >
+                        <span className="text-xs font-black">{cell.dayNumber}</span>
+                        {hasTasks && (
+                          <div className="flex gap-0.5 mt-0.5">
+                            {cell.dayTasks.slice(0, 3).map((t, tIdx) => {
+                              const style = getTypeStyle(t.type);
+                              return <span key={tIdx} className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white" : style.dotColor}`} />;
+                            })}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
 
-            {/* COMPACT & BEAUTIFUL 7-COLUMN MONTH GRID (ASPECT SQUARE TILES!) */}
-            <AnimatePresence mode="wait" custom={monthSlideDirection}>
-              <motion.div
-                key={currentMonthDate.toISOString()}
-                initial={{ opacity: 0, x: monthSlideDirection > 0 ? 20 : -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: monthSlideDirection > 0 ? -20 : 20 }}
-                transition={{ duration: 0.2 }}
-                className="grid grid-cols-7 gap-1.5"
-              >
-                {calendarDaysMatrix.map((cell, idx) => {
-                  if (!cell) {
-                    return <div key={`empty-${idx}`} className="h-10 sm:h-12 w-full bg-gray-50/20 dark:bg-white/5 rounded-xl border border-dashed border-gray-100 dark:border-white/5" />;
-                  }
+                <div className="pt-2 text-[10px] text-gray-400 font-bold flex justify-between">
+                  <span>🟢 Sowing | 🔵 Water | 🟣 Fert | 🔴 Spray</span>
+                  <button onClick={() => setSelectedCalendarDate(sowingDate)} className="text-emerald-600 font-extrabold hover:underline">Jump to Sowing Date</button>
+                </div>
+              </div>
 
-                  const visibleTasks = activeCategoryFilter === "all" ? cell.dayTasks : cell.dayTasks.filter(t => t.type === activeCategoryFilter);
-                  const hasTasks = visibleTasks.length > 0;
-                  const isSelected = selectedCalendarDate === cell.dateStr;
-                  const isToday = cell.dateStr === todayDateStr;
+              {/* SELECTED DAY DUTY BRIEFING */}
+              <div className="lg:col-span-7 bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-5">
+                <div className="border-b border-gray-100 dark:border-white/10 pb-3">
+                  <span className="text-[10px] font-black uppercase text-emerald-700">Scheduled Date Briefing</span>
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 mt-0.5">
+                    <Calendar className="w-5 h-5 text-emerald-600" />
+                    {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "Selected Date"}
+                  </h3>
+                </div>
 
-                  return (
-                    <motion.button
-                      key={cell.dateStr}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedCalendarDate(cell.dateStr)}
-                      className={`h-10 sm:h-12 w-full rounded-xl border-2 transition-all flex flex-col items-center justify-between p-1 relative ${
-                        isSelected 
-                          ? "bg-emerald-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-500/40 font-black"
-                          : isToday 
-                          ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-extrabold" 
-                          : "bg-white dark:bg-[#16171f] border-gray-200/60 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:border-emerald-400"
-                      }`}
-                    >
-                      <span className="text-xs font-black leading-none">{cell.dayNumber}</span>
+                <div className="space-y-4">
+                  {tasksForSelectedDate.length === 0 ? (
+                    <div className="bg-emerald-50/40 dark:bg-emerald-950/20 border-2 border-dashed border-emerald-200 dark:border-emerald-800 p-8 rounded-2xl text-center space-y-2">
+                      <Sprout className="w-8 h-8 text-emerald-600 mx-auto" />
+                      <h4 className="text-sm font-black text-gray-800 dark:text-gray-200">No special duties scheduled for this exact day</h4>
+                      <p className="text-xs text-gray-500 font-medium">Your crop is growing steadily according to plan.</p>
+                    </div>
+                  ) : (
+                    tasksForSelectedDate.map(t => {
+                      const style = getTypeStyle(t.type);
+                      return (
+                        <div key={t.id} className={`p-5 rounded-2xl border-2 space-y-3 ${style.bg}`}>
+                          <div className="flex justify-between items-center">
+                            <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-md ${style.badgeBg}`}>{style.label}</span>
+                            <button onClick={() => toggleTaskCompletion(t.id)} className="px-3 py-1 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-sm">
+                              {t.isCompleted ? "Completed ✅" : "Mark Completed"}
+                            </button>
+                          </div>
 
-                      {/* COMPACT TASK INDICATOR DOTS */}
-                      {hasTasks && (
-                        <div className="flex items-center gap-0.5 mt-0.5">
-                          {visibleTasks.slice(0, 3).map((t, tIdx) => {
-                            const style = getTypeStyle(t.type);
-                            return (
-                              <span 
-                                key={tIdx} 
-                                className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white" : style.dotColor}`} 
-                              />
-                            );
-                          })}
+                          <h4 className="text-base font-black">{t.title}</h4>
+                          <p className="text-xs font-medium leading-relaxed">{t.description}</p>
+
+                          {t.howToDoInstructions && (
+                            <div className="bg-white/80 dark:bg-black/30 p-3 rounded-xl text-xs space-y-1 border">
+                              <span className="font-black text-emerald-800 dark:text-emerald-300 block">🛠️ How To Do:</span>
+                              <p className="text-xs whitespace-pre-line font-medium text-gray-800 dark:text-gray-200">{t.howToDoInstructions}</p>
+                            </div>
+                          )}
+
+                          {t.howToTakeCareTips && (
+                            <div className="bg-amber-100/70 dark:bg-amber-950/50 p-3 rounded-xl text-xs font-semibold text-amber-950 dark:text-amber-200 border border-amber-300 flex items-start gap-2">
+                              <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                              <span>{t.howToTakeCareTips}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="pt-2 border-t border-gray-100 dark:border-white/10 flex justify-between items-center text-[10px] text-gray-400 font-bold">
-              <span>🟢 Sowing | 🔵 Water | 🟣 Fert | 🔴 Spray</span>
-              <button 
-                onClick={() => setSelectedCalendarDate(todayDateStr)}
-                className="text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline"
-              >
-                Jump to Today
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN: INTERACTIVE DAY COMMAND DESK & AI AGRO BRIEFING (7 COLS) */}
-        <div className="lg:col-span-7 space-y-6">
-          
-          {/* SELECTED DAY COMMAND PANEL */}
-          <div className="bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-5">
-            <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-4">
-              <div>
-                <span className="text-[10px] font-black uppercase text-emerald-700">Day Briefing & Duty Inspector</span>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 mt-0.5">
-                  <Calendar className="w-5 h-5 text-emerald-600" />
-                  {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "Selected Date"}
-                </h3>
+                      );
+                    })
+                  )}
+                </div>
               </div>
 
-              <button
-                onClick={() => setShowAddCustomModal(true)}
-                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-sm flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" /> Add Note
-              </button>
             </div>
+          )}
 
-            {/* LIST OF TASKS FOR THE SELECTED DATE */}
-            <div className="space-y-4">
-              {tasksForSelectedDate.length === 0 ? (
-                <div className="bg-emerald-50/40 dark:bg-emerald-950/20 border-2 border-dashed border-emerald-200 dark:border-emerald-800 p-8 rounded-2xl text-center space-y-2">
-                  <Sprout className="w-8 h-8 text-emerald-600 mx-auto" />
-                  <h4 className="text-sm font-black text-gray-800 dark:text-gray-200">No scheduled duties for this specific day</h4>
-                  <p className="text-xs text-gray-500 font-medium max-w-sm mx-auto">
-                    Your crop is growing steadily. Click <strong>+ Add Note</strong> to set custom fertilizer or irrigation reminders.
-                  </p>
-                </div>
-              ) : (
-                tasksForSelectedDate.map(t => {
+          {/* TAB 2: STEP-BY-STEP HOW TO DO GUIDE */}
+          {planTab === "care_guide" && (
+            <div className="bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-6">
+              <div className="border-b border-gray-100 dark:border-white/10 pb-4">
+                <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                  <BookOpen className="w-6 h-6 text-emerald-600" />
+                  Step-by-Step "How To Do" Cultivation Blueprint for {activeCropMaster.name}
+                </h3>
+                <p className="text-xs text-gray-500 font-medium mt-1">Detailed execution guide from field preparation to harvesting for your {landSizeInput} {landUnit} in {selectedState}.</p>
+              </div>
+
+              <div className="space-y-6">
+                {tasks.map((t, idx) => (
+                  <div key={t.id} className="bg-gray-50 dark:bg-white/5 p-5 md:p-6 rounded-2xl border border-gray-200 dark:border-white/10 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="w-7 h-7 bg-emerald-600 text-white font-black text-xs rounded-xl flex items-center justify-center shadow-md">
+                        {idx + 1}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-md">
+                        📅 {t.formattedDate} (Day {t.dayOffset})
+                      </span>
+                      <span className="text-[10px] font-bold text-gray-400">Phase: {t.phase}</span>
+                    </div>
+
+                    <h4 className="text-base font-black text-gray-900 dark:text-white">{t.title}</h4>
+                    <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{t.description}</p>
+
+                    <div className="bg-white dark:bg-[#16171f] p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/40 space-y-1">
+                      <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 block">🛠️ Step-by-Step Instructions (How to do):</span>
+                      <p className="text-xs text-gray-800 dark:text-gray-200 font-medium whitespace-pre-line leading-relaxed">{t.howToDoInstructions}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: CROP CARE, FERTILIZER & PEST DEFENSE */}
+          {planTab === "fertilizers" && (
+            <div className="bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-6">
+              <div className="border-b border-gray-100 dark:border-white/10 pb-4">
+                <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                  <Shield className="w-6 h-6 text-emerald-600" />
+                  Crop Care, Fertilizer Schedule & Disease Defense
+                </h3>
+                <p className="text-xs text-gray-500 font-medium mt-1">Exact fertilizer dosages per acre, nutrient timings, and bio-pesticide spray recipes for {activeCropMaster.name}.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {tasks.filter(t => t.type === "fertilizer" || t.type === "pest" || t.type === "soil").map((t) => {
                   const style = getTypeStyle(t.type);
                   return (
-                    <motion.div
-                      key={t.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`p-5 rounded-2xl border-2 transition-all space-y-3 shadow-sm ${style.bg} ${t.isCompleted ? "opacity-60" : ""}`}
-                    >
+                    <div key={t.id} className={`p-6 rounded-2xl border-2 space-y-4 ${style.bg}`}>
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-md ${style.badgeBg}`}>
-                            {style.label}
-                          </span>
-                          <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                            Growth Day {t.dayOffset} ({t.phase})
-                          </span>
-                        </div>
-
-                        <button
-                          onClick={() => toggleTaskCompletion(t.id)}
-                          className={`px-3 py-1 rounded-xl text-xs font-black transition-all ${
-                            t.isCompleted ? "bg-gray-200 text-gray-700" : "bg-emerald-600 text-white shadow-sm"
-                          }`}
-                        >
-                          {t.isCompleted ? "Completed ✅" : "Mark Done"}
-                        </button>
+                        <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-md ${style.badgeBg}`}>{style.label}</span>
+                        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Day {t.dayOffset} ({t.formattedDate})</span>
                       </div>
 
-                      <div>
-                        <h4 className={`text-base font-black ${t.isCompleted ? "line-through" : ""}`}>{t.title}</h4>
-                        <p className="text-xs text-gray-700 dark:text-gray-300 font-medium mt-1 leading-relaxed">{t.description}</p>
-                      </div>
+                      <h4 className="text-base font-black">{t.title}</h4>
 
                       {t.exactDosage && (
-                        <div className="bg-white/80 dark:bg-black/30 p-2.5 rounded-xl text-xs font-bold text-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-800">
-                          🧪 Dosage: <strong>{t.exactDosage}</strong>
+                        <div className="bg-white/80 dark:bg-black/30 p-3 rounded-xl text-xs font-bold text-purple-900 dark:text-purple-200 border border-purple-200">
+                          🧪 Exact Recommended Dosage: <strong>{t.exactDosage}</strong>
                         </div>
                       )}
 
-                      {t.aiProTip && (
-                        <div className="bg-amber-100/70 dark:bg-amber-950/50 p-3 rounded-xl text-xs font-semibold text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800 flex items-start gap-2">
-                          <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
-                          <span>{t.aiProTip}</span>
+                      {t.howToTakeCareTips && (
+                        <div className="bg-amber-100/80 dark:bg-amber-950/50 p-3.5 rounded-xl text-xs font-semibold text-amber-950 dark:text-amber-200 border border-amber-300 space-y-1">
+                          <span className="font-black flex items-center gap-1"><Lightbulb className="w-4 h-4 text-yellow-500" /> Crop Care Advisory:</span>
+                          <p className="text-xs italic font-medium">{t.howToTakeCareTips}</p>
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   );
-                })
-              )}
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* CHRONOLOGICAL ALL-TASK CHECKLIST PREVIEW */}
-          <div className="bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-4">
-            <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center justify-between">
-              <span>Full Season Milestones ({tasks.length} Tasks)</span>
-              <span className="text-xs font-bold text-emerald-600">{progressPercent}% Progress</span>
-            </h3>
-
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-              {tasks.map(t => (
-                <div 
-                  key={t.id}
-                  onClick={() => {
-                    setSelectedCalendarDate(t.dateStr);
-                    setSelectedTaskDetail(t);
-                  }}
-                  className={`p-3 rounded-xl border flex items-center justify-between text-xs cursor-pointer hover:border-emerald-500 ${
-                    t.isCompleted ? "bg-gray-50 text-gray-400 line-through" : "bg-gray-50 dark:bg-white/5 font-extrabold text-gray-900 dark:text-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>{t.title}</span>
-                  </div>
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono">{t.formattedDate}</span>
+          {/* TAB 4: FULL ACTION CHECKLIST */}
+          {planTab === "checklist" && (
+            <div className="bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-md space-y-6">
+              <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-4">
+                <div>
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white">Full Season Duty Checklist ({tasks.length} Tasks)</h3>
+                  <p className="text-xs text-gray-500 font-medium">Check off tasks as you perform them on your farm.</p>
                 </div>
-              ))}
+                <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl">{progressPercent}% Progress</span>
+              </div>
+
+              <div className="space-y-3">
+                {tasks.map(t => (
+                  <div key={t.id} className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => toggleTaskCompletion(t.id)} className="p-1 text-emerald-600">
+                        {t.isCompleted ? <CheckCircle2 className="w-6 h-6 fill-emerald-100" /> : <Square className="w-6 h-6 text-gray-400" />}
+                      </button>
+                      <div>
+                        <h4 className={`font-black ${t.isCompleted ? "line-through text-gray-400" : "text-gray-900 dark:text-white"}`}>{t.title}</h4>
+                        <span className="text-[10px] text-gray-400">Scheduled: {t.formattedDate} (Day {t.dayOffset})</span>
+                      </div>
+                    </div>
+
+                    <button onClick={() => toggleTaskCompletion(t.id)} className={`px-3 py-1.5 rounded-xl font-black ${t.isCompleted ? "bg-gray-200 text-gray-700" : "bg-emerald-600 text-white"}`}>
+                      {t.isCompleted ? "Completed ✅" : "Mark Done"}
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-        </div>
-
-      </div>
-
-      {/* TASK DETAIL & AI AGRONOMIST BRIEFING MODAL */}
-      <AnimatePresence>
-        {selectedTaskDetail && (
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative space-y-5 font-sans"
-            >
-              <button 
-                onClick={() => setSelectedTaskDetail(null)}
-                className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full bg-gray-100 dark:bg-white/10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
-                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl text-2xl shadow-inner">
-                  {selectedTaskDetail.type === "soil" ? "pt" : selectedTaskDetail.type === "water" ? "💧" : selectedTaskDetail.type === "fertilizer" ? "🧪" : selectedTaskDetail.type === "pest" ? "🛡️" : "🌾"}
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    AI Agronomist Briefing
-                  </span>
-                  <h3 className="text-lg font-black text-gray-900 dark:text-white mt-0.5">{selectedTaskDetail.title}</h3>
-                </div>
-              </div>
-
-              <div className="space-y-3 text-xs font-semibold">
-                <div className="flex justify-between items-center bg-gray-50 dark:bg-white/5 p-3.5 rounded-2xl border border-gray-200 dark:border-white/10">
-                  <div>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase block">Scheduled Date</span>
-                    <strong className="text-emerald-700 dark:text-emerald-400 text-sm font-black">{selectedTaskDetail.formattedDate}</strong>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase block">Growth Stage</span>
-                    <span className="font-extrabold text-gray-900 dark:text-white">{selectedTaskDetail.phase} (Day {selectedTaskDetail.dayOffset})</span>
-                  </div>
-                </div>
-
-                <div className="bg-emerald-50/80 dark:bg-emerald-950/40 p-4 rounded-2xl border-2 border-emerald-300 dark:border-emerald-800 space-y-1.5">
-                  <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase block">Farmer Mandatory Instructions:</span>
-                  <p className="text-xs text-gray-800 dark:text-gray-200 font-medium leading-relaxed">
-                    {selectedTaskDetail.description}
-                  </p>
-                </div>
-
-                {selectedTaskDetail.exactDosage && (
-                  <div className="bg-purple-50 dark:bg-purple-950/40 p-3.5 rounded-2xl border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-200 space-y-1">
-                    <span className="text-[10px] font-black uppercase text-purple-700 dark:text-purple-300 block">🧪 Exact Recommended Dosage / Acre:</span>
-                    <strong className="text-xs font-bold">{selectedTaskDetail.exactDosage}</strong>
-                  </div>
-                )}
-
-                {selectedTaskDetail.aiProTip && (
-                  <div className="bg-amber-50 dark:bg-amber-950/40 p-3.5 rounded-2xl border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 space-y-1">
-                    <span className="text-[10px] font-black uppercase text-amber-700 dark:text-amber-300 flex items-center gap-1">
-                      <Lightbulb className="w-3.5 h-3.5 text-yellow-500" /> AI Agronomist Pro Tip:
-                    </span>
-                    <p className="text-xs font-medium italic">{selectedTaskDetail.aiProTip}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => {
-                      toggleTaskCompletion(selectedTaskDetail.id);
-                      setSelectedTaskDetail(null);
-                    }}
-                    className={`flex-1 py-3.5 font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5 ${
-                      selectedTaskDetail.isCompleted ? "bg-gray-200 text-gray-800" : "bg-emerald-600 text-white hover:bg-emerald-700"
-                    }`}
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> {selectedTaskDetail.isCompleted ? "Mark Task Pending" : "Mark Task Completed"}
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteTask(selectedTaskDetail.id)}
-                    className="px-4 py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl text-xs border border-red-200"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ADD CUSTOM TASK MODAL */}
-      <AnimatePresence>
-        {showAddCustomModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#1a1b23] border-2 border-emerald-500 rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-4 font-sans"
-            >
-              <button 
-                onClick={() => setShowAddCustomModal(false)}
-                className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full bg-gray-100 dark:bg-white/10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-3">
-                <div className="p-2.5 bg-emerald-100 text-emerald-800 rounded-2xl">
-                  <Plus className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase text-emerald-700">Custom Reminder</span>
-                  <h3 className="text-lg font-black text-gray-900 dark:text-white">Add Task Note to Calendar</h3>
-                </div>
-              </div>
-
-              <form onSubmit={handleAddCustomTask} className="space-y-4 text-xs font-semibold">
-                <div>
-                  <label className="block text-gray-600 dark:text-gray-300 mb-1">Scheduled Date:</label>
-                  <input
-                    type="date"
-                    required
-                    value={selectedCalendarDate || ""}
-                    onChange={(e) => setSelectedCalendarDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-extrabold text-emerald-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-600 dark:text-gray-300 mb-1">Task Category:</label>
-                  <select
-                    value={newCustomType}
-                    onChange={(e) => setNewCustomType(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
-                  >
-                    <option value="water">💧 Irrigation & Water</option>
-                    <option value="fertilizer">🧪 Fertilizer & Nutrients</option>
-                    <option value="pest">🛡️ Pest & Fungicide Spray</option>
-                    <option value="soil">pt Soil Health & Weeding</option>
-                    <option value="sowing">🌱 Sowing & Seedling</option>
-                    <option value="harvest">🌾 Harvesting & APMC Sales</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-gray-600 dark:text-gray-300 mb-1">Task Title:</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Apply Micro-nutrient Foliar Spray"
-                    value={newCustomTitle}
-                    onChange={(e) => setNewCustomTitle(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-600 dark:text-gray-300 mb-1">Description / Notes:</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Add specific instructions, dosage per acre..."
-                    value={newCustomDesc}
-                    onChange={(e) => setNewCustomDesc(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-medium"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" /> Save Task Note to Calendar
-                </button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      )}
 
     </div>
   );

@@ -273,17 +273,13 @@ export default function Dashboard() {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-10 max-w-7xl mx-auto font-sans">
       
-      {/* 1. SPLINE 3D HERO INTERACTIVE SECTION */}
+      {/* 1. HERO TITLE & CALL TO ACTION BANNER */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="space-y-4"
+        className="bg-white dark:bg-[#16171f] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
       >
-        <SplineHeroAnimation />
-
-        {/* HERO TITLE & CALL TO ACTION BAR */}
-        <div className="bg-white dark:bg-[#16171f] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
             <span className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-yellow-500 animate-bounce" /> {greeting}
@@ -310,8 +306,7 @@ export default function Dashboard() {
               <Sprout className="w-4 h-4" /> Sell Produce
             </Link>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
       {/* 2. REAL-TIME MANDI RATES TICKER & LIVE WEATHER WIDGET */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -47,7 +47,7 @@ export default function Dashboard() {
     role: string;
     createdAt: string;
   }>>([
-    { id: "1", name: "Rameshwar Patil", rating: 5, comments: "Mandi finder and live weather predictions are spot on!", role: "Farmer (Pune)", createdAt: "Today" },
+    { id: "1", name: "Rameshwar Patil", rating: 5, comments: "Mandi Finder and live weather predictions are spot on!", role: "Farmer (Pune)", createdAt: "Today" },
     { id: "2", name: "Gurpreet Singh", rating: 5, comments: "Direct crop buyer matching saved us thousands in middleman fees.", role: "Farmer (Punjab)", createdAt: "Yesterday" }
   ]);
 

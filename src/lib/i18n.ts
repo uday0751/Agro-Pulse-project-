@@ -7,6 +7,7 @@ const resources = {
       "app_title": "E-Farmer Connect",
       "dashboard": "Dashboard",
       "market_prices": "Market Prices",
+      "mandi_finder": "Mandi Finder",
       "weather": "Weather Prediction",
       "community": "Farmer Community",
       "planner": "Crop Planner",

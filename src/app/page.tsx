@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Cloud, LineChart, Users, Calendar, Landmark, Stethoscope, ShoppingBag, Sprout, MapPin, BarChart, 
   ArrowRight, Sparkles, TrendingUp, Sun, Droplets, Wind, ArrowUpRight, ShieldCheck, ChevronRight, Navigation, Loader2,
-  MessageSquare, Star, Send, ThumbsUp, CheckCircle2, User, Mail
+  MessageSquare, Star, Send, ThumbsUp, CheckCircle2, User, Mail, Play, Zap
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import gsap from "gsap";
+import { SplineHeroAnimation } from "@/components/SplineHeroAnimation";
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
@@ -154,49 +156,6 @@ export default function Dashboard() {
     setTimeout(() => setFbSuccess(false), 4000);
   };
 
-  // GSAP Animations
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(heroRef.current, {
-        opacity: 0,
-        y: -25,
-        duration: 0.8,
-        ease: "power3.out"
-      });
-
-      gsap.from(tickerRef.current, {
-        opacity: 0,
-        scaleX: 0.96,
-        duration: 0.6,
-        delay: 0.2,
-        ease: "power2.out"
-      });
-
-      if (cardsContainerRef.current) {
-        const cards = cardsContainerRef.current.children;
-        gsap.fromTo(
-          cards,
-          { opacity: 0, y: 35, scale: 0.96 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.5,
-            stagger: 0.06,
-            ease: "back.out(1.2)",
-            delay: 0.3
-          }
-        );
-      }
-    });
-
-    return () => ctx.revert();
-  }, []);
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
-
   // Integrated Modules Grid
   const modules = [
     {
@@ -298,386 +257,321 @@ export default function Dashboard() {
       color: "bg-rose-500",
       textColor: "text-rose-600 dark:text-rose-400",
       bgGradient: "hover:border-rose-500/50"
-    },
+    }
+  ];
+
+  // Live Mandi Ticker Data
+  const mandiTickers = [
+    { crop: "Wheat (Sharbati)", mandi: "Indore APMC", price: "₹2,850/q", change: "+4.2%", isUp: true },
+    { crop: "Paddy (Basmati 1121)", mandi: "Karnal APMC", price: "₹4,620/q", change: "+2.8%", isUp: true },
+    { crop: "Cotton (Bt Long Staple)", mandi: "Rajkot APMC", price: "₹7,150/q", change: "-1.5%", isUp: false },
+    { crop: "Soyabean (Yellow)", mandi: "Ujjain APMC", price: "₹4,480/q", change: "+1.9%", isUp: true },
+    { crop: "Mustard (Black)", mandi: "Jaipur APMC", price: "₹5,350/q", change: "+3.1%", isUp: true },
+    { crop: "Onion (Nashik Red)", mandi: "Lasalgaon APMC", price: "₹1,920/q", change: "-2.4%", isUp: false }
   ];
 
   return (
-    <div className="min-h-screen p-4 md:p-8 font-sans max-w-7xl mx-auto space-y-10">
+    <div className="p-4 sm:p-6 md:p-8 space-y-10 max-w-7xl mx-auto font-sans">
       
-      {/* Clean Top Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 dark:border-white/10 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full bg-green-500 animate-ping" />
-            <span className="text-xs font-black text-green-700 dark:text-green-400 uppercase tracking-widest">
-              AgroPulse Ecosystem
-            </span>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mt-1">
-            Agricultural Portal Dashboard
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-2 bg-white dark:bg-[#1a1b23] border border-gray-200 dark:border-white/10 px-3.5 py-2 rounded-xl shadow-sm">
-          <span className="text-[11px] font-extrabold text-gray-400 uppercase">{t("select_language")}</span>
-          <select 
-            onChange={(e) => changeLanguage(e.target.value)}
-            value={i18n.language}
-            className="text-xs font-extrabold text-green-700 dark:text-green-400 bg-transparent border-none focus:outline-none cursor-pointer"
-          >
-            <option value="en">English</option>
-            <option value="hi">हिंदी</option>
-            <option value="ta">தமிழ்</option>
-          </select>
-        </div>
-      </div>
-
-      {/* GSAP Animated Hero Banner */}
-      <div 
-        ref={heroRef}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-900 via-emerald-800 to-green-950 p-6 md:p-10 text-white shadow-2xl border border-green-700/30"
+      {/* 1. SPLINE 3D HERO INTERACTIVE SECTION */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="space-y-4"
       >
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-green-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
+        <SplineHeroAnimation />
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-          <div className="lg:col-span-2 space-y-3">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-extrabold text-green-300 border border-white/15">
-              <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-              <span>{greeting}</span>
-            </div>
-
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight text-white">
-              Smart Agriculture & <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 via-emerald-200 to-teal-300">
-                Direct Farm Trading Ecosystem
-              </span>
+        {/* HERO TITLE & CALL TO ACTION BAR */}
+        <div className="bg-white dark:bg-[#16171f] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-1">
+            <span className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-yellow-500 animate-bounce" /> {greeting}
+            </span>
+            <h1 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+              India's Premier Direct Farm-to-Buyer Trading Portal
             </h1>
-
-            <p className="text-green-100/80 text-xs md:text-sm font-medium max-w-2xl leading-relaxed">
-              Buy and sell crops directly across 36 Indian States & UTs. Track 70+ world crop rates, find local mandis on interactive map, and check real-time satellite weather predictions below.
+            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium max-w-2xl">
+              Connect directly with farmers and wholesale buyers across 36 Indian States & UTs. Zero middleman commission.
             </p>
           </div>
 
-          {/* DYNAMIC REAL-TIME SATELLITE WEATHER SNAPSHOT */}
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-2xl space-y-3 text-xs shadow-lg">
-            <div className="flex justify-between items-center pb-2 border-b border-white/15">
-              <span className="font-extrabold text-green-300 flex items-center gap-1.5">
-                <Sun className="w-4 h-4 text-yellow-400" /> Live Weather
-              </span>
-              
-              <button 
-                onClick={detectLocationAndFetchWeather}
-                title="Refresh Live Location Weather"
-                className="text-[11px] font-black text-white bg-green-600/80 hover:bg-green-500 px-2.5 py-1 rounded-lg border border-white/20 flex items-center gap-1 transition-all"
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href="/marketplace"
+              className="px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs rounded-2xl shadow-xl transition-all flex items-center gap-2"
+            >
+              <ShoppingBag className="w-4 h-4" /> Explore Marketplace
+            </Link>
+            <Link
+              href="/seller"
+              className="px-5 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-2xl shadow-xl transition-all flex items-center gap-2"
+            >
+              <Sprout className="w-4 h-4" /> Sell Produce
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* 2. REAL-TIME MANDI RATES TICKER & LIVE WEATHER WIDGET */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* MANDI TICKER (2 COLS) */}
+        <div className="lg:col-span-2 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white p-5 rounded-3xl shadow-xl border border-emerald-500/30 flex flex-col justify-between space-y-4">
+          <div className="flex justify-between items-center border-b border-white/10 pb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Live Mandi Price Ticker</h3>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-300 bg-emerald-900/60 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
+              Live Agmarknet Data
+            </span>
+          </div>
+
+          {/* SCROLLING TICKER GRID */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {mandiTickers.map((t, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ scale: 1.03, y: -2 }}
+                className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/15 space-y-1"
               >
-                {weatherData.loading ? (
-                  <Loader2 className="w-3 h-3 animate-spin text-white" />
-                ) : (
-                  <Navigation className="w-3 h-3 text-green-200" />
-                )}
-                <span>{weatherData.cityName}</span>
-              </button>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-3xl font-black text-white flex items-baseline gap-1">
-                  {weatherData.temp}°C
+                <div className="flex justify-between items-center">
+                  <span className="text-[11px] font-black text-white truncate">{t.crop}</span>
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${t.isUp ? "bg-emerald-500/30 text-emerald-300" : "bg-red-500/30 text-red-300"}`}>
+                    {t.change}
+                  </span>
                 </div>
-                <div className="text-[11px] font-bold text-green-200 mt-0.5">
+                <div className="flex justify-between items-baseline">
+                  <strong className="text-sm font-black text-yellow-300">{t.price}</strong>
+                  <span className="text-[9px] text-gray-300 font-medium">{t.mandi}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="flex justify-between items-center text-[10px] text-emerald-200 font-bold border-t border-white/10 pt-2">
+            <span>Updates every 15 minutes across 26+ APMC Mandis.</span>
+            <Link href="/market" className="text-yellow-300 hover:underline flex items-center gap-0.5 font-black">
+              View All 70+ Crops <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+
+        {/* LIVE GPS WEATHER WIDGET (1 COL) */}
+        <div className="bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl border border-sky-400/40 flex flex-col justify-between space-y-4">
+          <div className="flex justify-between items-center border-b border-white/10 pb-3">
+            <div className="flex items-center gap-2">
+              <Sun className="w-5 h-5 text-yellow-300 animate-spin" />
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Live Weather Guard</h3>
+            </div>
+            <button
+              onClick={detectLocationAndFetchWeather}
+              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sky-200"
+              title="Refresh Location Weather"
+            >
+              <Navigation className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {weatherData.loading ? (
+            <div className="py-8 text-center space-y-2">
+              <Loader2 className="w-8 h-8 text-sky-300 animate-spin mx-auto" />
+              <p className="text-xs font-bold text-sky-200">Detecting GPS Weather...</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex justify-between items-end">
+                <div>
+                  <span className="text-[11px] font-bold text-sky-200 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-red-400" /> {weatherData.cityName}
+                  </span>
+                  <strong className="text-3xl font-black text-white block mt-0.5">{weatherData.temp}°C</strong>
+                </div>
+                <span className="text-xs font-black text-yellow-300 bg-black/40 px-3 py-1 rounded-xl border border-white/10">
                   {weatherData.condition}
-                </div>
+                </span>
               </div>
-              <div className="text-right space-y-1 text-[11px]">
-                <div className="flex items-center justify-end gap-1 text-green-200 font-bold">
-                  <Droplets className="w-3.5 h-3.5 text-blue-300" /> {weatherData.humidity}% Humidity
+
+              <div className="grid grid-cols-2 gap-2 text-xs bg-black/30 p-3 rounded-2xl border border-white/10 font-bold">
+                <div className="flex items-center gap-1.5">
+                  <Droplets className="w-4 h-4 text-sky-400" />
+                  <div>
+                    <span className="text-[9px] text-sky-200 block uppercase">Humidity</span>
+                    <span>{weatherData.humidity}%</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-end gap-1 text-green-200 font-bold">
-                  <Wind className="w-3.5 h-3.5 text-teal-300" /> {weatherData.windSpeed} km/h Wind
+                <div className="flex items-center gap-1.5">
+                  <Wind className="w-4 h-4 text-sky-400" />
+                  <div>
+                    <span className="text-[9px] text-sky-200 block uppercase">Wind</span>
+                    <span>{weatherData.windSpeed} km/h</span>
+                  </div>
                 </div>
               </div>
             </div>
+          )}
 
-            <div className="pt-2 border-t border-white/15 flex justify-between items-center text-[10px] text-green-200 font-extrabold">
-              <span>📍 Live Satellite Open-Meteo API</span>
-              <Link href="/weather" className="text-yellow-300 hover:underline flex items-center gap-0.5">
-                Full 60-Day Forecast <ChevronRight className="w-3 h-3" />
-              </Link>
-            </div>
+          <div className="flex justify-between items-center text-[10px] text-sky-200 font-bold border-t border-white/10 pt-2">
+            <span>60-Day Rain Forecast</span>
+            <Link href="/weather" className="text-yellow-300 hover:underline font-black">
+              Full Weather Hub →
+            </Link>
           </div>
         </div>
+
       </div>
 
-      {/* Live Market Price Ticker */}
-      <div 
-        ref={tickerRef}
-        className="bg-white dark:bg-[#1a1b23] border border-gray-100 dark:border-white/10 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4"
-      >
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="bg-green-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded-md flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" /> Live Ticker
-          </span>
-          <span className="text-xs font-bold text-gray-900 dark:text-white">Trending Mandi Rates:</span>
-        </div>
-
-        <div className="flex items-center gap-4 overflow-x-auto w-full scrollbar-none text-xs font-bold">
-          <div className="flex items-center gap-1.5 shrink-0 bg-gray-50 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-white/5">
-            <span>🌾 Wheat Lokwan:</span>
-            <span className="text-green-600 dark:text-green-400 font-extrabold">₹2,550/q</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-green-500" />
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0 bg-gray-50 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-white/5">
-            <span>🌾 Basmati 1121:</span>
-            <span className="text-green-600 dark:text-green-400 font-extrabold">₹4,350/q</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-green-500" />
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0 bg-gray-50 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-white/5">
-            <span>🌱 Soybean JS-335:</span>
-            <span className="text-green-600 dark:text-green-400 font-extrabold">₹4,920/q</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-green-500" />
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0 bg-gray-50 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-white/5">
-            <span>🧅 Nashik Red Onion:</span>
-            <span className="text-green-600 dark:text-green-400 font-extrabold">₹2,100/q</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-green-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Grid of All 10 Interactive Platform Features */}
+      {/* 3. MODERN ANIMATED MODULES GRID */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-lg md:text-xl font-black text-gray-900 dark:text-white">
-              Explore Platform Features & Tools
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Comprehensive agricultural management suite designed for modern Indian farmers & crop buyers.
-            </p>
+            <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-wider">AgroPulse Ecosystem</span>
+            <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">Full Platform Solutions & Tools</h2>
           </div>
-          <span className="text-xs font-black text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 px-3 py-1 rounded-full border border-green-200 dark:border-green-800">
-            10 Active Suite Tools
-          </span>
+          <span className="text-xs font-black text-gray-400">10 Integrated Services</span>
         </div>
 
-        <div 
-          ref={cardsContainerRef}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-        >
-          {modules.map((mod, i) => {
-            const IconComponent = mod.icon;
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {modules.map((m, idx) => {
+            const Icon = m.icon;
             return (
-              <Link 
-                key={i} 
-                href={mod.href}
-                className={`group bg-white dark:bg-[#1a1b23] p-6 rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${mod.bgGradient}`}
+              <motion.div
+                key={m.href}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                whileHover={{ scale: 1.03, y: -6 }}
+                className={`bg-white dark:bg-[#1a1b23] p-6 rounded-3xl shadow-lg border-2 transition-all flex flex-col justify-between space-y-4 relative overflow-hidden group ${m.bgGradient}`}
               >
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex justify-between items-start">
-                    <div className={`p-3 rounded-2xl ${mod.color} text-white shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                      <IconComponent className="w-6 h-6" />
+                    <div className={`p-3.5 rounded-2xl ${m.color} text-white shadow-md transition-transform group-hover:scale-110`}>
+                      <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300">
-                      {mod.badge}
+                    <span className={`text-[10px] font-black px-3 py-1 rounded-xl bg-gray-100 dark:bg-white/10 ${m.textColor}`}>
+                      {m.badge}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-base font-black text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
-                      {mod.title}
+                    <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      {m.title}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed mt-1.5">
-                      {mod.desc}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed mt-1">
+                      {m.desc}
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-4 mt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-xs font-extrabold">
-                  <span className={mod.textColor}>Access Feature</span>
-                  <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 group-hover:bg-green-600 group-hover:text-white flex items-center justify-center transition-all">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </Link>
+                <Link
+                  href={m.href}
+                  className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs font-black text-emerald-700 dark:text-emerald-400 group-hover:text-emerald-800"
+                >
+                  <span>Open Tool</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </motion.div>
             );
           })}
         </div>
       </div>
 
-      {/* FEEDBACK FORM AT THE VERY BOTTOM OF THE DASHBOARD */}
-      <div className="bg-white dark:bg-[#1a1b23] border-2 border-green-500/30 dark:border-green-500/40 p-6 md:p-8 rounded-3xl shadow-xl space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 dark:border-white/10 pb-4">
+      {/* 4. USER FEEDBACK & COMMUNITY TESTIMONIALS */}
+      <div className="bg-white dark:bg-[#1a1b23] p-6 md:p-8 rounded-3xl border-2 border-emerald-500/30 shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-white/10 pb-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 bg-green-100 dark:bg-green-950 px-3.5 py-1 rounded-full text-xs font-black text-green-800 dark:text-green-300 mb-1 border border-green-300 dark:border-green-800">
-              <MessageSquare className="w-3.5 h-3.5 text-green-600" />
-              <span>Feedback Portal</span>
-            </div>
-            <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">
-              Farmer & User Feedback Form
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              We value your experience! Submit your review directly to the Lead Engineer & Platform Founder.
-            </p>
+            <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400">Verified Farmer Reviews</span>
+            <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 mt-0.5">
+              <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" />
+              Community Voice & Feedback
+            </h3>
           </div>
 
-          {/* FOUNDER BRAND BADGE */}
-          <div className="bg-gradient-to-r from-green-900 via-emerald-900 to-green-950 text-white p-4 rounded-2xl border border-green-700/60 shadow-md text-xs space-y-1 shrink-0">
-            <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-green-400" />
-              <span className="font-extrabold text-white text-sm">Uday Pratap Singh Chauhan</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-green-200">
-              <Mail className="w-3.5 h-3.5 text-green-400" />
-              <a href="mailto:udchauhan0987@gmail.com" className="hover:underline font-extrabold text-white">udchauhan0987@gmail.com</a>
-            </div>
-          </div>
+          <Link
+            href="/feedback"
+            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 shadow-md flex items-center gap-1.5"
+          >
+            <MessageSquare className="w-4 h-4" /> Full Feedback Page
+          </Link>
         </div>
 
-        {/* FEEDBACK FORM & FEEDBACK FEED GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
-          {/* FEEDBACK FORM */}
-          <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-2xl border border-gray-200/60 dark:border-white/5 space-y-4 text-xs">
-            <div className="flex justify-between items-center">
-              <h3 className="font-black text-sm text-gray-900 dark:text-white flex items-center gap-2">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" /> Submit Your Feedback Below
-              </h3>
-              <span className="text-[10px] font-bold text-green-600 bg-green-100 dark:bg-green-950 px-2.5 py-0.5 rounded-md">
-                Direct Submission
-              </span>
-            </div>
+        {/* FEEDBACK LIST */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {dashboardFeedbacks.map((fb) => (
+            <div key={fb.id} className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10 space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
+                    {fb.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-gray-900 dark:text-white">{fb.name}</h4>
+                    <span className="text-[9px] text-gray-400 font-medium">{fb.role}</span>
+                  </div>
+                </div>
 
-            {fbSuccess && (
-              <div className="bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300 p-3 rounded-xl text-xs font-bold flex items-center gap-2 border border-green-300">
-                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-                <span>Thank you! Your feedback has been successfully submitted and saved.</span>
-              </div>
-            )}
-
-            <form onSubmit={handleQuickFeedbackSubmit} className="space-y-4">
-              <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Your Full Name:</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Rameshwar Patil"
-                  value={fbName}
-                  onChange={(e) => setFbName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1b23] font-bold text-gray-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Star Rating:</label>
-                <div className="flex items-center gap-2 text-yellow-400">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      onClick={() => setFbRating(star)}
-                      className="p-1 hover:scale-125 transition-transform focus:outline-none"
-                    >
-                      <Star className={`w-6 h-6 ${star <= fbRating ? "fill-yellow-400" : "text-gray-300"}`} />
-                    </button>
+                <div className="flex text-yellow-400">
+                  {Array.from({ length: fb.rating }).map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-yellow-400" />
                   ))}
-                  <span className="text-xs font-extrabold text-gray-700 dark:text-gray-300 ml-2">
-                    ({fbRating} / 5 Stars)
-                  </span>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Your Feedback & Suggestions:</label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder="Share your thoughts... (Press Enter to Submit, Shift+Enter for new line)"
-                  value={fbComments}
-                  onChange={(e) => setFbComments(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleQuickFeedbackSubmit(e);
-                    }
-                  }}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1b23] font-bold text-gray-900 dark:text-white"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all"
-              >
-                <Send className="w-4 h-4" /> Submit Feedback Form
-              </button>
-            </form>
-          </div>
-
-          {/* SUBMITTED FEEDBACK REVIEWS */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-extrabold text-xs text-gray-900 dark:text-white uppercase tracking-wider">
-                Recent Farmer Reviews
-              </h3>
-              <Link href="/feedback" className="text-xs font-black text-green-600 dark:text-green-400 hover:underline flex items-center gap-1">
-                Full Feedback Portal <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium italic">"{fb.comments}"</p>
             </div>
-
-            <div className="space-y-3">
-              {dashboardFeedbacks.map((fb) => (
-                <div key={fb.id} className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-200/60 dark:border-white/5 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1 text-yellow-400">
-                      {[...Array(fb.rating)].map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-yellow-400" />
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[10px] font-bold">
-                      <span className="text-gray-400">{fb.createdAt}</span>
-                      <button
-                        onClick={() => {
-                          const newComment = prompt("Edit your feedback comment:", fb.comments);
-                          if (newComment && newComment.trim()) {
-                            setDashboardFeedbacks(dashboardFeedbacks.map(item => item.id === fb.id ? { ...item, comments: newComment.trim() } : item));
-                          }
-                        }}
-                        className="text-green-600 dark:text-green-400 hover:underline"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm("Delete this feedback?")) {
-                            setDashboardFeedbacks(dashboardFeedbacks.filter(item => item.id !== fb.id));
-                          }
-                        }}
-                        className="text-red-500 hover:underline"
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-gray-800 dark:text-gray-200 font-semibold italic">
-                    "{fb.comments}"
-                  </p>
-
-                  <div className="pt-2 border-t border-gray-200/60 dark:border-white/5 flex justify-between items-center text-xs">
-                    <span className="font-extrabold text-gray-900 dark:text-white">{fb.name}</span>
-                    <span className="text-[10px] text-green-600 dark:text-green-400 font-bold">{fb.role}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          ))}
         </div>
+
+        {/* QUICK SUBMIT FORM */}
+        <form onSubmit={handleQuickFeedbackSubmit} className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-3">
+          <span className="text-xs font-black text-gray-800 dark:text-gray-200 block">Leave a quick review:</span>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              required
+              placeholder="Your Name / City"
+              value={fbName}
+              onChange={(e) => setFbName(e.target.value)}
+              className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-bold"
+            />
+
+            <select
+              value={fbRating}
+              onChange={(e) => setFbRating(Number(e.target.value))}
+              className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-bold text-yellow-600 dark:text-yellow-400"
+            >
+              <option value={5}>⭐⭐⭐⭐⭐ (5 Stars)</option>
+              <option value={4}>⭐⭐⭐⭐ (4 Stars)</option>
+              <option value={3}>⭐⭐⭐ (3 Stars)</option>
+            </select>
+          </div>
+
+          <textarea
+            rows={2}
+            required
+            placeholder="Share your experience using AgroPulse..."
+            value={fbComments}
+            onChange={(e) => setFbComments(e.target.value)}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs font-medium"
+          />
+
+          <div className="flex justify-between items-center">
+            {fbSuccess ? (
+              <span className="text-xs text-emerald-600 font-black flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" /> Feedback submitted successfully!
+              </span>
+            ) : <span />}
+
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" /> Submit Review
+            </button>
+          </div>
+        </form>
       </div>
 
     </div>

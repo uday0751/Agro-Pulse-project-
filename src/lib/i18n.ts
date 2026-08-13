@@ -11,6 +11,7 @@ const resources = {
       "weather": "Weather Prediction",
       "community": "Farmer Community",
       "planner": "Crop Planner",
+      "compare": "Compare Crops",
       "govt_schemes": "Government Schemes",
       "expert_consultation": "Expert Consultation",
       "settings": "Settings",

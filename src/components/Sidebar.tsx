@@ -47,7 +47,7 @@ export function Sidebar() {
       initial={{ x: -72, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-      className="w-60 hidden md:flex flex-col min-h-screen fixed left-0 top-0 z-50"
+      className="w-60 hidden md:flex flex-col h-screen fixed left-0 top-0 z-50"
       style={{ background: "#1A3D2B" }}
     >
       {/* Brand */}

@@ -26,6 +26,23 @@
   --border-cream:  rgba(26,61,43,0.08);
 }
 
+.dark {
+  --cream:         #0A0F0C;
+  --cream-dark:    #111914;
+  --off-white:     #17221C;
+  --deep-green:    #F5F0E8;
+  --forest:        #6FCF97;
+  --sage:          #42715F;
+  --lime:          #A3E635;
+  --clay:          #E29373;
+  --clay-light:    #824125;
+  --amber:         #FBCF74;
+  --amber-light:   #8E6314;
+  --soil:          #EAE3D6;
+  --border:        rgba(255,255,255,0.12);
+  --border-cream:  rgba(255,255,255,0.08);
+}
+
 /* ─── RESET + BASE ───────────────────────────────────────────── */
 html, body { max-width:100vw; overflow-x:hidden; scroll-behavior:smooth; }
 

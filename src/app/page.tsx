@@ -95,7 +95,7 @@ function AgroOrb() {
       vx: (Math.random() - 0.5) * 0.0008,
       vy: (Math.random() - 0.5) * 0.0008,
       r: Math.random() * 2.5 + 1,
-      col: ["#2D6A4F","#6FCF97","#C9714B","#E8A838"][Math.floor(Math.random()*4)],
+      col: ["var(--forest)","var(--lime)","var(--clay)","var(--amber)"][Math.floor(Math.random()*4)],
     }));
 
     let raf: number;
@@ -175,7 +175,7 @@ function AgroOrb() {
           ? `rgba(45,106,79,${0.5 + norm * 0.5})`
           : `rgba(201,113,75,${0.15 + (1-norm)*0.3})`;
         ctx.shadowBlur = norm > 0.6 ? 6 : 0;
-        ctx.shadowColor = "#2D6A4F";
+        ctx.shadowColor = "var(--forest)";
         ctx.fill();
         ctx.shadowBlur = 0;
       });
@@ -224,13 +224,13 @@ function TiltCard({ children, className = "", style = {} }: { children: React.Re
     const dx = (e.clientX - cx) / (rect.width / 2);
     const dy = (e.clientY - cy) / (rect.height / 2);
     el.style.transform = `perspective(600px) rotateY(${dx * 7}deg) rotateX(${-dy * 5}deg) translateY(-4px)`;
-    el.style.boxShadow = `${-dx * 8}px ${dy * 8 + 12}px 40px rgba(26,61,43,0.14)`;
+    el.style.boxShadow = `${-dx * 8}px ${dy * 8 + 12}px 40px color-mix(in srgb, var(--deep-green) 14.000000000000002%, transparent)`;
   }, []);
   const handleLeave = useCallback(() => {
     const el = ref.current;
     if (!el) return;
     el.style.transform = "perspective(600px) rotateY(0deg) rotateX(0deg) translateY(0px)";
-    el.style.boxShadow = "0 2px 8px rgba(26,61,43,0.06)";
+    el.style.boxShadow = "0 2px 8px color-mix(in srgb, var(--deep-green) 6%, transparent)";
   }, []);
   return (
     <div ref={ref} onMouseMove={handleMove} onMouseLeave={handleLeave}
@@ -261,7 +261,7 @@ function ToolCard({ title, desc, icon: Icon, href, badge, color = "green" }: { t
     <Link href={href} className="block group h-full">
       <TiltCard
         className="h-full p-5 rounded-2xl flex flex-col gap-4 cursor-pointer"
-        style={{ background: "#FDFAF5", border: `1px solid rgba(26,61,43,0.1)`, boxShadow: "0 2px 8px rgba(26,61,43,0.06)" }}
+        style={{ background: "var(--off-white)", border: `1px solid color-mix(in srgb, var(--deep-green) 10%, transparent)`, boxShadow: "0 2px 8px color-mix(in srgb, var(--deep-green) 6%, transparent)" }}
       >
         <div className="flex items-start justify-between">
           <div className="p-2.5 rounded-xl" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
@@ -273,8 +273,8 @@ function ToolCard({ title, desc, icon: Icon, href, badge, color = "green" }: { t
           </span>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold mb-1.5 group-hover:text-green-700 transition-colors" style={{ color: "#1A3D2B" }}>{title}</h3>
-          <p className="text-[11px] leading-relaxed" style={{ color: "rgba(26,61,43,0.5)" }}>{desc}</p>
+          <h3 className="text-sm font-semibold mb-1.5 group-hover:text-green-700 transition-colors" style={{ color: "var(--deep-green)" }}>{title}</h3>
+          <p className="text-[11px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--deep-green) 50%, transparent)" }}>{desc}</p>
         </div>
         <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: c.text }}>
           Open <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -374,7 +374,7 @@ export default function Dashboard() {
       {/* ════════════════════════════════════════════════════
           §1  ASYMMETRIC HERO — left text, right 3D canvas
       ════════════════════════════════════════════════════ */}
-      <section style={{ background: "#F5F0E8", overflow: "hidden" }}>
+      <section style={{ background: "var(--cream)", overflow: "hidden" }}>
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_480px] min-h-[90vh] items-center px-8 md:px-12 gap-0">
 
           {/* LEFT — editorial text block, left-aligned */}
@@ -385,17 +385,17 @@ export default function Dashboard() {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
                 style={{ background:"rgba(45,106,79,0.1)", border:"1px solid rgba(45,106,79,0.2)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-semibold" style={{ color:"#2D6A4F" }}>{greeting} — AgroPulse is live</span>
+                <span className="text-xs font-semibold" style={{ color:"var(--forest)" }}>{greeting} — AgroPulse is live</span>
               </div>
             </motion.div>
 
             {/* DISPLAY HEADLINE — Playfair, left-anchored, intentionally asymmetric */}
             <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.08 }}>
               <h1 className="font-display leading-[1.04] tracking-tight"
-                style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:"clamp(44px, 5.5vw, 78px)", color:"#1A3D2B" }}>
+                style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:"clamp(44px, 5.5vw, 78px)", color:"var(--deep-green)" }}>
                 From Seed
                 <br />
-                <em style={{ color:"#C9714B" }}>to Sale.</em>
+                <em style={{ color:"var(--clay)" }}>to Sale.</em>
                 <br />
                 No Middlemen.
               </h1>
@@ -403,7 +403,7 @@ export default function Dashboard() {
 
             <motion.p initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.16 }}
               className="text-base md:text-lg leading-relaxed max-w-md"
-              style={{ color:"rgba(26,61,43,0.6)", fontFamily:"'DM Sans', sans-serif" }}>
+              style={{ color:"color-mix(in srgb, var(--deep-green) 60%, transparent)", fontFamily:"'DM Sans', sans-serif" }}>
               India's direct agri-market platform. Buy, sell, and trade farm produce across 36 States & UTs
               with live APMC data, AI planning, and zero commission.
             </motion.p>
@@ -431,11 +431,11 @@ export default function Dashboard() {
                 { v:"0%",        l:"Middleman Commission" },
               ].map(s => (
                 <div key={s.l}>
-                  <p className="font-display text-2xl font-bold" style={{ fontFamily:"'Playfair Display',serif", color:"#1A3D2B" }}>{s.v}</p>
-                  <p className="text-[10px] font-medium mt-0.5" style={{ color:"rgba(26,61,43,0.45)" }}>{s.l}</p>
+                  <p className="font-display text-2xl font-bold" style={{ fontFamily:"'Playfair Display',serif", color:"var(--deep-green)" }}>{s.v}</p>
+                  <p className="text-[10px] font-medium mt-0.5" style={{ color:"color-mix(in srgb, var(--deep-green) 45%, transparent)" }}>{s.l}</p>
                 </div>
               ))}
-              <div style={{ width:1, height:36, background:"rgba(26,61,43,0.1)" }} className="hidden sm:block" />
+              <div style={{ width:1, height:36, background:"color-mix(in srgb, var(--deep-green) 10%, transparent)" }} className="hidden sm:block" />
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold"
                 style={{ background:"rgba(232,168,56,0.15)", color:"#7A5014", border:"1px solid rgba(232,168,56,0.3)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
@@ -459,16 +459,16 @@ export default function Dashboard() {
             {/* Floating data callouts — positioned absolutely */}
             <div className="absolute top-[18%] left-[-20px] float">
               <div className="px-3.5 py-2.5 rounded-2xl shadow-lg"
-                style={{ background:"#FDFAF5", border:"1px solid rgba(26,61,43,0.12)", boxShadow:"0 8px 24px rgba(26,61,43,0.1)" }}>
-                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"rgba(26,61,43,0.4)" }}>Wheat · Indore</p>
-                <p className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',serif", color:"#1A3D2B" }}>₹2,850 <span className="text-green-600 text-xs">↑4.2%</span></p>
+                style={{ background:"var(--off-white)", border:"1px solid var(--border)", boxShadow:"0 8px 24px color-mix(in srgb, var(--deep-green) 10%, transparent)" }}>
+                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"color-mix(in srgb, var(--deep-green) 40%, transparent)" }}>Wheat · Indore</p>
+                <p className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',serif", color:"var(--deep-green)" }}>₹2,850 <span className="text-green-600 text-xs">↑4.2%</span></p>
               </div>
             </div>
             <div className="absolute bottom-[20%] right-[-10px] float float-delay-1">
               <div className="px-3.5 py-2.5 rounded-2xl shadow-lg"
-                style={{ background:"#FDFAF5", border:"1px solid rgba(201,113,75,0.2)", boxShadow:"0 8px 24px rgba(201,113,75,0.12)" }}>
-                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"rgba(26,61,43,0.4)" }}>Farmers Online</p>
-                <p className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',serif", color:"#C9714B" }}>2,841 <span style={{ color:"rgba(26,61,43,0.4)", fontSize:10 }}>right now</span></p>
+                style={{ background:"var(--off-white)", border:"1px solid rgba(201,113,75,0.2)", boxShadow:"0 8px 24px rgba(201,113,75,0.12)" }}>
+                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"color-mix(in srgb, var(--deep-green) 40%, transparent)" }}>Farmers Online</p>
+                <p className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',serif", color:"var(--clay)" }}>2,841 <span style={{ color:"color-mix(in srgb, var(--deep-green) 40%, transparent)", fontSize:10 }}>right now</span></p>
               </div>
             </div>
             <div className="absolute top-[52%] left-[-30px] float float-delay-2">
@@ -483,12 +483,12 @@ export default function Dashboard() {
       {/* ════════════════════════════════════════════════════
           §2  LIVE APMC TICKER — deep green band
       ════════════════════════════════════════════════════ */}
-      <section className="overflow-hidden py-4" style={{ background:"#1A3D2B" }}>
+      <section className="overflow-hidden py-4" style={{ background:"var(--deep-green)" }}>
         <div className="flex items-center">
           <div className="shrink-0 flex items-center gap-2.5 px-6 pr-7"
-            style={{ borderRight:"1px solid rgba(255,255,255,0.12)" }}>
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background:"#6FCF97" }} />
-            <span className="text-[10px] font-bold tracking-[.12em] uppercase" style={{ color:"#6FCF97" }}>
+            style={{ borderRight:"1px solid color-mix(in srgb, var(--cream) 12%, transparent)" }}>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background:"var(--lime)" }} />
+            <span className="text-[10px] font-bold tracking-[.12em] uppercase" style={{ color:"var(--lime)" }}>
               Live APMC Rates
             </span>
           </div>
@@ -496,13 +496,13 @@ export default function Dashboard() {
             <div className="ticker-track">
               {[...tickers, ...tickers].map((t, i) => (
                 <div key={i} className="inline-flex items-center gap-3 px-7 shrink-0">
-                  <span className="text-xs font-medium" style={{ color:"rgba(255,255,255,0.55)" }}>{t.crop}</span>
+                  <span className="text-xs font-medium" style={{ color:"color-mix(in srgb, var(--cream) 55.00000000000001%, transparent)" }}>{t.crop}</span>
                   <span className="text-sm font-bold text-white">{t.price}</span>
                   <span className={`flex items-center gap-0.5 text-[11px] font-bold ${t.up ? "text-green-400" : "text-red-400"}`}>
                     {t.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {t.d}
                   </span>
-                  <span className="text-[10px]" style={{ color:"rgba(255,255,255,0.25)" }}>{t.mandi}</span>
-                  <span style={{ color:"rgba(255,255,255,0.1)" }}>·</span>
+                  <span className="text-[10px]" style={{ color:"color-mix(in srgb, var(--cream) 25%, transparent)" }}>{t.mandi}</span>
+                  <span style={{ color:"color-mix(in srgb, var(--cream) 10%, transparent)" }}>·</span>
                 </div>
               ))}
             </div>
@@ -513,14 +513,14 @@ export default function Dashboard() {
       {/* ════════════════════════════════════════════════════
           §3  PLATFORM INTRO — asymmetric, off-center
       ════════════════════════════════════════════════════ */}
-      <section className="px-8 md:px-12 py-20" style={{ background:"#F5F0E8" }}>
+      <section className="px-8 md:px-12 py-20" style={{ background:"var(--cream)" }}>
         <div className="max-w-[1400px] mx-auto">
           {/* Off-center section: large decorative number left, heading slightly indented */}
           <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr_420px] gap-8 items-start">
 
             {/* Giant muted number — decorative, non-centered */}
             <div className="hidden lg:block pt-2 select-none">
-              <span className="font-display font-bold" style={{ fontFamily:"'Playfair Display',serif", fontSize:120, lineHeight:1, color:"rgba(26,61,43,0.06)", letterSpacing:"-8px" }}>01</span>
+              <span className="font-display font-bold" style={{ fontFamily:"'Playfair Display',serif", fontSize:120, lineHeight:1, color:"color-mix(in srgb, var(--deep-green) 6%, transparent)", letterSpacing:"-8px" }}>01</span>
             </div>
 
             {/* Heading + quick links */}
@@ -528,15 +528,15 @@ export default function Dashboard() {
               <Reveal>
                 <p className="label">The Platform</p>
                 <h2 className="font-display mt-3 leading-tight"
-                  style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(34px, 4vw, 52px)", color:"#1A3D2B" }}>
+                  style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(34px, 4vw, 52px)", color:"var(--deep-green)" }}>
                   Everything a farmer needs,<br />
-                  <em style={{ color:"#2D6A4F" }}>intelligently connected.</em>
+                  <em style={{ color:"var(--forest)" }}>intelligently connected.</em>
                 </h2>
               </Reveal>
 
               <Reveal delay={0.1}>
                 <p className="text-base leading-relaxed max-w-sm"
-                  style={{ color:"rgba(26,61,43,0.55)", fontFamily:"'DM Sans',sans-serif" }}>
+                  style={{ color:"color-mix(in srgb, var(--deep-green) 55.00000000000001%, transparent)", fontFamily:"'DM Sans',sans-serif" }}>
                   Built ground-up for Indian agriculture — from small-holders in Vidarbha to large-scale cotton growers in Gujarat.
                 </p>
               </Reveal>
@@ -545,20 +545,20 @@ export default function Dashboard() {
               <Reveal delay={0.18}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-sm">
                   {[
-                    { href:"/marketplace", icon:ShoppingBag, label:"Crop Marketplace",  sub:"50,000+ listings",   col:"#2D6A4F", bg:"#EAF5EE" },
-                    { href:"/seller",      icon:Sprout,      label:"Farmer Desk",       sub:"List & sell produce", col:"#C9714B", bg:"#F7EDE8" },
+                    { href:"/marketplace", icon:ShoppingBag, label:"Crop Marketplace",  sub:"50,000+ listings",   col:"var(--forest)", bg:"#EAF5EE" },
+                    { href:"/seller",      icon:Sprout,      label:"Farmer Desk",       sub:"List & sell produce", col:"var(--clay)", bg:"#F7EDE8" },
                     { href:"/mandi-finder",icon:MapPin,      label:"GPS Mandi Finder",  sub:"26+ APMC mandis",     col:"#0369A1", bg:"#E8F4FA" },
                     { href:"/planner",     icon:Calendar,    label:"AI Crop Planner",   sub:"Full growth schedule",col:"#7C3AED", bg:"#F0EBF8" },
                   ].map(({ href,icon:Icon,label,sub,col,bg }) => (
                     <Link key={href} href={href}
                       className="group flex items-center gap-3.5 p-4 rounded-2xl transition-all hover:-translate-y-0.5"
-                      style={{ background:"#FDFAF5", border:"1px solid rgba(26,61,43,0.1)", boxShadow:"0 2px 8px rgba(26,61,43,0.05)" }}>
+                      style={{ background:"var(--off-white)", border:"1px solid color-mix(in srgb, var(--deep-green) 10%, transparent)", boxShadow:"0 2px 8px color-mix(in srgb, var(--deep-green) 5%, transparent)" }}>
                       <div className="p-2 rounded-xl shrink-0" style={{ background:bg }}>
                         <Icon className="w-4 h-4" style={{ color:col }} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold group-hover:text-green-800 transition-colors" style={{ color:"#1A3D2B" }}>{label}</p>
-                        <p className="text-[10px]" style={{ color:"rgba(26,61,43,0.4)" }}>{sub}</p>
+                        <p className="text-xs font-semibold group-hover:text-green-800 transition-colors" style={{ color:"var(--deep-green)" }}>{label}</p>
+                        <p className="text-[10px]" style={{ color:"color-mix(in srgb, var(--deep-green) 40%, transparent)" }}>{sub}</p>
                       </div>
                     </Link>
                   ))}
@@ -593,7 +593,7 @@ export default function Dashboard() {
                       <div className="flex items-end gap-3">
                         <span className="font-display font-bold leading-none" style={{ fontFamily:"'Playfair Display',serif", fontSize:72, color:"#0C4A6E" }}>{weather.temp}°</span>
                         <div>
-                          <p className="text-sm font-semibold" style={{ color:"#C9714B" }}>{weather.cond}</p>
+                          <p className="text-sm font-semibold" style={{ color:"var(--clay)" }}>{weather.cond}</p>
                           <p className="text-[10px] mt-1" style={{ color:"rgba(3,105,161,0.5)" }}>Farming conditions</p>
                         </div>
                       </div>
@@ -602,7 +602,7 @@ export default function Dashboard() {
                           { icon:Droplets, l:"Humidity",   v:`${weather.hum}%` },
                           { icon:Wind,     l:"Wind Speed", v:`${weather.wind} km/h` },
                         ].map(({ icon:Icon, l, v }) => (
-                          <div key={l} className="p-3.5 rounded-2xl flex items-center gap-2.5" style={{ background:"rgba(255,255,255,0.55)", backdropFilter:"blur(8px)" }}>
+                          <div key={l} className="p-3.5 rounded-2xl flex items-center gap-2.5" style={{ background:"color-mix(in srgb, var(--cream) 55.00000000000001%, transparent)", backdropFilter:"blur(8px)" }}>
                             <Icon className="w-4 h-4 shrink-0 text-sky-600" />
                             <div>
                               <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color:"rgba(3,105,161,0.5)" }}>{l}</p>
@@ -627,18 +627,18 @@ export default function Dashboard() {
       {/* ════════════════════════════════════════════════════
           §4  TOOLS GRID — earthy warm section
       ════════════════════════════════════════════════════ */}
-      <section className="px-8 md:px-12 py-20" style={{ background:"#EAE3D6" }}>
+      <section className="px-8 md:px-12 py-20" style={{ background:"var(--cream-dark)" }}>
         <div className="max-w-[1400px] mx-auto space-y-10">
 
           {/* Off-center heading */}
           <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 items-end">
             <div className="hidden lg:block select-none">
-              <span className="font-display font-bold" style={{ fontFamily:"'Playfair Display',serif", fontSize:100, lineHeight:1, color:"rgba(26,61,43,0.07)", letterSpacing:"-6px" }}>02</span>
+              <span className="font-display font-bold" style={{ fontFamily:"'Playfair Display',serif", fontSize:100, lineHeight:1, color:"color-mix(in srgb, var(--deep-green) 7.000000000000001%, transparent)", letterSpacing:"-6px" }}>02</span>
             </div>
             <div>
               <Reveal>
                 <p className="label">Integrated Farm Tools</p>
-                <h2 className="font-display mt-2" style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px, 3.5vw, 46px)", color:"#1A3D2B" }}>
+                <h2 className="font-display mt-2" style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px, 3.5vw, 46px)", color:"var(--deep-green)" }}>
                   10 services, one platform.
                 </h2>
               </Reveal>
@@ -658,18 +658,18 @@ export default function Dashboard() {
       {/* ════════════════════════════════════════════════════
           §5  REVIEWS — deep green background, cream cards
       ════════════════════════════════════════════════════ */}
-      <section className="px-8 md:px-12 py-20" style={{ background:"#1A3D2B" }}>
+      <section className="px-8 md:px-12 py-20" style={{ background:"var(--deep-green)" }}>
         <div className="max-w-[1400px] mx-auto space-y-12">
 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
             <Reveal>
               <p className="label" style={{ color:"rgba(111,207,151,0.7)" }}>Verified Farmer Reviews</p>
-              <h2 className="font-display mt-2" style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(28px,3.5vw,44px)", color:"#FDFAF5" }}>
+              <h2 className="font-display mt-2" style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(28px,3.5vw,44px)", color:"var(--off-white)" }}>
                 Heard from the fields.
               </h2>
             </Reveal>
             <Link href="/feedback" className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full transition-colors"
-              style={{ background:"rgba(111,207,151,0.15)", color:"#6FCF97", border:"1px solid rgba(111,207,151,0.25)" }}>
+              style={{ background:"rgba(111,207,151,0.15)", color:"var(--lime)", border:"1px solid rgba(111,207,151,0.25)" }}>
               <MessageSquare className="w-3.5 h-3.5" /> All Reviews
             </Link>
           </div>
@@ -680,7 +680,7 @@ export default function Dashboard() {
               <Reveal key={r.id} delay={i * 0.1}>
                 <TiltCard
                   className="p-6 rounded-2xl flex flex-col gap-4 h-full"
-                  style={{ background:"#FDFAF5", border:"1px solid rgba(26,61,43,0.1)", boxShadow:"0 4px 24px rgba(0,0,0,0.2)" }}
+                  style={{ background:"var(--off-white)", border:"1px solid color-mix(in srgb, var(--deep-green) 10%, transparent)", boxShadow:"0 4px 24px rgba(0,0,0,0.2)" }}
                 >
                   <div className="flex gap-0.5">
                     {Array.from({ length: r.rating }).map((_, j) => (
@@ -688,19 +688,19 @@ export default function Dashboard() {
                     ))}
                   </div>
                   <blockquote className="font-display text-base font-medium leading-relaxed flex-1"
-                    style={{ fontFamily:"'Playfair Display',serif", color:"#1A3D2B" }}>
+                    style={{ fontFamily:"'Playfair Display',serif", color:"var(--deep-green)" }}>
                     "{r.msg}"
                   </blockquote>
-                  <div className="flex items-center gap-3 pt-4" style={{ borderTop:"1px solid rgba(26,61,43,0.07)" }}>
+                  <div className="flex items-center gap-3 pt-4" style={{ borderTop:"1px solid color-mix(in srgb, var(--deep-green) 7.000000000000001%, transparent)" }}>
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white"
-                      style={{ background:"linear-gradient(135deg,#2D6A4F,#1A3D2B)" }}>
+                      style={{ background:"linear-gradient(135deg,var(--forest),var(--deep-green))" }}>
                       {r.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold" style={{ color:"#1A3D2B" }}>{r.name}</p>
-                      <p className="text-[10px]" style={{ color:"rgba(26,61,43,0.45)" }}>{r.role}</p>
+                      <p className="text-xs font-bold" style={{ color:"var(--deep-green)" }}>{r.name}</p>
+                      <p className="text-[10px]" style={{ color:"color-mix(in srgb, var(--deep-green) 45%, transparent)" }}>{r.role}</p>
                     </div>
-                    <span className="text-[10px]" style={{ color:"rgba(26,61,43,0.28)" }}>{r.ts}</span>
+                    <span className="text-[10px]" style={{ color:"color-mix(in srgb, var(--deep-green) 28.000000000000004%, transparent)" }}>{r.ts}</span>
                   </div>
                 </TiltCard>
               </Reveal>
@@ -709,33 +709,33 @@ export default function Dashboard() {
 
           {/* Review form */}
           <Reveal delay={0.15}>
-            <div className="rounded-3xl p-8" style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)" }}>
-              <h3 className="font-display font-bold text-xl mb-6" style={{ fontFamily:"'Playfair Display',serif", color:"#FDFAF5" }}>
+            <div className="rounded-3xl p-8" style={{ background:"color-mix(in srgb, var(--cream) 6%, transparent)", border:"1px solid color-mix(in srgb, var(--cream) 10%, transparent)" }}>
+              <h3 className="font-display font-bold text-xl mb-6" style={{ fontFamily:"'Playfair Display',serif", color:"var(--off-white)" }}>
                 Share your story
               </h3>
               <form onSubmit={submitReview} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input type="text" required placeholder="Your name & city" value={fbName} onChange={e=>setFbName(e.target.value)}
                     className="px-4 py-3.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-400/30"
-                    style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"#FDFAF5", caretColor:"#6FCF97" }}
-                    onFocus={e=>(e.target.style.background="rgba(255,255,255,0.12)")}
-                    onBlur={e=>(e.target.style.background="rgba(255,255,255,0.08)")} />
+                    style={{ background:"color-mix(in srgb, var(--cream) 8%, transparent)", border:"1px solid color-mix(in srgb, var(--cream) 12%, transparent)", color:"var(--off-white)", caretColor:"var(--lime)" }}
+                    onFocus={e=>(e.target.style.background="color-mix(in srgb, var(--cream) 12%, transparent)")}
+                    onBlur={e=>(e.target.style.background="color-mix(in srgb, var(--cream) 8%, transparent)")} />
                   <select value={fbRating} onChange={e=>setFbRating(Number(e.target.value))}
                     className="px-4 py-3.5 rounded-xl text-sm font-semibold focus:outline-none"
-                    style={{ background:"rgba(232,168,56,0.15)", border:"1px solid rgba(232,168,56,0.3)", color:"#E8A838" }}>
-                    <option value={5} style={{ background:"#1A3D2B" }}>⭐⭐⭐⭐⭐  Excellent</option>
-                    <option value={4} style={{ background:"#1A3D2B" }}>⭐⭐⭐⭐  Very Good</option>
-                    <option value={3} style={{ background:"#1A3D2B" }}>⭐⭐⭐  Good</option>
+                    style={{ background:"rgba(232,168,56,0.15)", border:"1px solid rgba(232,168,56,0.3)", color:"var(--amber)" }}>
+                    <option value={5} style={{ background:"var(--deep-green)" }}>⭐⭐⭐⭐⭐  Excellent</option>
+                    <option value={4} style={{ background:"var(--deep-green)" }}>⭐⭐⭐⭐  Very Good</option>
+                    <option value={3} style={{ background:"var(--deep-green)" }}>⭐⭐⭐  Good</option>
                   </select>
                 </div>
                 <textarea rows={3} required placeholder="How did AgroPulse help your farm business…" value={fbMsg} onChange={e=>setFbMsg(e.target.value)}
                   className="w-full px-4 py-3.5 rounded-xl text-sm font-medium resize-none focus:outline-none focus:ring-2 focus:ring-green-400/30"
-                  style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"#FDFAF5", caretColor:"#6FCF97" }} />
+                  style={{ background:"color-mix(in srgb, var(--cream) 8%, transparent)", border:"1px solid color-mix(in srgb, var(--cream) 12%, transparent)", color:"var(--off-white)", caretColor:"var(--lime)" }} />
                 <div className="flex justify-between items-center">
                   <AnimatePresence>
                     {fbDone && (
                       <motion.span initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0 }}
-                        className="flex items-center gap-1.5 text-sm font-semibold" style={{ color:"#6FCF97" }}>
+                        className="flex items-center gap-1.5 text-sm font-semibold" style={{ color:"var(--lime)" }}>
                         <CheckCircle2 className="w-4 h-4" /> Thank you! Review posted.
                       </motion.span>
                     )}

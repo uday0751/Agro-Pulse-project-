@@ -12,6 +12,7 @@ import {
   Activity, Star, Check, BookOpen, Shield, HelpCircle, FileText, ArrowLeft
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { ALL_INDIAN_STATES_AND_UTS } from "@/app/marketplace/page";
 
 // CROP TYPES WITH BASE GROWING DURATION (DAYS) & EMOJI
@@ -58,6 +59,7 @@ export interface CalendarTask {
 }
 
 export default function AICropPlannerPage() {
+  const { t } = useTranslation();
   // Step 1: Input Form | Step 2: Generated AI Plan Dashboard
   const [currentStep, setCurrentStep] = useState<"input" | "plan">("input");
 
@@ -393,7 +395,7 @@ export default function AICropPlannerPage() {
           </div>
           <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3 drop-shadow-md">
             <Sprout className="w-9 h-9 text-yellow-300 shrink-0" />
-            AI Crop Growth & Care Planner
+            {t("planner_title", "AI Crop Growth & Care Planner")}
           </h1>
           <p className="text-xs md:text-sm text-emerald-100 font-bold max-w-2xl">
             {currentStep === "input" 
@@ -432,15 +434,15 @@ export default function AICropPlannerPage() {
               <Sprout className="w-7 h-7" />
             </div>
             <div>
-              <span className="text-[10px] font-black uppercase text-emerald-700">Step 1 of 2</span>
-              <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">Enter Your Crop & Farm Details</h2>
+              <span className="text-[10px] font-black uppercase text-emerald-700">{t("step1", "Step 1 of 2")}</span>
+              <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">{t("enter_crop_farm_details", "Enter Your Crop & Farm Details")}</h2>
             </div>
           </div>
 
           <form onSubmit={handleGeneratePlan} className="space-y-5 text-xs font-bold">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 mb-1">Select Crop Produce:</label>
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">{t("select_crop", "Select Crop Produce:")}</label>
                 <select
                   value={selectedCropName}
                   onChange={(e) => setSelectedCropName(e.target.value)}
@@ -468,7 +470,7 @@ export default function AICropPlannerPage() {
               )}
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 mb-1">Sowing / Planting Date:</label>
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">{t("sowing_date", "Sowing / Planting Date:")}</label>
                 <input
                   type="date"
                   required
@@ -481,7 +483,7 @@ export default function AICropPlannerPage() {
 
             {/* FLUID LAND SIZE ENTRY + UNIT SELECTOR */}
             <div className="space-y-1">
-              <label className="block text-gray-700 dark:text-gray-200 mb-1">Total Land Size & Unit:</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">{t("land_size", "Total Land Size & Unit:")}</label>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -550,7 +552,7 @@ export default function AICropPlannerPage() {
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 mb-1">Farming Style:</label>
+                <label className="block text-gray-700 dark:text-gray-200 mb-1">{t("farming_style", "Farming Style:")}</label>
                 <select
                   value={farmingType}
                   onChange={(e) => setFarmingType(e.target.value as any)}

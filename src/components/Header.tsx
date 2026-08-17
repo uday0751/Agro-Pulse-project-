@@ -112,7 +112,7 @@ export function Header() {
                 transition={{ duration:0.15 }}
                 className="absolute right-0 mt-2 w-[296px] overflow-hidden z-50" style={dropStyle}>
                 <div className="px-4 py-3 flex justify-between items-center" style={{ borderBottom:"1px solid color-mix(in srgb, var(--deep-green) 7.000000000000001%, transparent)" }}>
-                  <span className="text-xs font-bold" style={{ color:"var(--deep-green)" }}>Notifications</span>
+                  <span className="text-xs font-bold" style={{ color:"var(--deep-green)" }}>{t('notifications', 'Notifications')}</span>
                   <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background:"rgba(111,207,151,0.2)", color:"var(--forest)" }}>4 new</span>
                 </div>
                 {notifs.map(n => (
@@ -156,12 +156,12 @@ export function Header() {
                   <Link href="/profile" onClick={()=>setProfileOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium hover:bg-black/[0.04] transition-colors"
                     style={{ color:"var(--forest)" }}>
-                    <User className="w-3.5 h-3.5"/> View Profile
+                    <User className="w-3.5 h-3.5"/> {t('profile', 'View Profile')}
                   </Link>
                   <div className="my-1 mx-3" style={{ height:1, background:"color-mix(in srgb, var(--deep-green) 7.000000000000001%, transparent)" }}/>
                   <button onClick={()=>{ setProfileOpen(false); handleLogout(); }}
                     className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors text-red-500">
-                    <LogOut className="w-3.5 h-3.5"/> Sign Out
+                    <LogOut className="w-3.5 h-3.5"/> {t('sign_out', 'Sign Out')}
                   </button>
                 </div>
               </motion.div>
@@ -191,7 +191,8 @@ export function Header() {
                   "community","schemes","feedback"
                 ].map(p => {
                   const href = p==="/" ? "/" : `/${p}`;
-                  const label = p==="/" ? "Dashboard" : p.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+                  const keyMap: Record<string, string> = { "/": "dashboard", "marketplace": "nav_buy_crops", "seller": "nav_sell_harvest", "market": "market_prices", "mandi-finder": "mandi_finder", "weather": "nav_weather_hub", "planner": "planner", "compare": "compare", "experts": "expert_consultation", "community": "community", "schemes": "govt_schemes", "feedback": "nav_feedback" };
+                  const label = t(keyMap[p] || p);
                   const active = pathname===href;
                   return (
                     <Link key={href} href={href} onClick={()=>setMobileOpen(false)}

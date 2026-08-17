@@ -312,7 +312,10 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropItem[] = [
   }
 ];
 
+import { useTranslation } from "react-i18next";
+
 export default function MarketPage() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
   const [selectedState, setSelectedState] = useState<string>("All States");
@@ -380,15 +383,15 @@ export default function MarketPage() {
         <div className="relative z-10 space-y-2">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-extrabold text-green-300 border border-white/20">
             <Globe className="w-3.5 h-3.5 text-yellow-400" />
-            <span>Real-Time APMC Mandi Rates Across 36 States & UTs</span>
+            <span>{t('real_time_apmc', 'Real-Time APMC Mandi Rates Across 36 States & UTs')}</span>
           </div>
 
           <h1 className="text-3xl md:text-5xl font-black text-white">
-            Market Prices & Analytics
+            {t('market_analytics', 'Market Prices & Analytics')}
           </h1>
 
           <p className="text-green-100/90 text-xs md:text-sm font-medium max-w-3xl leading-relaxed">
-            Search any Crop, Fruit, or Vegetable. Interactive 6-month price comparison graphs & state-by-state APMC rates. Engineered by Uday Pratap Singh Chauhan (udchauhan0987@gmail.com).
+            {t('market_subtitle', 'Search any Crop, Fruit, or Vegetable. Interactive 6-month price comparison graphs & state-by-state APMC rates.')} Engineered by Uday Pratap Singh Chauhan (udchauhan0987@gmail.com).
           </p>
         </div>
       </div>
@@ -402,7 +405,7 @@ export default function MarketPage() {
             <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5 z-10" />
             <input
               type="text"
-              placeholder="Search any crop, fruit (e.g. Apple, Mango), or vegetable..."
+              placeholder={t('search_placeholder_market', 'Search any crop, fruit (e.g. Apple, Mango), or vegetable...')}
               value={searchTerm}
               onFocus={() => setShowSearchDropdown(true)}
               onChange={(e) => {
@@ -422,7 +425,7 @@ export default function MarketPage() {
               <div className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#16171f] border border-green-500/40 rounded-2xl shadow-2xl z-50 overflow-hidden text-xs">
                 {searchSuggestions.length > 0 ? (
                   <div className="p-2 space-y-1">
-                    <span className="text-[10px] font-black uppercase text-gray-400 px-3 py-1 block">Live Matching Commodities:</span>
+                    <span className="text-[10px] font-black uppercase text-gray-400 px-3 py-1 block">{t('live_matching', 'Live Matching Commodities:')}</span>
                     {searchSuggestions.map((crop) => (
                       <button
                         key={crop.id}
@@ -448,10 +451,10 @@ export default function MarketPage() {
                   <div className="p-4 text-center space-y-1">
                     <AlertCircle className="w-5 h-5 text-amber-500 mx-auto" />
                     <p className="font-extrabold text-xs text-gray-900 dark:text-white">
-                      Market Price Currently Not Available for "{searchTerm}"
+                      {t('market_price_not_available', 'Market Price Currently Not Available for')} "{searchTerm}"
                     </p>
                     <p className="text-[10px] text-gray-400 font-medium">
-                      APMC Mandi rates update daily at 09:00 AM. This item may be currently out of season.
+                      {t('market_price_update_msg', 'APMC Mandi rates update daily at 09:00 AM. This item may be currently out of season.')}
                     </p>
                   </div>
                 )}
@@ -466,13 +469,13 @@ export default function MarketPage() {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold text-xs text-gray-900 dark:text-white focus:outline-none focus:border-green-500 cursor-pointer"
             >
-              <option value="All Categories">All Categories (Crops, Fruits, Veggies)</option>
-              <option value="Cereals & Grains">🌾 Cereals & Grains</option>
-              <option value="Pulses & Legumes">🫘 Pulses & Legumes</option>
-              <option value="Vegetables">🧅 Vegetables & Roots</option>
-              <option value="Fruits">🍎 Fruits & Orchards</option>
-              <option value="Oilseeds">🌱 Oilseeds</option>
-              <option value="Spices & Herbs">🫚 Spices & Herbs</option>
+              <option value="All Categories">{t('all_categories', 'All Categories')}</option>
+              <option value="Cereals & Grains">🌾 {t('cereals_grains', 'Cereals & Grains')}</option>
+              <option value="Pulses & Legumes">🫘 {t('pulses_legumes', 'Pulses & Legumes')}</option>
+              <option value="Vegetables">🧅 {t('vegetables_roots', 'Vegetables & Roots')}</option>
+              <option value="Fruits">🍎 {t('fruits_orchards', 'Fruits & Orchards')}</option>
+              <option value="Oilseeds">🌱 {t('oilseeds', 'Oilseeds')}</option>
+              <option value="Spices & Herbs">🫚 {t('spices_herbs', 'Spices & Herbs')}</option>
             </select>
           </div>
 
@@ -484,7 +487,7 @@ export default function MarketPage() {
               className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 font-bold text-xs text-gray-900 dark:text-white focus:outline-none focus:border-green-500 cursor-pointer"
             >
               {ALL_INDIAN_STATES.map((st, idx) => (
-                <option key={idx} value={st}>{st === "All States" ? "📍 All Indian States" : `📍 ${st}`}</option>
+                <option key={idx} value={st}>{st === "All States" ? `📍 ${t('all_indian_states', 'All Indian States')}` : `📍 ${st}`}</option>
               ))}
             </select>
           </div>
@@ -492,10 +495,10 @@ export default function MarketPage() {
         </div>
 
         <div className="flex justify-between items-center pt-2 text-xs font-black text-gray-500 border-t border-gray-100 dark:border-white/5">
-          <span>Showing {filteredCrops.length} active Mandi listings</span>
+          <span>{t('showing_active', 'Showing active Mandi listings')} ({filteredCrops.length})</span>
           {searchTerm && (
             <button onClick={() => { setSearchTerm(""); setSelectedCategory("All Categories"); setSelectedState("All States"); }} className="text-green-600 dark:text-green-400 hover:underline">
-              Clear All Filters
+              {t('clear_all_filters', 'Clear All Filters')}
             </button>
           )}
         </div>
@@ -506,16 +509,16 @@ export default function MarketPage() {
         <div className="bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 p-6 rounded-3xl text-center space-y-2">
           <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto" />
           <h3 className="font-black text-base text-amber-900 dark:text-amber-200">
-            Market Price Currently Not Available for "{searchTerm}"
+            {t('market_price_not_available', 'Market Price Currently Not Available')} "{searchTerm}"
           </h3>
           <p className="text-xs text-amber-800 dark:text-amber-300 font-medium max-w-lg mx-auto">
-            This crop, fruit, or vegetable is currently not listed in active Mandi arrival logs today. Rates update every morning at 09:00 AM.
+            {t('crop_fruit_not_listed', 'This crop, fruit, or vegetable is currently not listed in active Mandi arrival logs today. Rates update every morning at 09:00 AM.')}
           </p>
           <button
             onClick={() => setSearchTerm("")}
             className="px-4 py-2 bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md mt-2"
           >
-            Show All Available Commodities
+            {t('show_all_commodities', 'Show All Available Commodities')}
           </button>
         </div>
       )}
@@ -562,12 +565,12 @@ export default function MarketPage() {
                 {/* PRICE DISPLAY */}
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div className="bg-green-50/80 dark:bg-green-950/40 p-3 rounded-2xl border border-green-300 dark:border-green-800 space-y-0.5">
-                    <span className="text-[10px] font-black uppercase text-green-800 dark:text-green-300 block">APMC Mandi Rate</span>
+                    <span className="text-[10px] font-black uppercase text-green-800 dark:text-green-300 block">{t('apmc_mandi_rate', 'APMC Mandi Rate')}</span>
                     <span className="text-lg font-black text-green-700 dark:text-green-400 block">₹{displayPrice.toLocaleString("en-IN")}<span className="text-[10px] font-bold text-gray-500">/q</span></span>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-2xl border border-gray-200 dark:border-white/10 space-y-0.5">
-                    <span className="text-[10px] font-black uppercase text-gray-400 block">Govt MSP Rate</span>
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">{t('govt_msp_rate', 'Govt MSP Rate')}</span>
                     <span className="text-lg font-black text-gray-900 dark:text-white block">₹{crop.govt.toLocaleString("en-IN")}<span className="text-[10px] font-bold text-gray-400">/q</span></span>
                   </div>
                 </div>
@@ -575,14 +578,14 @@ export default function MarketPage() {
 
               <div className="pt-3 border-t border-gray-100 dark:border-white/10 flex justify-between items-center text-xs">
                 <span className="text-[10px] font-extrabold text-green-600 bg-green-100 dark:bg-green-950 px-2.5 py-1 rounded-md flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> Market Trending
+                  <TrendingUp className="w-3 h-3" /> {t('market_trending', 'Market Trending')}
                 </span>
 
                 <button
                   onClick={() => { setSelectedCropModal(crop); setActiveModalTab("trend"); }}
                   className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1 transition-all"
                 >
-                  <BarChart2 className="w-3.5 h-3.5" /> View Graph Analytics
+                  <BarChart2 className="w-3.5 h-3.5" /> {t('view_graph_analytics', 'View Graph Analytics')}
                 </button>
               </div>
             </div>
@@ -618,19 +621,19 @@ export default function MarketPage() {
             {/* KEY METRICS BAR */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="bg-green-50 dark:bg-green-950/40 p-3 rounded-2xl border border-green-200 dark:border-green-800">
-                <span className="text-green-800 dark:text-green-300 font-bold block text-[10px]">APMC Mandi Price</span>
+                <span className="text-green-800 dark:text-green-300 font-bold block text-[10px]">{t('apmc_mandi_rate', 'APMC Mandi Price')}</span>
                 <span className="text-base font-black text-green-700 dark:text-green-400">₹{selectedCropModal.private}/q</span>
               </div>
               <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-2xl border border-gray-200 dark:border-white/10">
-                <span className="text-gray-400 font-bold block text-[10px]">Govt MSP Rate</span>
+                <span className="text-gray-400 font-bold block text-[10px]">{t('govt_msp_rate', 'Govt MSP Rate')}</span>
                 <span className="text-base font-black text-gray-900 dark:text-white">₹{selectedCropModal.govt}/q</span>
               </div>
               <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-2xl border border-gray-200 dark:border-white/10">
-                <span className="text-gray-400 font-bold block text-[10px]">Avg Yield / Acre</span>
+                <span className="text-gray-400 font-bold block text-[10px]">{t('avg_yield_acre', 'Avg Yield / Acre')}</span>
                 <span className="text-xs font-black text-gray-900 dark:text-white">{selectedCropModal.avgYieldPerAcre}</span>
               </div>
               <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-2xl border border-gray-200 dark:border-white/10">
-                <span className="text-gray-400 font-bold block text-[10px]">Quality Grade</span>
+                <span className="text-gray-400 font-bold block text-[10px]">{t('quality_grade', 'Quality Grade')}</span>
                 <span className="text-xs font-black text-green-600 dark:text-green-400">{selectedCropModal.qualityGrade}</span>
               </div>
             </div>
@@ -645,7 +648,7 @@ export default function MarketPage() {
                     : "border-transparent text-gray-400 hover:text-gray-600"
                 }`}
               >
-                <LineChartIcon className="w-4 h-4" /> 6-Month Price Trend Graph
+                <LineChartIcon className="w-4 h-4" /> {t('six_month_trend', '6-Month Price Trend Graph')}
               </button>
 
               <button
@@ -656,7 +659,7 @@ export default function MarketPage() {
                     : "border-transparent text-gray-400 hover:text-gray-600"
                 }`}
               >
-                <BarChart2 className="w-4 h-4" /> State Comparison Bar Chart
+                <BarChart2 className="w-4 h-4" /> {t('state_comparison_chart', 'State Comparison Bar Chart')}
               </button>
             </div>
 
@@ -664,8 +667,8 @@ export default function MarketPage() {
             {activeModalTab === "trend" ? (
               <div className="space-y-3 bg-gray-50/50 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-gray-900 dark:text-white">6-Month Price Trend (Govt MSP vs APMC Rate)</span>
-                  <span className="text-[10px] text-green-600 font-bold bg-green-100 dark:bg-green-950 px-2 py-0.5 rounded-md">Live Historical Logs</span>
+                  <span className="font-extrabold text-gray-900 dark:text-white">{t('six_month_price_trend', '6-Month Price Trend (Govt MSP vs APMC Rate)')}</span>
+                  <span className="text-[10px] text-green-600 font-bold bg-green-100 dark:bg-green-950 px-2 py-0.5 rounded-md">{t('live_historical_logs', 'Live Historical Logs')}</span>
                 </div>
 
                 <div className="h-64 w-full pt-2">
@@ -687,8 +690,8 @@ export default function MarketPage() {
             ) : (
               <div className="space-y-3 bg-gray-50/50 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-gray-900 dark:text-white">State-by-State Mandi Price Comparison</span>
-                  <span className="text-[10px] text-gray-400 font-bold">Rates in ₹ per Quintal</span>
+                  <span className="font-extrabold text-gray-900 dark:text-white">{t('state_by_state_mandi_price', 'State-by-State Mandi Price Comparison')}</span>
+                  <span className="text-[10px] text-gray-400 font-bold">{t('rates_in_rs_quintal', 'Rates in ₹ per Quintal')}</span>
                 </div>
 
                 <div className="h-64 w-full pt-2">
@@ -710,14 +713,14 @@ export default function MarketPage() {
             {/* STATE MANDI DETAILS LIST */}
             <div className="space-y-2 text-xs">
               <h4 className="font-extrabold text-gray-900 dark:text-white uppercase tracking-wider text-xs">
-                Verified State APMC Mandi Rates
+                {t('verified_state_apmc', 'Verified State APMC Mandi Rates')}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {selectedCropModal.statePrices.map((sp, idx) => (
                   <div key={idx} className="flex justify-between items-center bg-gray-50 dark:bg-white/5 p-3 rounded-xl border border-gray-200/60 dark:border-white/5 font-bold">
                     <div>
                       <span className="text-gray-900 dark:text-white block">{sp.mandiName}</span>
-                      <span className="text-[10px] text-gray-400">{sp.state} • Arrival: {sp.arrivalQuantity}</span>
+                      <span className="text-[10px] text-gray-400">{sp.state} • {t('arrival', 'Arrival:')} {sp.arrivalQuantity}</span>
                     </div>
                     <span className="text-sm font-black text-green-600 dark:text-green-400">₹{sp.privatePrice}/q</span>
                   </div>
@@ -729,7 +732,7 @@ export default function MarketPage() {
               onClick={() => setSelectedCropModal(null)}
               className="w-full py-3 bg-gray-200 dark:bg-white/10 font-black text-xs text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-white/20 transition-colors"
             >
-              Close Analytics Panel
+              {t('close_analytics_panel', 'Close Analytics Panel')}
             </button>
           </div>
         </div>

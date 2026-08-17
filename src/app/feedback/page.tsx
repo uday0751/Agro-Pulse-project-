@@ -5,6 +5,7 @@ import {
   Star, MessageSquare, Send, CheckCircle2, User, Mail, ShieldCheck, 
   ThumbsUp, Sparkles, MapPin, Tag, Edit3, Trash2, X, Save
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 
 export interface UserFeedback {
@@ -60,6 +61,7 @@ const INITIAL_FEEDBACKS: UserFeedback[] = [
 ];
 
 export default function FeedbackPage() {
+  const { t } = useTranslation();
   const [feedbacks, setFeedbacks] = useState<UserFeedback[]>(INITIAL_FEEDBACKS);
   
   // Logged-in e-Farmer User Account
@@ -177,11 +179,11 @@ export default function FeedbackPage() {
           </div>
 
           <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight text-white">
-            Farmer Feedback & Reviews
+            {t("feedback_title", "Farmer Feedback & Reviews")}
           </h1>
 
           <p className="text-green-100/90 text-xs md:text-sm font-medium max-w-2xl leading-relaxed">
-            Every comment is verified with an official Government e-Farmer ID. Users can ONLY edit & delete their OWN comments.
+            {t("feedback_desc", "Every comment is verified with an official Government e-Farmer ID. Users can ONLY edit & delete their OWN comments.")}
           </p>
         </div>
       </div>
@@ -194,7 +196,7 @@ export default function FeedbackPage() {
           <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-4">
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-green-600" /> Submit Feedback (e-Farmer ID: {currentUser?.eFarmerId || "MH-FAR-89210"})
+                <MessageSquare className="w-5 h-5 text-green-600" /> {t("submit_feedback", "Submit Feedback")} (e-Farmer ID: {currentUser?.eFarmerId || "MH-FAR-89210"})
               </h2>
               <p className="text-xs text-gray-500 font-medium">Your verified e-Farmer ID badge will be attached to your comment.</p>
             </div>
@@ -221,7 +223,7 @@ export default function FeedbackPage() {
             {/* STAR RATING SELECTOR */}
             <div>
               <label className="block font-black text-gray-700 dark:text-gray-300 mb-2">
-                Overall Experience Rating:
+                {t("overall_rating", "Overall Experience Rating:")}
               </label>
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -251,7 +253,7 @@ export default function FeedbackPage() {
             {/* CATEGORY & ROLE */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">Feature Category:</label>
+                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">{t("feature_category", "Feature Category:")}</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as any)}
@@ -266,7 +268,7 @@ export default function FeedbackPage() {
               </div>
 
               <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">Your User Role:</label>
+                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">{t("user_role", "Your User Role:")}</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as any)}
@@ -283,7 +285,7 @@ export default function FeedbackPage() {
             {/* NAME & EMAIL */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">Your Full Name:</label>
+                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">{t("full_name", "Your Full Name:")}</label>
                 <input
                   type="text"
                   required
@@ -295,7 +297,7 @@ export default function FeedbackPage() {
               </div>
 
               <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">Email Address:</label>
+                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">{t("email_addr", "Email Address:")}</label>
                 <input
                   type="email"
                   placeholder="e.g. farmer@agropulse.in"
@@ -308,7 +310,7 @@ export default function FeedbackPage() {
 
             {/* LOCATION & COMMENTS */}
             <div>
-              <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">District & State:</label>
+              <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">{t("district_state", "District & State:")}</label>
               <input
                 type="text"
                 placeholder="e.g. Pune, Maharashtra"
@@ -319,7 +321,7 @@ export default function FeedbackPage() {
             </div>
 
             <div>
-              <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">Your Detailed Feedback & Suggestions:</label>
+              <label className="block font-black text-gray-700 dark:text-gray-300 mb-1.5">{t("detailed_feedback", "Your Detailed Feedback & Suggestions:")}</label>
               <textarea
                 required
                 rows={4}
@@ -340,7 +342,7 @@ export default function FeedbackPage() {
               type="submit"
               className="w-full py-3.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
             >
-              <Send className="w-4 h-4" /> Submit Feedback with e-Farmer ID ({currentUser?.eFarmerId || "MH-FAR-89210"})
+              <Send className="w-4 h-4" /> {t("submit_button", "Submit Feedback with e-Farmer ID")} ({currentUser?.eFarmerId || "MH-FAR-89210"})
             </button>
           </form>
         </div>
@@ -411,7 +413,7 @@ export default function FeedbackPage() {
         <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-4">
           <div>
             <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-              <ThumbsUp className="w-5 h-5 text-green-600" /> Recent e-Farmer Reviews ({feedbacks.length})
+              <ThumbsUp className="w-5 h-5 text-green-600" /> {t("recent_reviews", "Recent e-Farmer Reviews")} ({feedbacks.length})
             </h2>
             <p className="text-xs text-gray-500 font-medium">Logged in as: <span className="font-extrabold text-green-600">{currentUser?.fullName} ({currentUser?.eFarmerId})</span></p>
           </div>
@@ -453,7 +455,7 @@ export default function FeedbackPage() {
                           className="p-1 text-green-700 dark:text-green-300 hover:text-green-900 rounded-md transition-colors flex items-center gap-1 font-black text-[10px]"
                           title="Edit My Comment"
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-green-600" /> Edit
+                          <Edit3 className="w-3.5 h-3.5 text-green-600" /> {t("edit_comment", "Edit")}
                         </button>
 
                         <button
@@ -461,7 +463,7 @@ export default function FeedbackPage() {
                           className="p-1 text-red-600 dark:text-red-400 hover:text-red-800 rounded-md transition-colors flex items-center gap-1 font-black text-[10px]"
                           title="Delete My Comment"
                         >
-                          <Trash2 className="w-3.5 h-3.5 text-red-500" /> Delete
+                          <Trash2 className="w-3.5 h-3.5 text-red-500" /> {t("delete_comment", "Delete")}
                         </button>
                       </div>
                     )}
@@ -555,13 +557,13 @@ export default function FeedbackPage() {
                   onClick={() => setEditingFeedback(null)}
                   className="w-1/2 py-2.5 bg-gray-200 dark:bg-white/10 text-gray-800 dark:text-gray-200 font-bold rounded-xl"
                 >
-                  Cancel
+                  {t("cancel", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   className="w-1/2 py-2.5 bg-green-600 hover:bg-green-700 text-white font-extrabold rounded-xl shadow-md flex items-center justify-center gap-1"
                 >
-                  <Save className="w-4 h-4" /> Save Changes
+                  <Save className="w-4 h-4" /> {t("save_changes", "Save Changes")}
                 </button>
               </div>
             </form>

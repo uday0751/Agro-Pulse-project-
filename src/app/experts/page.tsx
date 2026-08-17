@@ -7,6 +7,7 @@ import {
   CheckCircle, Search, ShieldCheck, UserCheck, AlertCircle, FileText, 
   Award, Lock, PlusCircle, CheckCircle2, Clock, ThumbsUp, RefreshCw, Send, Paperclip, CreditCard, Smartphone, Building, QrCode, BellRing, ExternalLink, ArrowRight, LogIn, UserPlus, ShieldAlert, KeyRound, Unlock, Shield, Sparkles, User
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface RealExpert {
   id: string;
@@ -109,6 +110,7 @@ export function validateAadhaarNumber(aadhaar: string): { isValid: boolean; mess
 const INITIAL_REAL_EXPERTS: RealExpert[] = [];
 
 export default function ExpertConsultationPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"directory" | "register" | "expert_login" | "my_bookings">("directory");
   const [experts, setExperts] = useState<RealExpert[]>(INITIAL_REAL_EXPERTS);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
@@ -500,10 +502,10 @@ export default function ExpertConsultationPage() {
             </div>
             <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3">
               <Stethoscope className="w-9 h-9 text-emerald-400 shrink-0" />
-              Verified Expert Consultants
+              {t("verified_experts", "Verified Expert Consultants")}
             </h1>
             <p className="text-xs md:text-sm text-emerald-100/80 font-medium max-w-2xl">
-              100% Real human agricultural scientists verified via UIDAI Verhoeff Checksum. Connect directly with approved agronomists & crop pathologists.
+              {t("experts_desc", "100% Real human agricultural scientists verified via UIDAI Verhoeff Checksum. Connect directly with approved agronomists & crop pathologists.")}
             </p>
           </div>
 
@@ -514,7 +516,7 @@ export default function ExpertConsultationPage() {
               className="px-4 py-2.5 bg-slate-900/90 hover:bg-slate-800 text-purple-300 border border-purple-500/40 rounded-2xl text-xs font-black transition-all shadow-lg flex items-center gap-2 backdrop-blur-md hover:border-purple-400 group"
             >
               <ShieldCheck className="w-4 h-4 text-purple-400 group-hover:rotate-12 transition-transform" />
-              <span>Developer Portal</span>
+              <span>{t("dev_portal", "Developer Portal")}</span>
               {pendingExperts.length > 0 && (
                 <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
                   {pendingExperts.length} Pending
@@ -534,7 +536,7 @@ export default function ExpertConsultationPage() {
                 : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <Stethoscope className="w-4 h-4" /> Verified Directory ({approvedExperts.length})
+            <Stethoscope className="w-4 h-4" /> {t("verified_dir", "Verified Directory")} ({approvedExperts.length})
           </button>
 
           <button
@@ -545,7 +547,7 @@ export default function ExpertConsultationPage() {
                 : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <UserPlus className="w-4 h-4 text-amber-300" /> Create Expert Account
+            <UserPlus className="w-4 h-4 text-amber-300" /> {t("create_expert", "Create Expert Account")}
           </button>
 
           <button
@@ -556,7 +558,7 @@ export default function ExpertConsultationPage() {
                 : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <LogIn className="w-4 h-4" /> Expert Sign In
+            <LogIn className="w-4 h-4" /> {t("expert_signin", "Expert Sign In")}
           </button>
 
           <button
@@ -567,7 +569,7 @@ export default function ExpertConsultationPage() {
                 : "bg-white/5 hover:bg-white/10 text-white"
             }`}
           >
-            <Calendar className="w-4 h-4" /> My Session Bookings ({bookings.length})
+            <Calendar className="w-4 h-4" /> {t("my_bookings", "My Session Bookings")} ({bookings.length})
           </button>
         </div>
       </header>
@@ -582,7 +584,7 @@ export default function ExpertConsultationPage() {
               <Search className="absolute left-3.5 top-3 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search real approved experts..."
+                placeholder={t("search_experts", "Search real approved experts...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white"
@@ -592,7 +594,7 @@ export default function ExpertConsultationPage() {
             {/* Specialties Filter */}
             <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-none">
               {[
-                { id: "All", label: "All Specialties" },
+                { id: "All", label: t("all_specialties", "All Specialties") },
                 { id: "pest", label: "🐛 Pest Control" },
                 { id: "soil", label: "🌱 Soil & Fertilizer" },
                 { id: "disease", label: "🔬 Plant Diseases" },
@@ -620,7 +622,7 @@ export default function ExpertConsultationPage() {
                 👨‍⚕️
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-white">No AI Bot Experts Available</h3>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white">{t("no_bots", "No AI Bot Experts Available")}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
                   We have removed all automated bot accounts. Real human experts must create an account using <strong>"Create Expert Account"</strong> and get approved by the Developer to appear here.
                 </p>
@@ -651,7 +653,7 @@ export default function ExpertConsultationPage() {
                   <div>
                     <div className="flex justify-between items-center mb-3">
                       <span className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3 text-emerald-600" /> Developer Approved
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" /> {t("dev_approved", "Developer Approved")}
                       </span>
                       <span className="text-xs font-black text-amber-500 flex items-center gap-1">
                         <Star className="w-3.5 h-3.5 fill-amber-400" /> {expert.rating} ({expert.reviewsCount})
@@ -679,11 +681,11 @@ export default function ExpertConsultationPage() {
 
                     <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 space-y-2 text-xs font-semibold">
                       <div className="flex justify-between text-gray-500">
-                        <span>Experience:</span>
+                        <span>{t("experience", "Experience:")}</span>
                         <span className="font-black text-gray-900 dark:text-white">{expert.experience} Years</span>
                       </div>
                       <div className="flex justify-between text-gray-500">
-                        <span>Consultation Fee:</span>
+                        <span>{t("consultation_fee", "Consultation Fee:")}</span>
                         <span className="font-black text-emerald-600 dark:text-emerald-400">₹{expert.feePerSession} / Session</span>
                       </div>
                       <div className="flex flex-wrap gap-1 pt-1">
@@ -706,14 +708,14 @@ export default function ExpertConsultationPage() {
                       }}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all"
                     >
-                      <Calendar className="w-3.5 h-3.5" /> Book Session
+                      <Calendar className="w-3.5 h-3.5" /> {t("book_session", "Book Session")}
                     </button>
 
                     <button
                       onClick={() => setChatExpert(expert)}
                       className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> Live Chat
+                      <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> {t("live_chat", "Live Chat")}
                     </button>
                   </div>
                 </div>
@@ -744,7 +746,7 @@ export default function ExpertConsultationPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 <div>
-                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Full Name (As on Aadhaar Card) *</label>
+                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">{t("full_name_aadhaar", "Full Name (As on Aadhaar Card) *")}</label>
                   <input
                     type="text"
                     required
@@ -756,7 +758,7 @@ export default function ExpertConsultationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">Expertise Specialty *</label>
+                  <label className="block text-xs font-extrabold text-gray-700 dark:text-gray-300 mb-1">{t("expertise_specialty", "Expertise Specialty *")}</label>
                   <select
                     value={regCategory}
                     onChange={(e: any) => setRegCategory(e.target.value)}

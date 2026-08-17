@@ -6,6 +6,7 @@ import {
   Send, Users, MapPin, MessageSquare, ImagePlus, X, 
   ShieldCheck, UserPlus, Lock, UserPlus2, LogOut, Check, Bell, BellOff, Upload, Radio, Tag, Eye, ChevronRight
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface UserAccount {
   eFarmerId: string;
@@ -49,6 +50,7 @@ const PUBLIC_GROUPS: DiscussionGroup[] = [
 ];
 
 export default function FarmersCommunityChatPage() {
+  const { t } = useTranslation();
   const [currentGroup, setCurrentGroup] = useState<DiscussionGroup>(PUBLIC_GROUPS[0]);
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   
@@ -307,7 +309,7 @@ export default function FarmersCommunityChatPage() {
                     </div>
                     <div>
                       <span className="bg-white/20 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-md inline-flex items-center gap-1 border border-white/20">
-                        <ShieldCheck className="w-3 h-3 text-green-300" /> Government Verified e-ID
+                        <ShieldCheck className="w-3 h-3 text-green-300" /> {t('govt_verified_eid', 'Government Verified e-ID')}
                       </span>
                       <h3 className="font-extrabold text-sm text-white mt-1">{currentUser.fullName}</h3>
                       <p className="text-[10px] text-green-100 font-bold flex items-center gap-1 mt-0.5">
@@ -320,12 +322,12 @@ export default function FarmersCommunityChatPage() {
                     onClick={handleLogout}
                     className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl border border-white/20 transition-all"
                   >
-                    Switch Account
+                    {t('switch_account', 'Switch Account')}
                   </button>
                 </div>
 
                 <div className="bg-black/30 backdrop-blur-md rounded-2xl p-2.5 border border-white/15 flex justify-between items-center text-xs">
-                  <span className="text-[10px] text-green-200 font-extrabold uppercase">Official e-Farmer ID:</span>
+                  <span className="text-[10px] text-green-200 font-extrabold uppercase">{t('official_efarmer_id', 'Official e-Farmer ID:')}</span>
                   <span className="font-black text-white bg-green-600 px-3 py-1 rounded-xl tracking-wider shadow-sm">
                     {currentUser.eFarmerId}
                   </span>
@@ -337,14 +339,14 @@ export default function FarmersCommunityChatPage() {
                   <Lock className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-black text-sm text-white">Create e-Farmer Account</h3>
-                  <p className="text-[11px] text-green-100 font-medium mt-0.5">Register to get your verified e-Farmer ID and chat live with farmers.</p>
+                  <h3 className="font-black text-sm text-white">{t('create_efarmer_account', 'Create e-Farmer Account')}</h3>
+                  <p className="text-[11px] text-green-100 font-medium mt-0.5">{t('register_efarmer_desc', 'Register to get your verified e-Farmer ID and chat live with farmers.')}</p>
                 </div>
                 <button
                   onClick={() => setShowAccountModal(true)}
                   className="w-full py-2.5 bg-white text-green-900 font-black text-xs rounded-2xl shadow-lg hover:bg-green-50 transition-all flex items-center justify-center gap-1.5"
                 >
-                  <UserPlus className="w-4 h-4 text-green-700" /> Register e-Farmer Account
+                  <UserPlus className="w-4 h-4 text-green-700" /> {t('register_efarmer_account', 'Register e-Farmer Account')}
                 </button>
               </div>
             )}
@@ -354,10 +356,10 @@ export default function FarmersCommunityChatPage() {
           <div className="bg-white dark:bg-[#1a1b23] rounded-3xl p-4 shadow-md border border-gray-100 dark:border-white/10 flex-1 flex flex-col overflow-hidden space-y-3">
             <div className="flex justify-between items-center px-1">
               <h2 className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-green-600" /> Public Discussion Rooms ({PUBLIC_GROUPS.length})
+                <Users className="w-4 h-4 text-green-600" /> {t('public_discussion_rooms', 'Public Discussion Rooms')} ({PUBLIC_GROUPS.length})
               </h2>
               <span className="text-[10px] font-black text-green-600 bg-green-50 dark:bg-green-950 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <Radio className="w-3 h-3 text-green-600 animate-pulse" /> Live
+                <Radio className="w-3 h-3 text-green-600 animate-pulse" /> {t('live', 'Live')}
               </span>
             </div>
 
@@ -391,7 +393,7 @@ export default function FarmersCommunityChatPage() {
                           className={`p-1 rounded-lg transition-all ${
                             isNotifOn ? "text-green-600 bg-green-100 dark:bg-green-950" : "text-gray-400 hover:text-gray-600"
                           }`}
-                          title={isNotifOn ? "Notifications ON" : "Notifications OFF"}
+                          title={isNotifOn ? t('notifications_on', 'Notifications ON') : t('notifications_off', 'Notifications OFF')}
                         >
                           {isNotifOn ? <Bell className="w-3.5 h-3.5 fill-green-600" /> : <BellOff className="w-3.5 h-3.5" />}
                         </button>
@@ -399,7 +401,7 @@ export default function FarmersCommunityChatPage() {
                         <span className={`text-[9px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 ${
                           isJoined ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300" : "bg-gray-100 dark:bg-white/5 text-gray-400"
                         }`}>
-                          {isJoined ? "Joined" : "Not Joined"}
+                          {isJoined ? t('joined', 'Joined') : t('not_joined', 'Not Joined')}
                         </span>
                       </div>
                     </div>
@@ -427,7 +429,7 @@ export default function FarmersCommunityChatPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black uppercase text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <Radio className="w-3 h-3 text-green-600 animate-pulse" /> Live Real Human Chat • Zero Bots
+                    <Radio className="w-3 h-3 text-green-600 animate-pulse" /> {t('live_real_human_chat', 'Live Real Human Chat • Zero Bots')}
                   </span>
                 </div>
                 <h2 className="text-base font-black text-gray-900 dark:text-white mt-0.5">

@@ -8,30 +8,30 @@ import { motion } from "framer-motion";
 
 const GROUPS = [
   {
-    label: "Market",
+    labelKey: "nav_group_market",
     items: [
-      { href: "/",             label: "Dashboard",     icon: Home      },
-      { href: "/marketplace",  label: "Buy Crops",      icon: ShoppingBag },
-      { href: "/seller",       label: "Sell Harvest",   icon: Sprout    },
-      { href: "/market",       label: "Market Prices",  icon: LineChart },
-      { href: "/mandi-finder", label: "Mandi Finder",   icon: MapPin    },
+      { href: "/",             labelKey: "dashboard",     icon: Home      },
+      { href: "/marketplace",  labelKey: "nav_buy_crops",      icon: ShoppingBag },
+      { href: "/seller",       labelKey: "nav_sell_harvest",   icon: Sprout    },
+      { href: "/market",       labelKey: "market_prices",  icon: LineChart },
+      { href: "/mandi-finder", labelKey: "mandi_finder",   icon: MapPin    },
     ],
   },
   {
-    label: "Intelligence",
+    labelKey: "nav_group_intelligence",
     items: [
-      { href: "/weather",  label: "Weather Hub",    icon: Cloud       },
-      { href: "/planner",  label: "Crop Planner",   icon: Calendar    },
-      { href: "/compare",  label: "Compare Crops",  icon: BarChart    },
-      { href: "/experts",  label: "Agronomists",    icon: Stethoscope },
+      { href: "/weather",  labelKey: "nav_weather_hub",    icon: Cloud       },
+      { href: "/planner",  labelKey: "planner",   icon: Calendar    },
+      { href: "/compare",  labelKey: "compare",  icon: BarChart    },
+      { href: "/experts",  labelKey: "expert_consultation",    icon: Stethoscope },
     ],
   },
   {
-    label: "Community",
+    labelKey: "nav_group_community",
     items: [
-      { href: "/community", label: "Farmers Forum",  icon: Users              },
-      { href: "/schemes",   label: "Govt Schemes",   icon: Landmark           },
-      { href: "/feedback",  label: "Feedback",       icon: MessageSquareHeart },
+      { href: "/community", labelKey: "community",  icon: Users              },
+      { href: "/schemes",   labelKey: "govt_schemes",   icon: Landmark           },
+      { href: "/feedback",  labelKey: "nav_feedback",       icon: MessageSquareHeart },
     ],
   },
 ];
@@ -59,7 +59,7 @@ export function Sidebar() {
           </div>
           <div>
             <p className="font-display text-base font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>AgroPulse</p>
-            <p className="text-[9px] font-semibold tracking-[.14em] uppercase" style={{ color: "rgba(111,207,151,0.7)" }}>Farm Intelligence OS</p>
+            <p className="text-[9px] font-semibold tracking-[.14em] uppercase" style={{ color: "rgba(111,207,151,0.7)" }}>{t('app_subtitle', 'Farm Intelligence OS')}</p>
           </div>
         </Link>
       </div>
@@ -67,9 +67,9 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-5 space-y-6">
         {GROUPS.map((g) => (
-          <div key={g.label}>
+          <div key={g.labelKey}>
             <p className="px-3 mb-2 text-[9px] font-bold tracking-[.14em] uppercase" style={{ color: "rgba(255,255,255,0.2)" }}>
-              {g.label}
+              {t(g.labelKey)}
             </p>
             <div className="space-y-0.5">
               {g.items.map((item) => {
@@ -96,7 +96,7 @@ export function Sidebar() {
                         style={{ background: active ? "rgba(111,207,151,0.18)" : "rgba(255,255,255,0.05)" }}>
                         <Icon className="w-3.5 h-3.5" style={{ color: active ? "#6FCF97" : "rgba(255,255,255,0.38)" }} />
                       </span>
-                      <span className="relative z-10 font-medium">{item.label}</span>
+                      <span className="relative z-10 font-medium">{t(item.labelKey)}</span>
                     </motion.div>
                   </Link>
                 );
@@ -108,7 +108,7 @@ export function Sidebar() {
 
       {/* Bottom */}
       <div className="px-3 py-4 space-y-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-        {[{ href: "/profile", label: "My Profile", icon: User }, { href: "/settings", label: "Settings", icon: Settings }].map((item) => {
+        {[{ href: "/profile", labelKey: "profile", icon: User }, { href: "/settings", labelKey: "settings", icon: Settings }].map((item) => {
           const Icon = item.icon;
           return (
             <Link key={item.href} href={item.href}>
@@ -117,7 +117,7 @@ export function Sidebar() {
                 <span className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)" }}>
                   <Icon className="w-3.5 h-3.5" />
                 </span>
-                {item.label}
+                {t(item.labelKey)}
               </div>
             </Link>
           );

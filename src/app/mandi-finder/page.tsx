@@ -188,7 +188,10 @@ const REAL_INDIAN_MANDIS: RealMandi[] = [
   }
 ];
 
+import { useTranslation } from 'react-i18next';
+
 export default function MandiFinderPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState('All');
@@ -321,11 +324,11 @@ export default function MandiFinderPage() {
         <div className="relative z-10 space-y-1">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-extrabold text-green-300 border border-white/20">
             <Compass className="w-3.5 h-3.5 text-yellow-400" />
-            <span>State-Specific APMC Mandi Rates & Live Direct Purchase</span>
+            <span>{t('state_specific_apmc', 'State-Specific APMC Mandi Rates & Live Direct Purchase')}</span>
           </div>
-          <h1 className="text-2xl md:text-4xl font-black text-white">Real-Time Mandi Finder</h1>
+          <h1 className="text-2xl md:text-4xl font-black text-white">{t('real_time_mandi_finder', 'Real-Time Mandi Finder')}</h1>
           <p className="text-green-100/80 text-xs md:text-sm font-medium max-w-xl">
-            Real APMC Mandi rates varying by state & city. Click any commodity price to buy direct.
+            {t('mandi_subtitle', 'Real APMC Mandi rates varying by state & city. Click any commodity price to buy direct.')}
           </p>
         </div>
 
@@ -336,7 +339,7 @@ export default function MandiFinderPage() {
             className="px-4 py-2.5 bg-green-500 hover:bg-green-400 text-white font-black text-xs rounded-xl shadow-lg flex items-center gap-1.5 transition-all"
           >
             <Navigation className={`w-4 h-4 ${isLocating ? "animate-spin" : ""}`} />
-            <span>{isLocating ? "Locating..." : "📍 Recalculate Distance"}</span>
+            <span>{isLocating ? t('locating', 'Locating...') : `📍 ${t('recalculate_distance', 'Recalculate Distance')}`}</span>
           </button>
         </div>
       </div>
@@ -351,10 +354,10 @@ export default function MandiFinderPage() {
           <div className="bg-gradient-to-r from-emerald-900 to-green-950 text-white rounded-2xl p-4 shadow-md border border-green-700/40 space-y-2">
             <div className="flex justify-between items-center text-xs">
               <span className="font-extrabold text-green-300 flex items-center gap-1.5">
-                <Navigation className="w-4 h-4 text-yellow-400" /> Your Current GPS Location
+                <Navigation className="w-4 h-4 text-yellow-400" /> {t('your_current_gps', 'Your Current GPS Location')}
               </span>
               <span className="bg-green-500/30 text-green-200 text-[10px] font-black px-2 py-0.5 rounded-md border border-green-400/30">
-                Sorted By Distance
+                {t('sorted_by_distance', 'Sorted By Distance')}
               </span>
             </div>
 
@@ -370,7 +373,7 @@ export default function MandiFinderPage() {
               <Search className="absolute left-3.5 top-3 text-gray-400 w-4 h-4" />
               <input 
                 type="text" 
-                placeholder="🔍 Type ANY City Name (e.g. Kanpur, Bhopal, Indore, Pune, Nashik)..." 
+                placeholder={t('search_city_placeholder', '🔍 Type ANY City Name (e.g. Kanpur, Bhopal, Indore, Pune, Nashik)...')}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 focus:ring-2 focus:ring-green-500 rounded-xl text-xs font-bold outline-none text-gray-900 dark:text-white"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -387,7 +390,7 @@ export default function MandiFinderPage() {
 
             {/* Quick City Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px] font-extrabold">
-              <span className="text-gray-400 shrink-0">Popular Cities:</span>
+              <span className="text-gray-400 shrink-0">{t('popular_cities', 'Popular Cities:')}</span>
               {["Kanpur", "Bhopal", "Indore", "Lucknow", "Pune", "Nashik", "Mumbai", "Delhi", "Ludhiana", "Jaipur"].map(city => (
                 <button
                   key={city}
@@ -409,7 +412,7 @@ export default function MandiFinderPage() {
                 value={stateFilter}
                 onChange={(e) => setStateFilter(e.target.value)}
               >
-                <option value="All">All States ({states.length - 1})</option>
+                <option value="All">{t('state', 'State')} ({states.length - 1})</option>
                 {states.filter(s => s !== 'All').map(s => <option key={s} value={s}>{s}</option>)}
               </select>
 
@@ -418,9 +421,9 @@ export default function MandiFinderPage() {
                 value={typeFilter}
                 onChange={(e: any) => setTypeFilter(e.target.value)}
               >
-                <option value="All">All Types</option>
-                <option value="Government APMC">🏛️ Govt APMC</option>
-                <option value="Private Mandi / Hub">🏪 Private Hub</option>
+                <option value="All">{t('all_types', 'All Types')}</option>
+                <option value="Government APMC">🏛️ {t('govt_apmc', 'Govt APMC')}</option>
+                <option value="Private Mandi / Hub">🏪 {t('private_hub', 'Private Hub')}</option>
               </select>
             </div>
           </div>
@@ -454,7 +457,7 @@ export default function MandiFinderPage() {
 
                     {mandi.distance !== undefined && (
                       <span className="bg-emerald-600 text-white text-[11px] font-black px-3 py-1 rounded-xl shrink-0 flex items-center gap-1 shadow-md">
-                        <Navigation className="w-3.5 h-3.5 text-yellow-300" /> {mandi.distance.toFixed(1)} km away
+                        <Navigation className="w-3.5 h-3.5 text-yellow-300" /> {mandi.distance.toFixed(1)} {t('km_away', 'km away')}
                       </span>
                     )}
                   </div>
@@ -466,10 +469,10 @@ export default function MandiFinderPage() {
                   {/* PRICE SUMMARY PILL WITH DIRECT BUY LINK */}
                   <div className="mt-3 bg-gray-50 dark:bg-white/5 p-2.5 rounded-xl border border-gray-100 dark:border-white/5 flex items-center justify-between text-xs font-bold">
                     <span className="text-gray-500 font-extrabold text-[11px]">
-                      🍏 20+ State Rates Listed
+                      🍏 {t('state_rates_listed', '20+ State Rates Listed')}
                     </span>
                     <span className="text-green-600 dark:text-green-400 font-black flex items-center gap-1">
-                      <ShoppingBag className="w-3.5 h-3.5 text-green-600" /> Click to Buy Crop →
+                      <ShoppingBag className="w-3.5 h-3.5 text-green-600" /> {t('click_to_buy_crop', 'Click to Buy Crop →')}
                     </span>
                   </div>
                 </div>
@@ -499,7 +502,7 @@ export default function MandiFinderPage() {
                     <span className="text-[10px] font-black uppercase text-green-600 dark:text-green-400">{selectedMandi.type}</span>
                     {selectedMandi.distance !== undefined && (
                       <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
-                        📍 {selectedMandi.distance.toFixed(1)} km away from your location
+                        📍 {selectedMandi.distance.toFixed(1)} {t('km_away_location', 'km away from your location')}
                       </span>
                     )}
                   </div>
@@ -525,7 +528,7 @@ export default function MandiFinderPage() {
                     rel="noopener noreferrer"
                     className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all"
                   >
-                    <Car className="w-4 h-4 text-white" /> Get Driving Directions (Google Maps)
+                    <Car className="w-4 h-4 text-white" /> {t('get_driving_directions', 'Get Driving Directions (Google Maps)')}
                   </a>
                 )}
                 
@@ -533,7 +536,7 @@ export default function MandiFinderPage() {
                   href={`tel:${selectedMandi.phone}`}
                   className="py-2.5 px-4 bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:bg-gray-200 transition-all"
                 >
-                  <PhoneCall className="w-4 h-4 text-green-600" /> Call Office
+                  <PhoneCall className="w-4 h-4 text-green-600" /> {t('call_office', 'Call Office')}
                 </a>
               </div>
 
@@ -541,7 +544,7 @@ export default function MandiFinderPage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-[11px] font-black uppercase text-gray-400 block">
-                    {selectedMandi.city} APMC Mandi Live Rate Sheet ({Object.keys(selectedMandi.todayPrices).length} Commodities):
+                    {selectedMandi.city} {t('apmc_mandi_live_rate', 'APMC Mandi Live Rate Sheet')} ({Object.keys(selectedMandi.todayPrices).length} {t('market_analytics', 'Commodities')}):
                   </span>
                 </div>
 
@@ -549,7 +552,7 @@ export default function MandiFinderPage() {
                   <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
                   <input
                     type="text"
-                    placeholder="Search crop or fruit inside this mandi..."
+                    placeholder={t('search_crop_fruit', 'Search crop or fruit inside this mandi...')}
                     value={mandiItemSearch}
                     onChange={(e) => setMandiItemSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold focus:outline-none focus:border-green-500 text-gray-900 dark:text-white"
@@ -578,7 +581,7 @@ export default function MandiFinderPage() {
                             className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white font-extrabold text-[11px] rounded-lg shadow-sm flex items-center gap-1 transition-all"
                             title={`Click to buy ${cropName} directly from farmer marketplace`}
                           >
-                            <ShoppingBag className="w-3 h-3 text-white" /> ₹{priceObj.privatePrice}/q • Buy Direct
+                            <ShoppingBag className="w-3 h-3 text-white" /> ₹{priceObj.privatePrice}/q • {t('buy_direct', 'Buy Direct')}
                           </button>
                         </div>
                       </div>

@@ -65,15 +65,15 @@ export default function GovernmentSchemes() {
       <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">
-            Government Schemes & Subsidies
+            {t('govt_schemes_subsidies', 'Government Schemes & Subsidies')}
           </h1>
-          <p className="text-gray-500 mt-1 text-sm font-medium">Verify eligibility and apply for agricultural subsidies, schemes, and low-interest loans</p>
+          <p className="text-gray-500 mt-1 text-sm font-medium">{t('schemes_subtitle', 'Verify eligibility and apply for agricultural subsidies, schemes, and low-interest loans')}</p>
         </div>
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search schemes..."
+            placeholder={t('search_schemes', 'Search schemes...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-green-500 bg-white font-semibold text-xs text-gray-800"
@@ -131,7 +131,7 @@ export default function GovernmentSchemes() {
                 onClick={() => setSelectedScheme(scheme)}
                 className="flex-1 bg-green-600 text-white hover:bg-green-700 text-xs font-bold py-2.5 rounded-xl transition-colors shadow-sm"
               >
-                Apply Now
+                {t('apply_now', 'Apply Now')}
               </button>
               <a
                 href={scheme.link}
@@ -163,21 +163,21 @@ export default function GovernmentSchemes() {
               {applied ? (
                 <div className="text-center py-6">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-extrabold text-gray-900">Application Submitted!</h3>
+                  <h3 className="text-lg font-extrabold text-gray-900">{t('application_submitted', 'Application Submitted!')}</h3>
                   <p className="text-xs text-gray-500 font-medium mt-2 leading-relaxed">
-                    Your application for <strong>{selectedScheme.name}</strong> is filed successfully. Your application ID is <strong>EFRM-{Math.floor(100000 + Math.random() * 900000)}</strong>.
+                    {t('application_for', 'Your application for')} <strong>{selectedScheme.name}</strong> {t('filed_successfully_id', 'is filed successfully. Your application ID is')} <strong>EFRM-{Math.floor(100000 + Math.random() * 900000)}</strong>.
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleApply} className="space-y-4">
-                  <h3 className="text-base font-extrabold text-gray-900">Apply for Scheme</h3>
+                  <h3 className="text-base font-extrabold text-gray-900">{t('apply_for_scheme', 'Apply for Scheme')}</h3>
                   <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs font-semibold text-gray-600">
                     <div className="font-bold text-gray-900 mb-1">{selectedScheme.name}</div>
-                    <div>Benefit: {selectedScheme.benefit}</div>
+                    <div>{t('benefit_label', 'Benefit:')} {selectedScheme.benefit}</div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Applicant Aadhaar Card Number</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">{t('applicant_aadhaar', 'Applicant Aadhaar Card Number')}</label>
                     <input
                       type="text"
                       required
@@ -186,20 +186,20 @@ export default function GovernmentSchemes() {
                       value={aadhaar}
                       onChange={(e) => setAadhaar(e.target.value.replace(/\D/g, ""))}
                       className="block w-full border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-800 font-semibold focus:outline-none focus:ring-1 focus:ring-green-500 bg-gray-50"
-                      placeholder="Enter 12 digit Aadhaar number"
+                      placeholder={t('enter_aadhaar', 'Enter 12 digit Aadhaar number')}
                     />
                   </div>
 
                   <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-[10px] text-blue-700 font-semibold leading-relaxed flex gap-2">
                     <FileText className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>Your registered details (Name, State, and District) will be retrieved from your profile to auto-complete this subsidy request form.</span>
+                    <span>{t('subsidy_form_details_retrieved', 'Your registered details (Name, State, and District) will be retrieved from your profile to auto-complete this subsidy request form.')}</span>
                   </div>
 
                   <button
                     type="submit"
                     className="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-green-700 transition-colors shadow-sm"
                   >
-                    Submit Application
+                    {t('submit_application', 'Submit Application')}
                   </button>
                 </form>
               )}

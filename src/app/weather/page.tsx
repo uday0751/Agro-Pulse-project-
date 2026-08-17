@@ -8,6 +8,7 @@ import {
   MapPin, CheckCircle2, ChevronRight, Info, Compass, ShieldCheck, RefreshCw, BarChart2, Radio
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useTranslation } from "react-i18next";
 
 export interface DayForecast {
   dayNum: number;
@@ -109,6 +110,7 @@ function generate60DayForecastFromLive(liveTemp: number, liveRainProb: number, l
 }
 
 export default function WeatherPredictionPage() {
+  const { t } = useTranslation();
   const [searchCity, setSearchCity] = useState("Pune, Maharashtra");
   const [activeCity, setActiveCity] = useState("Live GPS Location");
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -284,7 +286,7 @@ export default function WeatherPredictionPage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2.5">
             <CloudRain className="w-8 h-8 text-blue-600 dark:text-blue-400 shrink-0" />
-            Live Real-Time Weather & 60-Day Crop Planning
+            {t("weather_title", "Live Real-Time Weather & 60-Day Crop Planning")}
           </h1>
         </div>
 
@@ -296,7 +298,7 @@ export default function WeatherPredictionPage() {
             className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center justify-center text-center gap-2"
           >
             <Navigation className={`w-3.5 h-3.5 ${isLocating ? "animate-spin" : ""}`} />
-            <span className="text-center font-black">{isLocating ? "Locating..." : "📍 Live Location"}</span>
+            <span className="text-center font-black">{isLocating ? "Locating..." : t("live_location", "📍 Live Location")}</span>
           </button>
 
           <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full sm:w-auto">
@@ -306,7 +308,7 @@ export default function WeatherPredictionPage() {
                 type="text"
                 value={searchCity}
                 onChange={(e) => setSearchCity(e.target.value)}
-                placeholder="Search City..."
+                placeholder={t("search_city", "Search City...")}
                 className="w-full pl-8 pr-3 py-2 rounded-xl text-xs font-bold border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1b23] text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
               />
             </div>
@@ -344,7 +346,7 @@ export default function WeatherPredictionPage() {
           <div className="grid grid-cols-4 gap-3 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center w-full md:w-auto">
             <div>
               <Droplets className="w-4 h-4 mx-auto text-blue-300 mb-0.5" />
-              <span className="text-[10px] font-bold text-blue-200 uppercase block">Humidity</span>
+              <span className="text-[10px] font-bold text-blue-200 uppercase block">{t("humidity", "Humidity")}</span>
               <span className="text-sm font-black">{liveWeather.humidity}%</span>
             </div>
 
@@ -356,13 +358,13 @@ export default function WeatherPredictionPage() {
 
             <div>
               <CloudRain className="w-4 h-4 mx-auto text-blue-300 mb-0.5" />
-              <span className="text-[10px] font-bold text-blue-200 uppercase block">Rain Odds</span>
+              <span className="text-[10px] font-bold text-blue-200 uppercase block">{t("rain_odds", "Rain Odds")}</span>
               <span className="text-sm font-black">{liveWeather.rainProb}%</span>
             </div>
 
             <div>
               <Wind className="w-4 h-4 mx-auto text-blue-300 mb-0.5" />
-              <span className="text-[10px] font-bold text-blue-200 uppercase block">Wind Speed</span>
+              <span className="text-[10px] font-bold text-blue-200 uppercase block">{t("wind_speed", "Wind Speed")}</span>
               <span className="text-sm font-black">{liveWeather.windSpeed} km/h</span>
             </div>
           </div>
@@ -531,7 +533,7 @@ export default function WeatherPredictionPage() {
             </div>
 
             <div className="flex items-center gap-3 text-xs font-bold">
-              <span className="bg-gray-100 dark:bg-white/5 px-3 py-1.5 rounded-xl">Condition: {selectedDay.condition}</span>
+              <span className="bg-gray-100 dark:bg-white/5 px-3 py-1.5 rounded-xl">{t("condition", "Condition:")} {selectedDay.condition}</span>
               <span className="bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-xl">Precipitation: {selectedDay.rainfallMm} mm</span>
             </div>
           </div>

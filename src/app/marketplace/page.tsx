@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShoppingBag, Search, MapPin, Phone, MessageSquare, 
@@ -397,6 +398,7 @@ const CATEGORIES = [
 ];
 
 export default function CustomerMarketplacePage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"browse" | "my_orders">("browse");
   const [listings, setListings] = useState<FarmerCropListing[]>(INITIAL_REAL_LISTINGS);
   const [orders, setOrders] = useState<BuyerOrderRequest[]>(INITIAL_ORDERS);
@@ -765,7 +767,7 @@ export default function CustomerMarketplacePage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2.5">
             <ShoppingBag className="w-8 h-8 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            Buy Real Crops Directly From Farmers & Mandis
+            {t('marketplace_title', 'Buy Real Crops Directly From Farmers & Mandis')}
           </h1>
         </div>
 

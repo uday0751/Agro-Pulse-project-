@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   PlusCircle, ClipboardList, CheckCircle2, Phone, MessageSquare, 
@@ -118,6 +119,7 @@ const CATEGORIES = [
 ];
 
 export default function FarmerSellerPortalPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"orders" | "my_listings" | "post">("orders");
   const [listings, setListings] = useState<FarmerCropListing[]>(INITIAL_LISTINGS);
   const [orders, setOrders] = useState<BuyerOrderRequest[]>(INITIAL_ORDERS);
@@ -464,7 +466,7 @@ export default function FarmerSellerPortalPage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2.5">
             <Sprout className="w-8 h-8 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            Farmer Seller & Order Management Desk
+            {t('seller_title', 'Farmer Seller & Order Management Desk')}
           </h1>
         </div>
 

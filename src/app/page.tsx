@@ -9,6 +9,7 @@ import {
   Star, Send, CheckCircle2, Leaf, Cpu, ShieldCheck, Zap, ChevronRight
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 // ─────────────────────────────────────────────────────────────
 //  INTERACTIVE 3D ICOSAHEDRON — pure canvas, no dependencies
@@ -306,6 +307,7 @@ function Reveal({ children, delay = 0, direction = "up" }: { children: React.Rea
 //  MAIN DASHBOARD
 // ─────────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [greeting, setGreeting] = useState("Good morning");
   const [weather, setWeather] = useState({ city:"Detecting…", temp:28, cond:"Clear ☀️", hum:52, wind:12, loading:true });
   const [fbName, setFbName] = useState(""); const [fbMsg, setFbMsg] = useState("");
@@ -357,14 +359,14 @@ export default function Dashboard() {
   ];
 
   const tools = [
-    { title:"Market Prices",        desc:"Live MSP vs APMC rates for 70+ crops with trend analysis.", icon:LineChart,   href:"/market",        badge:"70+ Crops", color:"green"  },
-    { title:"GPS Mandi Finder",     desc:"26+ APMC mandis on an interactive map with GPS navigation.", icon:MapPin,      href:"/mandi-finder",  badge:"GPS",       color:"sky"    },
-    { title:"Weather Forecast",     desc:"60-day hyper-local rain, humidity & soil moisture forecast.", icon:Cloud,       href:"/weather",       badge:"60-Day",    color:"sky"    },
-    { title:"Farmer Community",     desc:"Verified e-Farmer groups for yields, prices & advice.",     icon:Users,       href:"/community",     badge:"Verified",  color:"green"  },
-    { title:"Agronomist Consult",   desc:"1-on-1 certified crop disease diagnosis & treatment plans.",  icon:Stethoscope, href:"/experts",       badge:"1-on-1",    color:"clay"   },
-    { title:"AI Crop Planner",      desc:"Enter crop & date → get a full sowing-to-harvest plan.",    icon:Calendar,    href:"/planner",       badge:"AI",        color:"amber"  },
-    { title:"Compare Crops",        desc:"Profit margins, soil fit & water needs side-by-side.",      icon:BarChart,    href:"/compare",       badge:"Analytics", color:"teal"   },
-    { title:"Govt Schemes",         desc:"PM-Kisan, Fasal Bima, subsidies & agri loan details.",      icon:Landmark,    href:"/schemes",       badge:"Free",      color:"indigo" },
+    { title:t('market_prices', "Market Prices"),        desc:t('tool_desc_market', "Live MSP vs APMC rates for 70+ crops with trend analysis."), icon:LineChart,   href:"/market",        badge:t('badge_70_crops', "70+ Crops"), color:"green"  },
+    { title:t('mandi_finder', "GPS Mandi Finder"),     desc:t('tool_desc_mandi', "26+ APMC mandis on an interactive map with GPS navigation."), icon:MapPin,      href:"/mandi-finder",  badge:t('badge_gps', "GPS"),       color:"sky"    },
+    { title:t('weather', "Weather Forecast"),     desc:t('tool_desc_weather', "60-day hyper-local rain, humidity & soil moisture forecast."), icon:Cloud,       href:"/weather",       badge:t('badge_60_day', "60-Day"),    color:"sky"    },
+    { title:t('community', "Farmer Community"),     desc:t('tool_desc_community', "Verified e-Farmer groups for yields, prices & advice."),     icon:Users,       href:"/community",     badge:t('badge_verified', "Verified"),  color:"green"  },
+    { title:t('expert_consultation', "Agronomist Consult"),   desc:t('tool_desc_experts', "1-on-1 certified crop disease diagnosis & treatment plans."),  icon:Stethoscope, href:"/experts",       badge:t('badge_1_on_1', "1-on-1"),    color:"clay"   },
+    { title:t('planner', "AI Crop Planner"),      desc:t('tool_desc_planner', "Enter crop & date → get a full sowing-to-harvest plan."),    icon:Calendar,    href:"/planner",       badge:t('badge_ai', "AI"),        color:"amber"  },
+    { title:t('compare', "Compare Crops"),        desc:t('tool_desc_compare', "Profit margins, soil fit & water needs side-by-side."),      icon:BarChart,    href:"/compare",       badge:t('badge_analytics', "Analytics"), color:"teal"   },
+    { title:t('govt_schemes', "Govt Schemes"),         desc:t('tool_desc_schemes', "PM-Kisan, Fasal Bima, subsidies & agri loan details."),      icon:Landmark,    href:"/schemes",       badge:t('badge_free', "Free"),      color:"indigo" },
   ];
 
   /* ─── RENDER ────────────────────────────────────────────── */
@@ -393,32 +395,31 @@ export default function Dashboard() {
             <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.08 }}>
               <h1 className="font-display leading-[1.04] tracking-tight"
                 style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:"clamp(44px, 5.5vw, 78px)", color:"var(--deep-green)" }}>
-                From Seed
+                {t('hero_line1', 'From Seed')}
                 <br />
-                <em style={{ color:"var(--clay)" }}>to Sale.</em>
+                <em style={{ color:"var(--clay)" }}>{t('hero_line2', 'to Sale.')}</em>
                 <br />
-                No Middlemen.
+                {t('hero_line3', 'No Middlemen.')}
               </h1>
             </motion.div>
 
             <motion.p initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.16 }}
               className="text-base md:text-lg leading-relaxed max-w-md"
               style={{ color:"color-mix(in srgb, var(--deep-green) 60%, transparent)", fontFamily:"'DM Sans', sans-serif" }}>
-              India's direct agri-market platform. Buy, sell, and trade farm produce across 36 States & UTs
-              with live APMC data, AI planning, and zero commission.
+              {t('hero_desc', "India's direct agri-market platform. Buy, sell, and trade farm produce across 36 States & UTs with live APMC data, AI planning, and zero commission.")}
             </motion.p>
 
             {/* CTAs — left-aligned stack of buttons */}
             <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.22 }}
               className="flex flex-wrap gap-3">
               <Link href="/marketplace" className="btn-green">
-                <ShoppingBag className="w-4 h-4" /> Browse Marketplace
+                <ShoppingBag className="w-4 h-4" /> {t('browse_marketplace', 'Browse Marketplace')}
               </Link>
               <Link href="/seller" className="btn-amber">
-                <Sprout className="w-4 h-4" /> Sell Harvest
+                <Sprout className="w-4 h-4" /> {t('nav_sell_harvest', 'Sell Harvest')}
               </Link>
               <Link href="/planner" className="btn-ghost flex items-center gap-2">
-                AI Planner <ArrowRight className="w-4 h-4" />
+                {t('planner', 'AI Planner')} <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
 
@@ -637,9 +638,9 @@ export default function Dashboard() {
             </div>
             <div>
               <Reveal>
-                <p className="label">Integrated Farm Tools</p>
+                <p className="label">{t('integrated_tools_label', 'Integrated Farm Tools')}</p>
                 <h2 className="font-display mt-2" style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px, 3.5vw, 46px)", color:"var(--deep-green)" }}>
-                  10 services, one platform.
+                  {t('integrated_tools_title', '10 services, one platform.')}
                 </h2>
               </Reveal>
             </div>

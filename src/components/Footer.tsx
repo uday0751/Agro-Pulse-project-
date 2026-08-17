@@ -7,7 +7,10 @@ import {
 } from "lucide-react";
 import { Logo } from "./Logo";
 
+import { useTranslation } from "react-i18next";
+
 export function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="bg-white dark:bg-[#12131a] border-t border-gray-200 dark:border-white/10 mt-12 py-10 px-4 md:px-8 text-gray-700 dark:text-gray-300">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -58,37 +61,37 @@ export function Footer() {
           {/* COLUMN 3: QUICK NAVIGATION */}
           <div className="space-y-2 text-xs">
             <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-wider text-xs">
-              Platform Solutions
+              {t('platform_solutions', 'Platform Solutions')}
             </h4>
             <ul className="space-y-1.5 font-bold text-gray-600 dark:text-gray-400">
               <li>
                 <Link href="/marketplace" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  🛒 Buy Crops (Direct Customer)
+                  🛒 {t('buy_crops_customer', 'Buy Crops (Direct Customer)')}
                 </Link>
               </li>
               <li>
                 <Link href="/seller" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  🌾 Sell Crops (Farmer Desk)
+                  🌾 {t('sell_crops_farmer', 'Sell Crops (Farmer Desk)')}
                 </Link>
               </li>
               <li>
                 <Link href="/mandi-finder" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  📍 Real-Time Mandi Finder
+                  📍 {t('real_time_mandi', 'Real-Time Mandi Finder')}
                 </Link>
               </li>
               <li>
                 <Link href="/weather" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  🌧️ 60-Day Satellite Weather
+                  🌧️ {t('satellite_weather', '60-Day Satellite Weather')}
                 </Link>
               </li>
               <li>
                 <Link href="/community" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  💬 e-Farmer Verified Community
+                  💬 {t('verified_community', 'e-Farmer Verified Community')}
                 </Link>
               </li>
               <li>
                 <Link href="/feedback" className="hover:text-green-600 dark:hover:text-green-400 text-green-700 dark:text-green-400 underline font-extrabold">
-                  ⭐ Submit User Feedback
+                  ⭐ {t('submit_feedback', 'Submit User Feedback')}
                 </Link>
               </li>
             </ul>
@@ -97,13 +100,13 @@ export function Footer() {
           {/* COLUMN 4: GOVERNMENT HELPLINES & SUPPORT */}
           <div className="space-y-2 text-xs">
             <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-wider text-xs">
-              Kisan Support Helplines
+              {t('support_helplines', 'Kisan Support Helplines')}
             </h4>
             <div className="space-y-2 font-medium text-gray-600 dark:text-gray-400">
               <div className="bg-gray-50 dark:bg-white/5 p-2.5 rounded-xl border border-gray-100 dark:border-white/5 space-y-1">
-                <span className="font-extrabold text-gray-900 dark:text-white block text-[11px]">📞 Govt Kisan Call Centre</span>
+                <span className="font-extrabold text-gray-900 dark:text-white block text-[11px]">📞 {t('kisan_call_centre', 'Govt Kisan Call Centre')}</span>
                 <span className="font-black text-green-700 dark:text-green-400 text-sm">1800-180-1551</span>
-                <span className="text-[10px] text-gray-400 block">(Toll-Free 24x7 Support)</span>
+                <span className="text-[10px] text-gray-400 block">{t('toll_free_support', '(Toll-Free 24x7 Support)')}</span>
               </div>
               <p className="text-[11px] leading-relaxed">
                 Direct integration with e-NAM, Agmarknet & Ministry of Agriculture & Farmers Welfare India.
@@ -121,11 +124,11 @@ export function Footer() {
 
           <div className="flex items-center gap-4">
             <Link href="/feedback" className="hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-1">
-              <MessageSquare className="w-3.5 h-3.5 text-green-600" /> Give Feedback
+              <MessageSquare className="w-3.5 h-3.5 text-green-600" /> {t('give_feedback', 'Give Feedback')}
             </Link>
             <span>•</span>
             <Link href="/schemes" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-              Govt Schemes
+              {t('govt_schemes', 'Govt Schemes')}
             </Link>
           </div>
         </div>

@@ -95,12 +95,12 @@ export function Header() {
         <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-xl hover:bg-black/5 transition-colors" style={{ color:"var(--deep-green)" }}>
           {mobileOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5"/>}
         </button>
-        <Image src="/images/logo.png" alt="AgroPulse" width={110} height={32} style={{ objectFit: 'contain' }} />
+        <span className="font-display font-bold text-sm" style={{ fontFamily:"'Playfair Display',Georgia,serif", color:"var(--deep-green)" }}>AgroPulse</span>
       </div>
 
       {/* Desktop: breadcrumb */}
       <div className="hidden md:flex items-center gap-2 text-xs">
-        <Image src="/images/logo.png" alt="AgroPulse" width={100} height={28} style={{ objectFit: 'contain' }} />
+        <span style={{ color:"color-mix(in srgb, var(--deep-green) 30%, transparent)" }}>AgroPulse</span>
         <span style={{ color:"color-mix(in srgb, var(--deep-green) 18%, transparent)" }}>/</span>
         <span className="font-semibold capitalize" style={{ color:"var(--deep-green)" }}>{pageLabel}</span>
       </div>

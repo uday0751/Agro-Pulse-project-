@@ -75,8 +75,8 @@ function AuthForm() {
   };
 
   const handleDemoAuth = () => {
-    // Demo bypass could still technically just push, but with Supabase
-    // we would actually need a session. Let's just push for now if demo.
+    // Set a cookie so the middleware allows bypass
+    document.cookie = "demo_mode=true; path=/; max-age=86400";
     router.push(redirectPath);
   };
 

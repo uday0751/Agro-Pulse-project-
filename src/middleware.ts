@@ -74,9 +74,10 @@ export async function middleware(request: NextRequest) {
   // Call getUser to check session and refresh if necessary
   const { data: { user } } = await supabase.auth.getUser()
 
+  const isDemo = request.cookies.get('demo_mode')?.value === 'true'
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
 
-  if (!user && !isPublicRoute) {
+  if (!user && !isDemo && !isPublicRoute) {
     // Redirect to login page
     const loginUrl = new URL("/auth", request.url)
     loginUrl.searchParams.set("redirect", pathname)

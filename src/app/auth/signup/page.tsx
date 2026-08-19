@@ -84,6 +84,7 @@ export default function SignupPage() {
   };
 
   const handleDemoAuth = () => {
+    document.cookie = "demo_mode=true; path=/; max-age=86400";
     router.push('/profile-setup');
   };
 

@@ -2,6 +2,7 @@
 
 import { Home, LineChart, Cloud, Users, Calendar, Settings, Landmark, Stethoscope, User, MapPin, BarChart, ShoppingBag, Sprout, MessageSquareHeart, Leaf } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
@@ -53,14 +54,7 @@ export function Sidebar() {
       {/* Brand */}
       <div className="px-6 pt-7 pb-6" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: "rgba(111,207,151,0.18)", border: "1px solid rgba(111,207,151,0.3)" }}>
-            <Leaf className="w-5 h-5" style={{ color: "#6FCF97" }} />
-          </div>
-          <div>
-            <p className="font-display text-base font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>AgroPulse</p>
-            <p className="text-[9px] font-semibold tracking-[.14em] uppercase" style={{ color: "rgba(111,207,151,0.7)" }}>{t('app_subtitle', 'Farm Intelligence OS')}</p>
-          </div>
+          <Image src="/images/logo.png" alt="AgroPulse" width={140} height={40} className="brightness-0 invert" style={{ objectFit: 'contain' }} />
         </Link>
       </div>
 

@@ -113,6 +113,8 @@ export default function UserProfile() {
       avatar: profileData.avatar
     }));
 
+    window.dispatchEvent(new Event("profileUpdated"));
+
     setTimeout(() => {
       setSavingMsg(false);
       alert("Profile & Display Picture (DP) saved successfully!");

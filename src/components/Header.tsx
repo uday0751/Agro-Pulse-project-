@@ -16,6 +16,7 @@ export function Header() {
   const { t, i18n } = useTranslation();
   const { darkMode, toggleDarkMode } = useTheme();
   const [user, setUser] = useState<any>(null);
+  const [localProfile, setLocalProfile] = useState<any>(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,7 +49,19 @@ export function Header() {
       setUser(session?.user || { user_metadata: { name: "Rajesh Kumar" }, email: "rajesh@agropulse.in" });
     });
 
-    return () => subscription.unsubscribe();
+    const loadProfile = () => {
+      const saved = localStorage.getItem("agropulse_current_user_account");
+      if (saved) {
+        try { setLocalProfile(JSON.parse(saved)); } catch (e) {}
+      }
+    };
+    loadProfile();
+    window.addEventListener("profileUpdated", loadProfile);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("profileUpdated", loadProfile);
+    };
   }, []);
 
   useEffect(() => {
@@ -63,6 +76,7 @@ export function Header() {
   if (["/auth", "/auth/signup", "/profile-setup"].includes(pathname)) return null;
 
   const pageLabel = pathname === "/" ? "Dashboard" : pathname.replace("/","").replace(/-/g," ");
+  const displayName = localProfile?.fullName || user?.user_metadata?.name || user?.displayName || "Rajesh Kumar";
 
   const dropStyle = {
     background: "var(--off-white)",
@@ -146,10 +160,10 @@ export function Header() {
             style={{ border:"1px solid var(--border)" }}>
             <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black text-white"
               style={{ background:"linear-gradient(135deg,var(--forest),var(--deep-green))" }}>
-              {user?.displayName?.charAt(0)||"R"}
+              {displayName.charAt(0)}
             </div>
             <span className="text-xs font-semibold hidden sm:inline" style={{ color:"var(--deep-green)" }}>
-              {user?.displayName?.split(" ")[0]||"Rajesh"}
+              {displayName.split(" ")[0]}
             </span>
             <ChevronDown className="w-3 h-3 hidden sm:inline" style={{ color:"color-mix(in srgb, var(--deep-green) 30%, transparent)" }}/>
           </button>
@@ -159,7 +173,7 @@ export function Header() {
                 transition={{ duration:0.15 }}
                 className="absolute right-0 mt-2 w-52 overflow-hidden z-50" style={dropStyle}>
                 <div className="px-4 py-3" style={{ borderBottom:"1px solid color-mix(in srgb, var(--deep-green) 7.000000000000001%, transparent)" }}>
-                  <p className="text-xs font-bold" style={{ color:"var(--deep-green)" }}>{user?.displayName||"Rajesh Kumar"}</p>
+                  <p className="text-xs font-bold" style={{ color:"var(--deep-green)" }}>{displayName}</p>
                   <p className="text-[10px] mt-0.5 truncate" style={{ color:"color-mix(in srgb, var(--deep-green) 45%, transparent)" }}>{user?.email}</p>
                 </div>
                 <div className="p-1.5">

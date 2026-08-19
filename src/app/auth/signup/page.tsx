@@ -186,7 +186,10 @@ export default function SignupPage() {
         {/* Content Overlay */}
         <div className="relative z-10 p-8 lg:p-14 flex flex-col h-full justify-between pointer-events-none">
           <div className="spline-text flex items-center gap-3 justify-end lg:justify-start">
-            <Image src="/images/logo.png" alt="AgroPulse" width={180} height={50} className="brightness-0 invert" style={{ objectFit: 'contain' }} />
+            <div className="w-10 h-10 bg-lime-500 rounded-xl flex items-center justify-center text-[#05140b] shadow-lg shadow-lime-500/20">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="text-2xl font-black text-white tracking-tight font-display">AgroPulse</span>
           </div>
 
           <div className="mb-4 lg:mb-16">

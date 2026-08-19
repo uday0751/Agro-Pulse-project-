@@ -99,7 +99,7 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -110,6 +110,12 @@ export default function SignupPage() {
         }
       });
       if (error) throw error;
+      
+      if (data?.user && !data?.session) {
+        setError('Check your email inbox for a verification link to complete signup!');
+        return;
+      }
+      
       handleSuccess();
     } catch (err: any) {
       console.error(err);

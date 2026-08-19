@@ -22,13 +22,6 @@ export default function ProfileSetup() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const isDemo = document.cookie.includes("demo_mode=true");
-      if (isDemo) {
-        setCurrentUser({ id: 'demo', user_metadata: { name: 'Demo User' }, email: 'demo@agropulse.com' });
-        setFormData(prev => ({ ...prev, fullName: 'Demo User' }));
-        return;
-      }
-      
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUser(user);
@@ -48,18 +41,15 @@ export default function ProfileSetup() {
     
     setLoading(true);
     try {
-      const isDemo = document.cookie.includes("demo_mode=true");
-      if (!isDemo) {
-        const { error } = await supabase.auth.updateUser({
-          data: {
-            fullName: formData.fullName,
-            state: formData.state,
-            district: formData.district,
-            primaryCrop: formData.primaryCrop,
-          }
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          fullName: formData.fullName,
+          state: formData.state,
+          district: formData.district,
+          primaryCrop: formData.primaryCrop,
+        }
+      });
+      if (error) throw error;
       router.push("/");
     } catch (error) {
       console.error("Error saving profile:", error);

@@ -28,7 +28,6 @@ export default function SignupPage() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [demoMode, setDemoMode] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -83,11 +82,6 @@ export default function SignupPage() {
     router.refresh();
   };
 
-  const handleDemoAuth = () => {
-    document.cookie = "demo_mode=true; path=/; max-age=86400";
-    window.location.href = '/profile-setup';
-  };
-
   const onSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -119,9 +113,8 @@ export default function SignupPage() {
       
       handleSuccess();
     } catch (err: any) {
-      console.error(err);
+      console.error("[Auth Error] Signup failed:", err);
       setError(err.message || 'Signup failed.');
-      setDemoMode(true);
     } finally {
       setLoading(false);
     }
@@ -139,9 +132,8 @@ export default function SignupPage() {
       });
       if (error) throw error;
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Google sign up failed.');
-      setDemoMode(true);
+      console.error("[Auth Error] Google sign-up failed:", err);
+      setError(err.message || 'Google sign up failed. Ensure OAuth is configured in Supabase and Vercel Redirect URLs match.');
     } finally {
       setLoading(false);
     }
@@ -159,9 +151,8 @@ export default function SignupPage() {
       });
       if (error) throw error;
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'GitHub sign up failed.');
-      setDemoMode(true);
+      console.error("[Auth Error] GitHub sign-up failed:", err);
+      setError(err.message || 'GitHub sign up failed. Ensure OAuth is configured in Supabase and Vercel Redirect URLs match.');
     } finally {
       setLoading(false);
     }
@@ -227,17 +218,6 @@ export default function SignupPage() {
             </div>
           )}
 
-          {demoMode && (
-            <div className="mb-8 p-5 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/30 rounded-2xl anim-item text-center">
-              <p className="text-orange-800 dark:text-orange-300 font-bold mb-4 text-sm">Demo Mode Active</p>
-              <button
-                onClick={handleDemoAuth}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:-translate-y-0.5"
-              >
-                Enter as Demo User
-              </button>
-            </div>
-          )}
 
           <form onSubmit={onSignup} className="space-y-5">
             <div className="anim-item">

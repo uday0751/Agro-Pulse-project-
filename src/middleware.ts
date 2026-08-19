@@ -22,6 +22,13 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error(
+      "CRITICAL ERROR: Supabase environment variables are missing in Middleware! " +
+      "Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in Vercel project settings."
+    );
+  }
+
   // Create the supabase server client for middleware
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,10 +81,9 @@ export async function middleware(request: NextRequest) {
   // Call getUser to check session and refresh if necessary
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isDemo = request.cookies.get('demo_mode')?.value === 'true'
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
 
-  if (!user && !isDemo && !isPublicRoute) {
+  if (!user && !isPublicRoute) {
     // Redirect to login page
     const loginUrl = new URL("/auth", request.url)
     loginUrl.searchParams.set("redirect", pathname)

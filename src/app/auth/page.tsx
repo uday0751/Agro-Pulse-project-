@@ -19,7 +19,6 @@ function AuthForm() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [demoMode, setDemoMode] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -74,12 +73,6 @@ function AuthForm() {
     router.refresh();
   };
 
-  const handleDemoAuth = () => {
-    // Set a cookie so the middleware allows bypass
-    document.cookie = "demo_mode=true; path=/; max-age=86400";
-    window.location.href = redirectPath;
-  };
-
 
 
   const onEmailLogin = async (e: React.FormEvent) => {
@@ -94,9 +87,8 @@ function AuthForm() {
       if (error) throw error;
       handleSuccess();
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Login failed.');
-      setDemoMode(true);
+      console.error("[Auth Error] Login failed:", err);
+      setError(err.message || 'Login failed. Please check your credentials and ensure your email is verified.');
     } finally {
       setLoading(false);
     }
@@ -114,9 +106,8 @@ function AuthForm() {
       });
       if (error) throw error;
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Google sign in failed.');
-      setDemoMode(true);
+      console.error("[Auth Error] Google sign-in failed:", err);
+      setError(err.message || 'Google sign in failed. Ensure OAuth is configured in Supabase and Vercel Redirect URLs match.');
     } finally {
       setLoading(false);
     }
@@ -134,9 +125,8 @@ function AuthForm() {
       });
       if (error) throw error;
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'GitHub sign in failed.');
-      setDemoMode(true);
+      console.error("[Auth Error] GitHub sign-in failed:", err);
+      setError(err.message || 'GitHub sign in failed. Ensure OAuth is configured in Supabase and Vercel Redirect URLs match.');
     } finally {
       setLoading(false);
     }
@@ -202,17 +192,6 @@ function AuthForm() {
             </div>
           )}
 
-          {demoMode && (
-            <div className="mb-8 p-5 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/30 rounded-2xl anim-item text-center">
-              <p className="text-orange-800 dark:text-orange-300 font-bold mb-4 text-sm">Demo Mode Active</p>
-              <button
-                onClick={handleDemoAuth}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:-translate-y-0.5"
-              >
-                Enter as Demo User
-              </button>
-            </div>
-          )}
 
           <div className="relative">
             <div className="anim-item w-full">

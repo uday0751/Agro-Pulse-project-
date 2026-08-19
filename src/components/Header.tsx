@@ -40,6 +40,11 @@ export function Header() {
 
   useEffect(() => {
     const fetchUser = async () => {
+      const isDemo = document.cookie.includes("demo_mode=true");
+      if (isDemo) {
+        setUser({ user_metadata: { name: "Demo User" }, email: "demo@agropulse.com" });
+        return;
+      }
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user || { user_metadata: { name: "Rajesh Kumar" }, email: "rajesh@agropulse.in" });
     };

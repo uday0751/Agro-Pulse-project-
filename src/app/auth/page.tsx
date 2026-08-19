@@ -77,7 +77,7 @@ function AuthForm() {
   const handleDemoAuth = () => {
     // Set a cookie so the middleware allows bypass
     document.cookie = "demo_mode=true; path=/; max-age=86400";
-    router.push(redirectPath);
+    window.location.href = redirectPath;
   };
 
 

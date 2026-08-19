@@ -85,7 +85,7 @@ export default function SignupPage() {
 
   const handleDemoAuth = () => {
     document.cookie = "demo_mode=true; path=/; max-age=86400";
-    router.push('/profile-setup');
+    window.location.href = '/profile-setup';
   };
 
   const onSignup = async (e: React.FormEvent) => {

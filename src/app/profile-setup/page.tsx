@@ -3,10 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { auth, db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { createClient } from "@/lib/supabase/client";
 import { User, MapPin, Sprout, ArrowRight } from "lucide-react";
-import { onAuthStateChanged } from "firebase/auth";
 
 export default function ProfileSetup() {
   const router = useRouter();
@@ -20,19 +18,21 @@ export default function ProfileSetup() {
     primaryCrop: "",
   });
 
+  const supabase = createClient();
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUser(user);
-        // Pre-fill name if available from Google Auth
-        if (user.displayName) {
-          setFormData(prev => ({ ...prev, fullName: user.displayName! }));
+        if (user.user_metadata?.name || user.user_metadata?.fullName) {
+          setFormData(prev => ({ ...prev, fullName: user.user_metadata.name || user.user_metadata.fullName }));
         }
       } else {
         router.push("/auth");
       }
-    });
-    return () => unsubscribe();
+    };
+    fetchUser();
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,17 +41,16 @@ export default function ProfileSetup() {
     
     setLoading(true);
     try {
-      await setDoc(doc(db, "users", currentUser.uid), {
-        uid: currentUser.uid,
-        phoneNumber: currentUser.phoneNumber || "",
-        email: currentUser.email || "",
-        fullName: formData.fullName,
-        state: formData.state,
-        district: formData.district,
-        primaryCrop: formData.primaryCrop,
-        createdAt: new Date().toISOString(),
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          fullName: formData.fullName,
+          state: formData.state,
+          district: formData.district,
+          primaryCrop: formData.primaryCrop,
+        }
       });
       
+      if (error) throw error;
       router.push("/");
     } catch (error) {
       console.error("Error saving profile:", error);

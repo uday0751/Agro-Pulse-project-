@@ -10,8 +10,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
@@ -25,6 +24,7 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState("₹ INR");
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     const saved = localStorage.getItem("agropulse_settings_config");
@@ -63,7 +63,7 @@ export default function SettingsPage() {
   const handleSignOut = async () => {
     if (confirm(t('confirm_signout', 'Are you sure you want to sign out of your AgroPulse account?'))) {
       setIsSigningOut(true);
-      try { await signOut(auth); } catch (e) { console.warn("Firebase sign out warning", e); }
+      try { await supabase.auth.signOut(); } catch (e) { console.warn("Supabase sign out warning", e); }
       finally {
         localStorage.removeItem("agropulse_current_user_account");
         alert(t('signed_out_msg', 'You have been signed out successfully.'));

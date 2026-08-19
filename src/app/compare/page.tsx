@@ -1,166 +1,143 @@
 "use client";
 
-import React, { useState, useLayoutEffect, useRef, useMemo } from 'react';
+import React, { useState, useLayoutEffect, useRef, useMemo, useEffect } from 'react';
 import gsap from 'gsap';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Check, CheckCircle2, Droplets, IndianRupee, Info, Leaf, Sprout, TrendingUp, AlertTriangle, CalendarDays, ShieldAlert } from 'lucide-react';
+import { Check, CheckCircle2, Droplets, IndianRupee, Info, Leaf, Sprout, TrendingUp, AlertTriangle, CalendarDays, ShieldAlert, Search, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { COMPREHENSIVE_CROPS_DATABASE } from '../market/page';
 
-const CROP_DATA = [
-  {
-    id: 'wheat', name: 'Wheat',
-    price: 2400, msp: 2275,
-    yield: 18, water: 450,
-    season: 'Rabi', risk: 'Low',
-    fertilizerCost: 3500, irrigationType: 'Surface/Sprinkler',
-    duration: 120,
-    trend: [
-      { month: 'Jan', price: 2200 }, { month: 'Feb', price: 2250 },
-      { month: 'Mar', price: 2300 }, { month: 'Apr', price: 2350 },
-      { month: 'May', price: 2380 }, { month: 'Jun', price: 2400 }
-    ]
-  },
-  {
-    id: 'rice', name: 'Rice (Paddy)',
-    price: 2800, msp: 2183,
-    yield: 22, water: 1200,
-    season: 'Kharif', risk: 'Medium',
-    fertilizerCost: 4500, irrigationType: 'Flood',
-    duration: 140,
-    trend: [
-      { month: 'Jan', price: 2500 }, { month: 'Feb', price: 2600 },
-      { month: 'Mar', price: 2650 }, { month: 'Apr', price: 2700 },
-      { month: 'May', price: 2750 }, { month: 'Jun', price: 2800 }
-    ]
-  },
-  {
-    id: 'cotton', name: 'Cotton',
-    price: 7500, msp: 6620,
-    yield: 8, water: 700,
-    season: 'Kharif', risk: 'High',
-    fertilizerCost: 6000, irrigationType: 'Drip',
-    duration: 160,
-    trend: [
-      { month: 'Jan', price: 6800 }, { month: 'Feb', price: 7000 },
-      { month: 'Mar', price: 7200 }, { month: 'Apr', price: 7100 },
-      { month: 'May', price: 7300 }, { month: 'Jun', price: 7500 }
-    ]
-  },
-  {
-    id: 'soybean', name: 'Soybean',
-    price: 4800, msp: 4600,
-    yield: 10, water: 500,
-    season: 'Kharif', risk: 'Medium',
-    fertilizerCost: 3000, irrigationType: 'Rainfed/Sprinkler',
-    duration: 100,
-    trend: [
-      { month: 'Jan', price: 4400 }, { month: 'Feb', price: 4500 },
-      { month: 'Mar', price: 4650 }, { month: 'Apr', price: 4600 },
-      { month: 'May', price: 4700 }, { month: 'Jun', price: 4800 }
-    ]
-  },
-  {
-    id: 'sugarcane', name: 'Sugarcane',
-    price: 340, msp: 315, // per quintal
-    yield: 350, water: 2000,
-    season: 'Annual', risk: 'Low',
-    fertilizerCost: 10000, irrigationType: 'Surface/Drip',
-    duration: 365,
-    trend: [
-      { month: 'Jan', price: 310 }, { month: 'Feb', price: 315 },
-      { month: 'Mar', price: 320 }, { month: 'Apr', price: 330 },
-      { month: 'May', price: 335 }, { month: 'Jun', price: 340 }
-    ]
-  },
-  {
-    id: 'maize', name: 'Maize',
-    price: 2100, msp: 2090,
-    yield: 20, water: 550,
-    season: 'Kharif', risk: 'Low',
-    fertilizerCost: 4000, irrigationType: 'Surface/Rainfed',
-    duration: 110,
-    trend: [
-      { month: 'Jan', price: 1950 }, { month: 'Feb', price: 2000 },
-      { month: 'Mar', price: 2050 }, { month: 'Apr', price: 2050 },
-      { month: 'May', price: 2080 }, { month: 'Jun', price: 2100 }
-    ]
-  },
-  {
-    id: 'bajra', name: 'Bajra',
-    price: 2600, msp: 2500,
-    yield: 12, water: 300,
-    season: 'Kharif', risk: 'Low',
-    fertilizerCost: 2000, irrigationType: 'Rainfed',
-    duration: 85,
-    trend: [
-      { month: 'Jan', price: 2400 }, { month: 'Feb', price: 2450 },
-      { month: 'Mar', price: 2480 }, { month: 'Apr', price: 2500 },
-      { month: 'May', price: 2550 }, { month: 'Jun', price: 2600 }
-    ]
-  },
-  {
-    id: 'groundnut', name: 'Groundnut',
-    price: 6500, msp: 6377,
-    yield: 10, water: 600,
-    season: 'Kharif', risk: 'Medium',
-    fertilizerCost: 3500, irrigationType: 'Sprinkler',
-    duration: 110,
-    trend: [
-      { month: 'Jan', price: 6100 }, { month: 'Feb', price: 6200 },
-      { month: 'Mar', price: 6350 }, { month: 'Apr', price: 6400 },
-      { month: 'May', price: 6450 }, { month: 'Jun', price: 6500 }
-    ]
-  },
-  {
-    id: 'onion', name: 'Onion',
-    price: 2200, msp: 1500,
-    yield: 100, water: 700,
-    season: 'Rabi', risk: 'High',
-    fertilizerCost: 8000, irrigationType: 'Drip/Sprinkler',
-    duration: 130,
-    trend: [
-      { month: 'Jan', price: 1500 }, { month: 'Feb', price: 1200 },
-      { month: 'Mar', price: 1400 }, { month: 'Apr', price: 1800 },
-      { month: 'May', price: 2500 }, { month: 'Jun', price: 2200 }
-    ]
-  },
-  {
-    id: 'tomato', name: 'Tomato',
-    price: 3000, msp: 0, // No MSP
-    yield: 150, water: 600,
-    season: 'Annual', risk: 'High',
-    fertilizerCost: 12000, irrigationType: 'Drip',
-    duration: 140,
-    trend: [
-      { month: 'Jan', price: 1200 }, { month: 'Feb', price: 1500 },
-      { month: 'Mar', price: 1800 }, { month: 'Apr', price: 2500 },
-      { month: 'May', price: 4000 }, { month: 'Jun', price: 3000 }
-    ]
-  },
-];
+const CROP_DATA = COMPREHENSIVE_CROPS_DATABASE.map(crop => {
+  // Extract number from string like "18-22 Quintals" or "80 Quintals"
+  const yieldMatch = crop.avgYieldPerAcre.match(/\d+/);
+  const parsedYield = yieldMatch ? parseInt(yieldMatch[0]) : 15;
+  
+  // Extract number from string like "110-130 Days" or "120 Days"
+  const durationMatch = crop.durationDays.match(/\d+/);
+  const parsedDuration = durationMatch ? parseInt(durationMatch[0]) : 120;
+
+  // Approximate water needs based on category
+  const water = 
+    crop.category === 'Commercial & Plantation' ? 1500 : 
+    crop.category === 'Cereals & Grains' ? 800 : 
+    crop.category === 'Fruits' ? 1000 : 
+    crop.category === 'Vegetables' ? 600 : 500;
+
+  // Risk inversely proportional to demand
+  const risk = 
+    crop.demandLevel === 'Extremely High' ? 'Low' : 
+    crop.demandLevel === 'High' ? 'Medium' : 'High';
+
+  return {
+    id: crop.id.toString(),
+    name: crop.name,
+    price: crop.private,
+    msp: crop.govt,
+    yield: parsedYield,
+    water: water,
+    season: crop.season,
+    risk: risk,
+    fertilizerCost: Math.round(crop.costPerAcre * 0.25), // Estimate fert cost as 25% of total
+    irrigationType: crop.soilType.toLowerCase().includes('sandy') ? 'Drip/Sprinkler' : 'Surface/Flood',
+    duration: parsedDuration,
+    trend: crop.history.map(h => ({ month: h.month, price: h.private }))
+  };
+});
 
 const COLORS = ['#16a34a', '#2563eb', '#ea580c', '#9333ea'];
 
+const SearchableSelect = ({ 
+  value, 
+  onChange, 
+  label,
+  index 
+}: { 
+  value: string | null; 
+  onChange: (val: string | null) => void; 
+  label: string;
+  index: number;
+}) => {
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const selectedCrop = CROP_DATA.find(c => c.id === value);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = CROP_DATA.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="relative w-full" ref={containerRef}>
+      <label className="block text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
+      <div 
+        className={`flex items-center justify-between border px-4 py-2.5 rounded-xl cursor-pointer bg-white transition-all ${open ? 'border-green-500 ring-2 ring-green-500/20' : 'border-gray-200 hover:border-gray-300'}`}
+        onClick={() => { setOpen(true); setSearch(''); }}
+      >
+        <span className={`text-sm font-medium ${selectedCrop ? 'text-gray-900' : 'text-gray-400'}`}>
+          {selectedCrop ? selectedCrop.name : 'Select a crop...'}
+        </span>
+        <ChevronDown className="w-4 h-4 text-gray-400" />
+      </div>
+      
+      {open && (
+        <div className="absolute z-50 mt-1.5 w-full bg-white border border-gray-100 rounded-xl shadow-2xl overflow-hidden">
+          <div className="p-2 border-b border-gray-50 flex items-center gap-2 bg-gray-50/50">
+            <Search className="w-4 h-4 text-gray-400 ml-1" />
+            <input 
+              type="text" 
+              autoFocus
+              placeholder="Search crops..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full text-sm outline-none bg-transparent py-1"
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto p-1">
+            {value && (
+              <div 
+                className="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg cursor-pointer mb-1 font-medium"
+                onClick={() => { onChange(null); setOpen(false); }}
+              >
+                Clear selection
+              </div>
+            )}
+            {filtered.length === 0 ? (
+              <div className="px-3 py-4 text-sm text-gray-500 text-center">No crops found</div>
+            ) : (
+              filtered.map(crop => (
+                <div 
+                  key={crop.id}
+                  className="px-3 py-2 text-sm hover:bg-green-50 rounded-lg cursor-pointer flex items-center justify-between group"
+                  onClick={() => { onChange(crop.id); setOpen(false); }}
+                >
+                  <span className="font-medium text-gray-700 group-hover:text-green-700">{crop.name}</span>
+                  {value === crop.id && <Check className="w-4 h-4 text-green-600" />}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function CompareCrops() {
   const { t } = useTranslation();
-  const [selectedIds, setSelectedIds] = useState<string[]>(['wheat', 'rice', 'cotton']);
+  const [selectedIds, setSelectedIds] = useState<(string | null)[]>([null, null, null, null]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedCrops = useMemo(() => {
-    return CROP_DATA.filter(c => selectedIds.includes(c.id));
+    return selectedIds.map(id => id ? CROP_DATA.find(c => c.id === id) : null).filter(Boolean) as typeof CROP_DATA;
   }, [selectedIds]);
-
-  const toggleCrop = (id: string) => {
-    setSelectedIds(prev => {
-      if (prev.includes(id)) {
-        if (prev.length <= 2) return prev; // min 2
-        return prev.filter(c => c !== id);
-      } else {
-        if (prev.length >= 4) return prev; // max 4
-        return [...prev, id];
-      }
-    });
-  };
 
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
@@ -243,34 +220,27 @@ export default function CompareCrops() {
 
         {/* Selection Area */}
         <div className="animate-item bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <Leaf className="w-5 h-5 text-green-600" />
-              {t("select_crops", "Select Crops")} ({selectedIds.length}/4)
+          <div className="flex items-center gap-2 mb-6">
+            <Leaf className="w-5 h-5 text-green-600" />
+            <h2 className="text-lg font-semibold text-gray-800">
+              {t("select_crops_compare", "Select Crops to Compare")}
             </h2>
-            <span className="text-sm text-gray-500">{t("min_max_crops", "Minimum 2, Maximum 4")}</span>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {CROP_DATA.map(crop => {
-              const isSelected = selectedIds.includes(crop.id);
-              return (
-                <button
-                  key={crop.id}
-                  onClick={() => toggleCrop(crop.id)}
-                  disabled={!isSelected && selectedIds.length >= 4}
-                  className={`
-                    px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2
-                    ${isSelected 
-                      ? 'bg-green-50 border-green-500 text-green-700 shadow-sm' 
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:bg-green-50/50'}
-                    ${!isSelected && selectedIds.length >= 4 ? 'opacity-50 cursor-not-allowed' : ''}
-                  `}
-                >
-                  {isSelected && <Check className="w-4 h-4" />}
-                  {crop.name}
-                </button>
-              );
-            })}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[0, 1, 2, 3].map(index => (
+              <SearchableSelect 
+                key={index}
+                index={index}
+                label={`Crop ${index + 1}`}
+                value={selectedIds[index]}
+                onChange={(newVal) => {
+                  const newIds = [...selectedIds];
+                  newIds[index] = newVal;
+                  setSelectedIds(newIds);
+                }}
+              />
+            ))}
           </div>
         </div>
 

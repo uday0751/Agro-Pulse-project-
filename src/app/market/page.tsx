@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, MapPin, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, 
-  X, Globe, Sprout, Info, Calendar, DollarSign, Droplets, ChevronRight, RefreshCw, BarChart2, Zap, Calculator, Landmark, ShieldCheck, ArrowRightLeft, Scale, Award, Eye, SlidersHorizontal, ArrowUpDown, AlertCircle, LineChart as LineChartIcon
+  X, Globe, Sprout, Info, Calendar, DollarSign, Droplets, ChevronRight, RefreshCw, BarChart2, Zap, Calculator, Landmark, ShieldCheck, ArrowRightLeft, Scale, Award, Eye, SlidersHorizontal, ArrowUpDown, AlertCircle, LineChart as LineChartIcon, ShoppingCart, Check
 } from "lucide-react";
 import Link from "next/link";
 import { 
@@ -149,6 +149,25 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropItem[] = [
 
 import { useTranslation } from "react-i18next";
 
+const generateSimulatedStatePrice = (crop: any, state: string): StatePriceDetail => {
+  // Deterministic hash based on state name and crop ID
+  const hash = state.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + crop.id;
+  // Variance between -15% and +15%
+  const variancePercent = ((hash % 30) - 15) / 100; 
+  const simulatedPrice = Math.round(crop.private * (1 + variancePercent));
+  const simulatedArrival = Math.round(500 + (hash % 9000));
+  const simulatedTrend = (hash % 2 === 0) ? "up" : "down";
+
+  return {
+    state: state,
+    district: "Major Markets",
+    mandiName: `${state} Main APMC`,
+    privatePrice: simulatedPrice,
+    arrivalQuantity: `${simulatedArrival.toLocaleString("en-IN")} Quintals`,
+    trend: simulatedTrend as "up" | "down"
+  };
+};
+
 export default function MarketPage() {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,33 +177,98 @@ export default function MarketPage() {
   const [activeModalTab, setActiveModalTab] = useState<"trend" | "state" | "details">("trend");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedModalStates, setSelectedModalStates] = useState<string[]>([]);
 
-  // Dynamic filter for search, category, and state
-  const filteredCrops = useMemo(() => {
-    return COMPREHENSIVE_CROPS_DATABASE.filter((crop) => {
-      const term = searchTerm.toLowerCase().trim();
-      const matchesSearch = 
-        !term || 
+  // Each display row = one crop + one state price entry
+  interface DisplayRow {
+    crop: CropItem;
+    stateName: string;
+    district: string;
+    mandiName: string;
+    price: number;
+    arrivalQuantity: string;
+    trend: "up" | "down";
+    rowKey: string;
+  }
+
+  // Build expanded list: when no state selected, one card per statePrices entry
+  const displayRows = useMemo((): DisplayRow[] => {
+    const term = searchTerm.toLowerCase().trim();
+    const rows: DisplayRow[] = [];
+
+    COMPREHENSIVE_CROPS_DATABASE.forEach((crop) => {
+      // Match crop name / category / search term
+      const matchesSearch =
+        !term ||
         crop.name.toLowerCase().includes(term) ||
         crop.scientificName.toLowerCase().includes(term) ||
-        crop.category.toLowerCase().includes(term) ||
-        crop.state.toLowerCase().includes(term) ||
-        crop.district.toLowerCase().includes(term) ||
-        crop.mandiName.toLowerCase().includes(term) ||
-        crop.statePrices.some(sp => sp.state.toLowerCase().includes(term) || sp.mandiName.toLowerCase().includes(term));
+        crop.category.toLowerCase().includes(term);
 
-      const matchesCategory = 
-        selectedCategory === "All Categories" || 
+      const matchesCategory =
+        selectedCategory === "All Categories" ||
         crop.category === selectedCategory;
 
-      const matchesState = 
-        selectedState === "All States" || 
-        crop.state === selectedState ||
-        crop.statePrices.some(sp => sp.state === selectedState);
+      if (!matchesSearch || !matchesCategory) return;
 
-      return matchesSearch && matchesCategory && matchesState;
+      if (selectedState !== "All States") {
+        // State filter ON → show only that state's price
+        let sp = crop.statePrices.find(s => s.state === selectedState);
+        
+        // DYNAMICALLY GENERATE PRICE IF STATE DOESN'T EXIST IN DB
+        if (!sp) {
+          sp = generateSimulatedStatePrice(crop, selectedState);
+        }
+
+        if (sp) {
+          rows.push({
+            crop,
+            stateName: sp.state,
+            district: sp.district,
+            mandiName: sp.mandiName,
+            price: sp.privatePrice,
+            arrivalQuantity: sp.arrivalQuantity,
+            trend: sp.trend,
+            rowKey: `${crop.id}-${sp.state}`,
+          });
+        }
+      } else {
+        // No state filter → expand into one card per state
+        crop.statePrices.forEach((sp) => {
+          rows.push({
+            crop,
+            stateName: sp.state,
+            district: sp.district,
+            mandiName: sp.mandiName,
+            price: sp.privatePrice,
+            arrivalQuantity: sp.arrivalQuantity,
+            trend: sp.trend,
+            rowKey: `${crop.id}-${sp.state}`,
+          });
+        });
+      }
     });
+
+    // Sort: highest price first
+    rows.sort((a, b) => b.price - a.price);
+    return rows;
   }, [searchTerm, selectedCategory, selectedState]);
+
+  // Generate all 30 states for the modal
+  const fullStatePrices = useMemo(() => {
+    if (!selectedCropModal) return [];
+    const pricesMap = new Map(selectedCropModal.statePrices.map(sp => [sp.state, sp]));
+    return ALL_INDIAN_STATES.filter(s => s !== "All States").map(state => {
+      if (pricesMap.has(state)) return pricesMap.get(state)!;
+      return generateSimulatedStatePrice(selectedCropModal, state);
+    });
+  }, [selectedCropModal]);
+
+  const filteredModalStatePrices = useMemo(() => {
+    if (selectedModalStates.length === 0) {
+      return selectedCropModal ? selectedCropModal.statePrices : [];
+    }
+    return fullStatePrices.filter(sp => selectedModalStates.includes(sp.state));
+  }, [fullStatePrices, selectedModalStates, selectedCropModal]);
 
   // LIVE POP-UP SEARCH DROPDOWN MATCHES
   const searchSuggestions = useMemo(() => {
@@ -331,8 +415,8 @@ export default function MarketPage() {
         </div>
 
         <div className="flex justify-between items-center pt-2 text-xs font-black text-gray-500 border-t border-gray-100 dark:border-white/5">
-          <span>{t('showing_active', 'Showing active Mandi listings')} ({filteredCrops.length})</span>
-          {searchTerm && (
+          <span>{t('showing_active', 'Showing active Mandi listings')} ({displayRows.length})</span>
+          {(searchTerm || selectedState !== "All States" || selectedCategory !== "All Categories") && (
             <button onClick={() => { setSearchTerm(""); setSelectedCategory("All Categories"); setSelectedState("All States"); }} className="text-green-600 dark:text-green-400 hover:underline">
               {t('clear_all_filters', 'Clear All Filters')}
             </button>
@@ -341,17 +425,17 @@ export default function MarketPage() {
       </div>
 
       {/* NOT AVAILABLE ALERT BANNER IF SEARCH HAS NO MATCHES */}
-      {filteredCrops.length === 0 && (
+      {displayRows.length === 0 && (
         <div className="bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 p-6 rounded-3xl text-center space-y-2">
           <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto" />
           <h3 className="font-black text-base text-amber-900 dark:text-amber-200">
-            {t('market_price_not_available', 'Market Price Currently Not Available')} "{searchTerm}"
+            {t('market_price_not_available', 'Market Price Currently Not Available for')} "{searchTerm || selectedState}"
           </h3>
           <p className="text-xs text-amber-800 dark:text-amber-300 font-medium max-w-lg mx-auto">
             {t('crop_fruit_not_listed', 'This crop, fruit, or vegetable is currently not listed in active Mandi arrival logs today. Rates update every morning at 09:00 AM.')}
           </p>
           <button
-            onClick={() => setSearchTerm("")}
+            onClick={() => { setSearchTerm(""); setSelectedState("All States"); setSelectedCategory("All Categories"); }}
             className="px-4 py-2 bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md mt-2"
           >
             {t('show_all_commodities', 'Show All Available Commodities')}
@@ -359,52 +443,72 @@ export default function MarketPage() {
         </div>
       )}
 
-      {/* COMMODITY GRID WITH SLEEK ORIGINAL CARD STYLING */}
+      {/* COMMODITY GRID — one card per state listing */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCrops.map((crop) => {
-          const stateSpecific = selectedState !== "All States" 
-            ? crop.statePrices.find(sp => sp.state === selectedState) 
-            : null;
-
-          const displayPrice = stateSpecific ? stateSpecific.privatePrice : crop.private;
-          const displayMandi = stateSpecific ? `${stateSpecific.mandiName} (${stateSpecific.district})` : `${crop.mandiName} (${crop.district}, ${crop.state})`;
-
+        {displayRows.map((row) => {
+          const { crop, stateName, district, mandiName: rowMandi, price, arrivalQuantity, trend: rowTrend } = row;
+          const isUp = rowTrend === "up";
           return (
-            <div 
-              key={crop.id}
+            <div
+              key={row.rowKey}
               className="bg-white dark:bg-[#1a1b23] rounded-3xl border border-gray-100 dark:border-white/10 p-6 shadow-sm hover:shadow-xl hover:border-green-500/50 transition-all duration-300 flex flex-col justify-between space-y-4"
             >
               <div className="space-y-3">
+                {/* Header */}
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl p-2.5 bg-gray-100 dark:bg-white/10 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
                       {crop.iconEmoji}
                     </span>
                     <div>
-                      <h3 className="font-black text-base text-gray-900 dark:text-white leading-tight">
-                        {crop.name}
-                      </h3>
+                      <h3 className="font-black text-sm text-gray-900 dark:text-white leading-tight">{crop.name}</h3>
                       <span className="text-[10px] text-gray-400 font-bold block italic">{crop.scientificName}</span>
                     </div>
                   </div>
-
-                  <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-800">
+                  <span className="text-[9px] font-black uppercase px-2 py-1 rounded-lg bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-800 shrink-0 ml-1">
                     {crop.category}
                   </span>
                 </div>
 
+                {/* State + Mandi location */}
                 <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold bg-gray-50 dark:bg-white/5 p-2.5 rounded-xl border border-gray-200/60 dark:border-white/5">
                   <MapPin className="w-3.5 h-3.5 text-green-600 shrink-0" />
-                  <span className="truncate">{displayMandi}</span>
+                  <div className="flex items-center gap-1 overflow-hidden">
+                    <span className="truncate">{rowMandi} • {district},</span>
+                    <select 
+                      value={stateName}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => setSelectedState(e.target.value)}
+                      className="bg-transparent border-none text-green-600 dark:text-green-400 font-extrabold outline-none cursor-pointer hover:underline appearance-none px-1"
+                    >
+                      {ALL_INDIAN_STATES.map(s => (
+                        <option key={s} value={s}>{s === "All States" ? "Select State" : s}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* PRICE DISPLAY */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
+                {/* Arrival quantity badge */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md border border-blue-200 dark:border-blue-800">
+                    📦 {t('arrival', 'Arrival')}: {arrivalQuantity}
+                  </span>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-md border flex items-center gap-0.5 ${
+                    isUp
+                      ? "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
+                      : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+                  }`}>
+                    {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                    {isUp ? t('rising', 'Rising') : t('falling', 'Falling')}
+                  </span>
+                </div>
+
+                {/* Price display */}
+                <div className="grid grid-cols-2 gap-3">
                   <div className="bg-green-50/80 dark:bg-green-950/40 p-3 rounded-2xl border border-green-300 dark:border-green-800 space-y-0.5">
                     <span className="text-[10px] font-black uppercase text-green-800 dark:text-green-300 block">{t('apmc_mandi_rate', 'APMC Mandi Rate')}</span>
-                    <span className="text-lg font-black text-green-700 dark:text-green-400 block">₹{displayPrice.toLocaleString("en-IN")}<span className="text-[10px] font-bold text-gray-500">/q</span></span>
+                    <span className="text-lg font-black text-green-700 dark:text-green-400 block">₹{price.toLocaleString("en-IN")}<span className="text-[10px] font-bold text-gray-500">/q</span></span>
                   </div>
-
                   <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-2xl border border-gray-200 dark:border-white/10 space-y-0.5">
                     <span className="text-[10px] font-black uppercase text-gray-400 block">{t('govt_msp_rate', 'Govt MSP Rate')}</span>
                     <span className="text-lg font-black text-gray-900 dark:text-white block">₹{crop.govt.toLocaleString("en-IN")}<span className="text-[10px] font-bold text-gray-400">/q</span></span>
@@ -413,16 +517,25 @@ export default function MarketPage() {
               </div>
 
               <div className="pt-3 border-t border-gray-100 dark:border-white/10 flex justify-between items-center text-xs">
-                <span className="text-[10px] font-extrabold text-green-600 bg-green-100 dark:bg-green-950 px-2.5 py-1 rounded-md flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> {t('market_trending', 'Market Trending')}
-                </span>
-
-                <button
-                  onClick={() => { setSelectedCropModal(crop); setActiveModalTab("trend"); }}
-                  className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1 transition-all"
-                >
-                  <BarChart2 className="w-3.5 h-3.5" /> {t('view_graph_analytics', 'View Graph Analytics')}
-                </button>
+                <span className="text-[10px] font-bold text-gray-400">{crop.season} • {crop.durationDays}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { 
+                      setSelectedCropModal(crop); 
+                      setActiveModalTab("state"); 
+                      setSelectedModalStates([]);
+                    }}
+                    className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1 transition-all"
+                  >
+                    <BarChart2 className="w-3.5 h-3.5" /> {t('view_graph_analytics', 'All State Prices')}
+                  </button>
+                  <Link
+                    href={`/marketplace?search=${encodeURIComponent(crop.name.split(' ')[0])}&autobuy=true`}
+                    className="px-3.5 py-1.5 bg-green-100 dark:bg-green-900/50 hover:bg-green-200 dark:hover:bg-green-800 text-green-700 dark:text-green-300 font-extrabold text-xs rounded-xl shadow-sm flex items-center gap-1 transition-all"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" /> Buy
+                  </Link>
+                </div>
               </div>
             </div>
           );
@@ -525,14 +638,40 @@ export default function MarketPage() {
               </div>
             ) : (
               <div className="space-y-3 bg-gray-50/50 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-extrabold text-gray-900 dark:text-white">{t('state_by_state_mandi_price', 'State-by-State Mandi Price Comparison')}</span>
-                  <span className="text-[10px] text-gray-400 font-bold">{t('rates_in_rs_quintal', 'Rates in ₹ per Quintal')}</span>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-extrabold text-gray-900 dark:text-white">{t('state_by_state_mandi_price', 'State-by-State Mandi Price Comparison')}</span>
+                    <span className="text-[10px] text-gray-400 font-bold">{t('rates_in_rs_quintal', 'Rates in ₹ per Quintal')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 custom-scrollbar border border-gray-100 dark:border-white/5 rounded-xl bg-white/50 dark:bg-black/20">
+                    {ALL_INDIAN_STATES.filter(s => s !== "All States").map(state => {
+                      const isSelected = selectedModalStates.includes(state);
+                      return (
+                        <button
+                          key={state}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedModalStates(prev => prev.filter(s => s !== state));
+                            } else {
+                              setSelectedModalStates(prev => [...prev, state]);
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
+                            isSelected 
+                              ? "bg-green-600 text-white border-green-600 shadow-md" 
+                              : "bg-white dark:bg-[#1a1b23] text-gray-600 dark:text-gray-400 border-gray-200 dark:border-white/10 hover:border-green-400"
+                          }`}
+                        >
+                          {state} {isSelected && <Check className="w-3 h-3" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="h-64 w-full pt-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={selectedCropModal.statePrices}>
+                    <BarChart data={filteredModalStatePrices.slice(0, 12)}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                       <XAxis dataKey="state" tick={{ fontSize: 11, fontWeight: "bold" }} />
                       <YAxis tick={{ fontSize: 11, fontWeight: "bold" }} />
@@ -548,11 +687,12 @@ export default function MarketPage() {
 
             {/* STATE MANDI DETAILS LIST */}
             <div className="space-y-2 text-xs">
-              <h4 className="font-extrabold text-gray-900 dark:text-white uppercase tracking-wider text-xs">
+              <h4 className="font-extrabold text-gray-900 dark:text-white uppercase tracking-wider text-xs flex justify-between items-center">
                 {t('verified_state_apmc', 'Verified State APMC Mandi Rates')}
+                <span className="text-[10px] text-green-600 font-black">{filteredModalStatePrices.length} States Found</span>
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {selectedCropModal.statePrices.map((sp, idx) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                {filteredModalStatePrices.map((sp, idx) => (
                   <div key={idx} className="flex justify-between items-center bg-gray-50 dark:bg-white/5 p-3 rounded-xl border border-gray-200/60 dark:border-white/5 font-bold">
                     <div>
                       <span className="text-gray-900 dark:text-white block">{sp.mandiName}</span>

@@ -5,8 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Bell, User, Menu, X, CloudRain, Landmark, ShieldAlert, BadgePercent, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
 import Link from "next/link";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { createClient } from "@/lib/supabase/client";
 import { Logo } from "./Logo";
 import { useTheme } from "./ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,15 +29,26 @@ export function Header() {
     { id:"n4", dot:"bg-amber-400",  title:"PM-Kisan Open",      desc:"15th installment applications now open."         },
   ];
 
+  const supabase = createClient();
+
   const handleLogout = async () => {
-    try { if (auth) await signOut(auth); } catch {}
+    try { await supabase.auth.signOut(); } catch {}
     localStorage.removeItem("user");
     router.push("/auth");
   };
 
   useEffect(() => {
-    const u = onAuthStateChanged(auth, u => setUser(u || { displayName:"Rajesh Kumar", email:"rajesh@agropulse.in" }));
-    return () => u();
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user || { user_metadata: { name: "Rajesh Kumar" }, email: "rajesh@agropulse.in" });
+    };
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || { user_metadata: { name: "Rajesh Kumar" }, email: "rajesh@agropulse.in" });
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {

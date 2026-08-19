@@ -468,6 +468,31 @@ export default function CustomerMarketplacePage() {
   }, []);
 
   useEffect(() => {
+    // Read URL params
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get("search");
+    const autobuyParam = params.get("autobuy");
+
+    if (searchParam) {
+      setSearchQuery(searchParam);
+      
+      if (autobuyParam === "true") {
+        setTimeout(() => {
+          const q = searchParam.toLowerCase();
+          const match = INITIAL_REAL_LISTINGS.find(l => 
+            l.cropName.toLowerCase().includes(q) || 
+            q.includes(l.category.toLowerCase().split(' ')[0])
+          );
+          if (match) {
+            setBuyingListing(match);
+            setOrderQuantity(1);
+            setQuantityInput("1");
+            setCheckoutStep(1);
+          }
+        }, 300);
+      }
+    }
+
     // Restore Logged In Buyer Identity
     const savedPhone = localStorage.getItem("agropulse_buyer_phone");
     const savedName = localStorage.getItem("agropulse_buyer_name");

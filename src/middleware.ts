@@ -1,37 +1,94 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
-// Routes that don't require authentication
-const PUBLIC_ROUTES = ["/auth", "/auth/signup"];
+const PUBLIC_ROUTES = ["/auth", "/auth/signup"]
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  
+  // Create an unmodified response
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  // Allow public routes
-  if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
-
-  // Allow Next.js internals and static files
+  // Allow Next.js internals and static files early bypass
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname.includes(".") // static files like favicon, images
   ) {
-    return NextResponse.next();
+    return response
   }
 
-  // Check for auth token cookie
-  const authToken = request.cookies.get("agropulse-auth-token");
+  // Create the supabase server client for middleware
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is updated, update the cookies for the request and response
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the cookies for the request and response
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
 
-  if (!authToken) {
+  // Call getUser to check session and refresh if necessary
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
+
+  if (!user && !isPublicRoute) {
     // Redirect to login page
-    const loginUrl = new URL("/auth", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    const loginUrl = new URL("/auth", request.url)
+    loginUrl.searchParams.set("redirect", pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  return NextResponse.next();
+  // If user is logged in and tries to access /auth, redirect to home
+  if (user && pathname === "/auth") {
+    return NextResponse.redirect(new URL("/", request.url))
+  }
+
+  return response
 }
 
 export const config = {
@@ -44,4 +101,4 @@ export const config = {
      */
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
-};
+}

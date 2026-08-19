@@ -8,6 +8,7 @@ import {
   Award, Lock, PlusCircle, CheckCircle2, Clock, ThumbsUp, RefreshCw, Send, Paperclip, CreditCard, Smartphone, Building, QrCode, BellRing, ExternalLink, ArrowRight, LogIn, UserPlus, ShieldAlert, KeyRound, Unlock, Shield, Sparkles, User
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { createClient } from '@/lib/supabase/client';
 
 export interface RealExpert {
   id: string;
@@ -111,6 +112,7 @@ const INITIAL_REAL_EXPERTS: RealExpert[] = [];
 
 export default function ExpertConsultationPage() {
   const { t } = useTranslation();
+  const supabase = createClient();
   const [activeTab, setActiveTab] = useState<"directory" | "register" | "expert_login" | "my_bookings">("directory");
   const [experts, setExperts] = useState<RealExpert[]>(INITIAL_REAL_EXPERTS);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
@@ -125,6 +127,9 @@ export default function ExpertConsultationPage() {
   // Dedicated Developer Sign-In Form State
   const [devEmailInput, setDevEmailInput] = useState("");
   const [devPasscodeInput, setDevPasscodeInput] = useState("");
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+  const [devLoading, setDevLoading] = useState(false);
 
   // Expert Registration Form State
   const [regName, setRegName] = useState("");
@@ -314,16 +319,32 @@ export default function ExpertConsultationPage() {
   };
 
   // DEDICATED DEVELOPER SIGN-IN HANDLER
-  const handleDeveloperSignIn = (e: React.FormEvent) => {
+  const handleDeveloperSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = devEmailInput.trim().toLowerCase();
-    const pass = devPasscodeInput.trim();
+    const password = devPasscodeInput.trim();
+    
+    if (email !== "udchauhan0987@gmail.com") {
+      alert("❌ Access restricted to Developer udchauhan0987@gmail.com only.");
+      return;
+    }
 
-    if (email === "udchauhan0987@gmail.com" || email === "developer" || pass === "dev2026" || pass === "uday0751") {
+    setDevLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
       setIsDeveloperAuthenticated(true);
       alert("🔓 Developer Authentication Successful! Welcome Developer Uday Pratap Singh Chauhan.");
-    } else {
-      alert("❌ Invalid Developer Credentials. Access restricted to Developer Uday Pratap Singh Chauhan.");
+    } catch (err: any) {
+      console.error(err);
+      alert(`❌ Developer Access Denied: ${err.message}`);
+    } finally {
+      setDevLoading(false);
     }
   };
 
@@ -1119,14 +1140,20 @@ export default function ExpertConsultationPage() {
 
                     <button
                       type="submit"
-                      className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black rounded-xl text-xs shadow-xl transition-all flex items-center justify-center gap-2"
+                      disabled={devLoading}
+                      className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black rounded-xl text-xs shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                      <Unlock className="w-4 h-4" /> Authenticate Developer Access
+                      {devLoading ? (
+                        <div className="w-4 h-4 border-2 border-slate-950/20 border-t-slate-950 rounded-full animate-spin" />
+                      ) : (
+                        <Unlock className="w-4 h-4" />
+                      )}
+                      {devLoading ? "Authenticating via Supabase..." : "Authenticate Developer Access"}
                     </button>
                   </form>
 
                   <p className="text-[10px] text-center text-purple-300 font-semibold">
-                    Developer Passcode: <code>dev2026</code> or <code>udchauhan0987@gmail.com</code>
+                    Developer Passcode is securely authenticated via Supabase.
                   </p>
                 </div>
               ) : (
@@ -1141,13 +1168,64 @@ export default function ExpertConsultationPage() {
                       <p className="text-xs text-purple-200 font-medium">Review and verify incoming human expert account applications.</p>
                     </div>
 
-                    <button
-                      onClick={() => setIsDeveloperAuthenticated(false)}
-                      className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/50 text-xs font-black rounded-xl transition-all"
-                    >
-                      Lock Desk
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowChangePassword(!showChangePassword)}
+                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 text-xs font-black rounded-xl transition-all"
+                      >
+                        Change Password
+                      </button>
+                      <button
+                        onClick={() => setIsDeveloperAuthenticated(false)}
+                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/50 text-xs font-black rounded-xl transition-all"
+                      >
+                        Lock Desk
+                      </button>
+                    </div>
                   </div>
+
+                  {showChangePassword && (
+                    <div className="bg-slate-900/80 p-5 rounded-2xl border border-purple-500/30 space-y-3 mb-6">
+                      <h3 className="text-sm font-black text-white">Update Developer Password</h3>
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <input
+                          type="password"
+                          value={newPasswordInput}
+                          onChange={(e) => setNewPasswordInput(e.target.value)}
+                          placeholder="Enter new password"
+                          className="flex-1 w-full px-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs font-bold outline-none focus:border-yellow-400"
+                        />
+                        <button
+                          onClick={async () => {
+                            if (newPasswordInput.trim().length < 6) {
+                              alert("Password must be at least 6 characters.");
+                              return;
+                            }
+                            
+                            setDevLoading(true);
+                            try {
+                              const { error } = await supabase.auth.updateUser({
+                                password: newPasswordInput.trim()
+                              });
+                              if (error) throw error;
+                              
+                              setNewPasswordInput("");
+                              setShowChangePassword(false);
+                              alert("Developer Password updated successfully in Supabase!");
+                            } catch (err: any) {
+                              alert(`Failed to update password: ${err.message}`);
+                            } finally {
+                              setDevLoading(false);
+                            }
+                          }}
+                          disabled={devLoading}
+                          className="w-full sm:w-auto px-5 py-2 bg-yellow-400 hover:bg-yellow-500 text-slate-950 text-xs font-black rounded-xl transition-all whitespace-nowrap disabled:opacity-50"
+                        >
+                          {devLoading ? "Saving to Supabase..." : "Save New Password"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {pendingExperts.length === 0 ? (
                     <div className="bg-slate-950/60 p-12 text-center rounded-3xl border border-purple-500/20 space-y-2">

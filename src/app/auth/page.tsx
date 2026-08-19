@@ -148,7 +148,7 @@ function AuthForm() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-[100] w-screen h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0a0a0a] overflow-hidden"
+      className="fixed inset-0 z-[100] w-full h-full flex flex-col lg:flex-row bg-white dark:bg-[#0a0a0a] overflow-hidden"
       ref={containerRef}
     >
       {/* LEFT: IMAGE PANEL */}
@@ -320,7 +320,7 @@ function AuthForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] w-full h-full bg-[#0a0a0a] flex items-center justify-center p-4">
         <Loader2 className="w-8 h-8 text-lime-500 animate-spin" />
       </div>
     }>

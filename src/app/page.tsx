@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { ScrambleText } from "@/components/ScrambleText";
 
 // ─────────────────────────────────────────────────────────────
 //  INTERACTIVE 3D ICOSAHEDRON — pure canvas, no dependencies
@@ -507,6 +508,30 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+          BRAND MANIFESTO — Scramble Decode Reveal Component
+      ════════════════════════════════════════════════════ */}
+      <section className="py-24 px-8 md:px-12 bg-[#08140D] text-white overflow-hidden border-y border-emerald-900/40">
+        <div className="max-w-[1200px] mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono tracking-widest uppercase mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            Brand Philosophy · Scramble Decode
+          </div>
+          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight max-w-4xl mx-auto leading-relaxed">
+            <ScrambleText
+              text={`NOVARA IS BUILT FOR THOSE WHO CHOOSE FORM OVER NOISE — AND LET THE WORK SPEAK WHERE WORDS DON'T HAVE TO`}
+              trigger="onScroll"
+              className="text-white"
+              staggerPerCharacterMs={22}
+              cyclesPerCharacter={12}
+              enableShine={true}
+              shineColor="rgba(52, 211, 153, 0.35)"
+              shineOpacity={0.25}
+            />
           </div>
         </div>
       </section>

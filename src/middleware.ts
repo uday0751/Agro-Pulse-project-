@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
-const PUBLIC_ROUTES = ["/auth", "/auth/signup"]
+const PROTECTED_ROUTES = ["/seller", "/profile", "/profile-setup", "/settings"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -39,7 +39,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          // If the cookie is updated, update the cookies for the request and response
           request.cookies.set({
             name,
             value,
@@ -57,7 +56,6 @@ export async function middleware(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
-          // If the cookie is removed, update the cookies for the request and response
           request.cookies.set({
             name,
             value: '',
@@ -81,9 +79,9 @@ export async function middleware(request: NextRequest) {
   // Call getUser to check session and refresh if necessary
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
 
-  if (!user && !isPublicRoute) {
+  if (!user && isProtectedRoute) {
     // Redirect to login page
     const loginUrl = new URL("/auth", request.url)
     loginUrl.searchParams.set("redirect", pathname)
